@@ -20,6 +20,26 @@ def doublegaussian(x, mu1, sig1, norm1, mu2, sig2, norm2):
     return gaussian(x, mu1, sig1, norm1) + gaussian(x, mu2, sig2, norm2)
 
 
+def f_po(x, c0):
+    """Polynomial of 0th order"""
+    return c0
+
+
+def f_p1(x, c0, c1):
+    """Polynomial of 1st order"""
+    return f_po(x, c0) + x * c1
+
+
+def f_p2(x, c0, c1, c2):
+    """Polynomial of 2nd order"""
+    return f_p1(x, c0, c1) + c2 * x ** 2
+
+
+def f_p3(x, c0, c1, c2, c3):
+    """Polynomial of 3rd order"""
+    return f_p2(x, c0, c1, c2) + c3 * x ** 3
+
+
 def fermi_step(x, k, c):
     """Fermi step function."""
     x = np.array(x, dtype=float)
@@ -97,5 +117,4 @@ def calc_Acorr_ratedep(
     """Calculate true ADC value by correcting for rate dependency"""
 
     A_meas = np.array(A_meas, dtype=float)
-    # return (A_meas + exp_dec(t_1, A_1 * delta, k)) / exp_sat(t_1, 1.0, k, 1.0)
     return A_meas + exp_dec(t_1, A_1 * delta, k)
