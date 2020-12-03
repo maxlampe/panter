@@ -1,5 +1,6 @@
 """Module for correcting Perkeo data."""
 
+import os
 import configparser
 import numpy as np
 import panter.core.dataPerkeo as dP
@@ -185,8 +186,9 @@ class corrPerkeo:
                 out_file_new[f"DetSum{det}"] = hist_n[det].ret_asnumpyhist()
 
             root_cmd = "/home/max/Software/root_install/bin/root"
-            arg_old = f'recalcHistErr.cpp("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
-            arg_new = f'recalcHistErr.cpp("int_new.root", "{src_name}_{cyc_no}_{corr}_new.root")'
+            this_dir = os.path.dirname(os.path.realpath(__file__))
+            arg_old = f'{this_dir}/recalcHistErr.cpp("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
+            arg_new = f'{this_dir}/recalcHistErr.cpp("int_new.root", "{src_name}_{cyc_no}_{corr}_new.root")'
             subprocess.run([root_cmd, arg_old])
             subprocess.run([root_cmd, arg_new])
 
