@@ -42,6 +42,7 @@ class corrPerkeo:
         self._histpar_sum = SUM_hist_par
         self._beam_mtime = BEAM_MEAS_TIME
         self.corrections = {"Pedestal": True, "RateDepElec": False}
+        self.histograms = []
 
     def __calc_detsum(
         self, vals: list, start_it: int = 0
@@ -150,7 +151,7 @@ class corrPerkeo:
 
         return [res_old, res_new]
 
-    def corr(self):
+    def corr(self, bstore: bool = False):
         """"""
 
         corr = ""
@@ -194,5 +195,9 @@ class corrPerkeo:
 
             subprocess.run(["rm", "int_old.root"])
             subprocess.run(["rm", "int_new.root"])
+
+            if bstore:
+                self.histograms.append(np.asarray([hist_o, hist_n]))
+        self.histograms = np.asarray(self.histograms)
 
         return 0
