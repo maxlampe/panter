@@ -5,6 +5,7 @@ panter (Perkeo ANalysis Tool for Evaluation and Reduction) is a Python package f
 ## Project status
 
 This project is very much WIP and changes are constantly being made. Feel free to contact me for feedback and issues.
+Currently, core features are still implemented and can be subject to change.
 
 ## Installation
 
@@ -17,12 +18,17 @@ pip3 install -r requirements.txt
 
 ## Usage
 
-See documentation.
+See docstrings and python help() function. For example:
 
-## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
+```python
+from panter.core.dataPerkeo import RootPerkeo
+help(RootPerkeo)
+from panter.core.dataloaderPerkeo import DLPerkeo
+help(DLPerkeo)
+from panter.core.evalPerkeo import DoFit, DoFitData
+help(DoFitData)
+```
+etc.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
