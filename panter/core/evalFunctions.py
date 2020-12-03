@@ -20,7 +20,7 @@ def doublegaussian(x, mu1, sig1, norm1, mu2, sig2, norm2):
     return gaussian(x, mu1, sig1, norm1) + gaussian(x, mu2, sig2, norm2)
 
 
-def f_po(x, c0):
+def f_p0(x, c0):
     """Polynomial of 0th order"""
     return c0
 

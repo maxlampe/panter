@@ -130,3 +130,15 @@ exp_sat_ord2.param_limit = {
     "k2": [0.001, 10000.0],
     "c2": [-1000.0, 1000.0],
 }
+
+pol0 = FitSetting()
+pol0.label = "pol0"
+pol0.fitfunc = eF.f_p0
+pol0.initvals = {"c0": 0.0}
+pol0.paramvary = [True] * len(pol0.initvals)
+
+pol1 = FitSetting()
+pol1.label = "pol1"
+pol1.fitfunc = eF.f_p1
+pol1.initvals = {"c0": 0.0, "c1": 1.}
+pol1.paramvary = [True] * len(pol1.initvals)
