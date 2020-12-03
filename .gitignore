@@ -3,6 +3,7 @@
 *.root
 *.png
 *.xml
+*.iml
 *.p
 *.pyc
 *.dat

@@ -15,11 +15,11 @@ from lmfit import Model
 from lmfit.model import ModelResult
 
 import dataPerkeo as dP
-import evalFitSettings as eFS
+import panter.config.evalFitSettings as eFS
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
-cnf.read("evalRaw.ini")
+cnf.read("../config/evalRaw.ini")
 
 # global plot output bool (default is False)
 BPLOT = cnf["evalPerkeo"].getboolean("bplot")

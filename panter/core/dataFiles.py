@@ -6,8 +6,8 @@ import sys
 import numpy as np
 
 import dataPerkeo as dP
-import filesDrift as fDr
-import filesElecTest as fET
+import panter.config.filesDrift as fDr
+import panter.config.filesElecTest as fET
 
 
 def is_integer(number_string) -> bool:

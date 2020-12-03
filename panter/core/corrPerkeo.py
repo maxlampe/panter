@@ -9,11 +9,11 @@ import subprocess
 import uproot
 import evalFunctions as eF
 import evalPerkeo as eP
-from params import delt_pmt
-from params import k_pmt_fix
+from panter.config.params import delt_pmt
+from panter.config.params import k_pmt_fix
 
 cnf = configparser.ConfigParser()
-cnf.read("evalRaw.ini")
+cnf.read("../config/evalRaw.ini")
 
 SUM_hist_par = {
     "bin_count": int(cnf["dataPerkeo"]["SUM_hist_counts"]),
