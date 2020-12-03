@@ -6,9 +6,9 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
-import dataPerkeo as dP
-import evalPerkeo as eP
-import evalFitSettings as eFS
+import panter.core.dataPerkeo as dP
+import panter.core.evalPerkeo as eP
+import panter.config.evalFitSettings as eFS
 
 
 # import global analysis parameters

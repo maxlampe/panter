@@ -1,7 +1,7 @@
 """Pedestal analysis"""
 
-import dataPerkeo as dP
-import evalPerkeo as eP
+import panter.core.dataPerkeo as dP
+import panter.core.evalPerkeo as eP
 
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 filename2 = "data119886-67506_bg.root"

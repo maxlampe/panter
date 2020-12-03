@@ -5,9 +5,9 @@ import configparser
 import numpy as np
 import pandas as pd
 
-import dataPerkeo as dP
-import evalPerkeo as eP
-import dataFiles as dF
+import panter.core.dataPerkeo as dP
+import panter.core.evalPerkeo as eP
+import panter.core.dataFiles as dF
 
 
 # import global analysis parameters

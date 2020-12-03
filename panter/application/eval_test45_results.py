@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import dataPerkeo as dP
-import evalPerkeo as eP
-import evalFitSettings as eFS
+import panter.core.dataPerkeo as dP
+import panter.core.evalPerkeo as eP
+import panter.config.evalFitSettings as eFS
 from lmfit import Model
 from lmfit.model import ModelResult
 

@@ -3,7 +3,7 @@
 import os
 import numpy as np
 import pandas as pd
-from dataFiles import sort_files
+from panter.core.dataFiles import sort_files
 
 
 class MeasPerkeo:

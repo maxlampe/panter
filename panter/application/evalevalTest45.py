@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import chi2
 
-import dataPerkeo as dP
-import evalPerkeo as eP
+import panter.core.dataPerkeo as dP
+import panter.core.evalPerkeo as eP
 
 
 # import global analysis parameters

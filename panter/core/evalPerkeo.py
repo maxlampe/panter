@@ -14,7 +14,7 @@ from scipy.stats import chi2
 from lmfit import Model
 from lmfit.model import ModelResult
 
-import dataPerkeo as dP
+import panter.core.dataPerkeo as dP
 import panter.config.evalFitSettings as eFS
 
 # import global analysis parameters

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # from mpl_toolkits.mplot3d import Axes3D
 from lmfit import Model
 
-import evalPerkeo as eP
+import panter.core.evalPerkeo as eP
 
 
 test5vals1 = [

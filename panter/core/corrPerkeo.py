@@ -2,13 +2,13 @@
 
 import configparser
 import numpy as np
-import dataPerkeo as dP
-from dataloaderPerkeo import DLPerkeo
+import panter.core.dataPerkeo as dP
+from panter.core.dataloaderPerkeo import DLPerkeo
 
 import subprocess
 import uproot
-import evalFunctions as eF
-import evalPerkeo as eP
+import panter.core.evalFunctions as eF
+import panter.core.evalPerkeo as eP
 from panter.config.params import delt_pmt
 from panter.config.params import k_pmt_fix
 

@@ -5,7 +5,7 @@ import datetime
 import sys
 import numpy as np
 
-import dataPerkeo as dP
+import panter.core.dataPerkeo as dP
 import panter.config.filesDrift as fDr
 import panter.config.filesElecTest as fET
 

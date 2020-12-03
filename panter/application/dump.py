@@ -1,8 +1,8 @@
 """Dump"""
 
 import numpy as np
-from dataloaderPerkeo import DLPerkeo, MeasPerkeo
-from corrPerkeo import corrPerkeo
+from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
+from panter.core.corrPerkeo import corrPerkeo
 
 
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"

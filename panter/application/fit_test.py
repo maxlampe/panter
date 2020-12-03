@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 
-import evalPerkeo as eP
-import evalFitSettings as eFS
+import panter.core.evalPerkeo as eP
+import panter.config.evalFitSettings as eFS
 
 xval = [2.3, 2.9, 3.5, 4.1, 4.7, 5.3, 5.9, 6.5, 7.1, 7.7]
 hist = [470, 668, 911, 1107, 1148, 1199, 1067, 928, 691, 506]
