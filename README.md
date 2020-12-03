@@ -12,6 +12,7 @@ Get the package from gitlab: https://gitlab.lrz.de/ge39dat/panter
 
 ```bash
 git clone https://gitlab.lrz.de/ge39dat/panter.git
+pip3 install -r requirements.txt
 ```
 
 ## Usage
