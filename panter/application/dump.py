@@ -29,4 +29,3 @@ exit()
 
 corr_class = corrPerkeo(dataloader[0:4])
 corr_class.corr()
-

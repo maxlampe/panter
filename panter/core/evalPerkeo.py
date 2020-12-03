@@ -15,11 +15,12 @@ from lmfit import Model
 from lmfit.model import ModelResult
 
 import panter.core.dataPerkeo as dP
+from panter.config import conf_path
 import panter.config.evalFitSettings as eFS
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
-cnf.read("../config/evalRaw.ini")
+cnf.read(f"{conf_path}/evalRaw.ini")
 
 # global plot output bool (default is False)
 BPLOT = cnf["evalPerkeo"].getboolean("bplot")
@@ -557,7 +558,7 @@ class DoFitData:
 
         cnf_int = configparser.ConfigParser()
         if (self._datatype == np.array(self._valid_datatypes)[1:]).sum() == 1:
-            cnf_int.read("evalElec.ini")
+            cnf_int.read(f"{conf_path}/evalElec.ini")
             set2 = (
                 cnf_int["evalFits"]["Eval_DPTT_Delta"]
                 + "\t"

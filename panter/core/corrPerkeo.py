@@ -9,11 +9,12 @@ import subprocess
 import uproot
 import panter.core.evalFunctions as eF
 import panter.core.evalPerkeo as eP
+from panter.config import conf_path
 from panter.config.params import delt_pmt
 from panter.config.params import k_pmt_fix
 
 cnf = configparser.ConfigParser()
-cnf.read("../config/evalRaw.ini")
+cnf.read(f"{conf_path}/evalRaw.ini")
 
 SUM_hist_par = {
     "bin_count": int(cnf["dataPerkeo"]["SUM_hist_counts"]),
@@ -39,7 +40,7 @@ class corrPerkeo:
         self._dataloader = dataloader
         self._histpar_sum = SUM_hist_par
         self._beam_mtime = BEAM_MEAS_TIME
-        self._corrections = {"Pedestal": True, "RateDepElec": False}
+        self.corrections = {"Pedestal": True, "RateDepElec": False}
 
     def __calc_detsum(
         self, vals: list, start_it: int = 0
@@ -77,14 +78,14 @@ class corrPerkeo:
 
         pedestals = [[0]] * data.no_pmts
         ampl_corr = [None] * data.no_pmts
-        if self._corrections["Pedestal"]:
+        if self.corrections["Pedestal"]:
             pedestals = eP.PedPerkeo(data).ret_pedestals()
             # or get fixed values from params.py
 
         for i in range(0, data.no_pmts):
             ampl_corr[i] = data.pmt_data[i] - pedestals[i][0]
 
-        if self._corrections["RateDepElec"]:
+        if self.corrections["RateDepElec"]:
             # FIXME: Think about this [1:]!
             dptt = data.dptt[1:]
             for i in range(0, data.no_pmts):
@@ -152,7 +153,7 @@ class corrPerkeo:
         """"""
 
         corr = ""
-        for (corr_name, is_active) in self._corrections.items():
+        for (corr_name, is_active) in self.corrections.items():
             if is_active:
                 corr += corr_name
 

@@ -9,17 +9,18 @@ import matplotlib.pyplot as plt
 import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
+from panter.config import conf_path
 from lmfit import Model
 from lmfit.model import ModelResult
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
-cnf.read("evalRaw.ini")
+cnf.read(f"{conf_path}/evalRaw.ini")
 
 outputFileDir = cnf["DEFAULT"]["expDir"]
 
 cnf2 = configparser.ConfigParser()
-cnf2.read("evalElec.ini")
+cnf2.read(f"{conf_path}/evalElec.ini")
 
 TYPE = cnf2["studyRes"]["evalTest"]
 BPLOT = cnf2["studyRes"].getboolean("BPLOT")

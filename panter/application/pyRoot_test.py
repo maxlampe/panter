@@ -33,15 +33,15 @@ det0PMT = pd.DataFrame(det0PMT.AsNumpy()["PMT"])
 print("Entire data result (with filter)")
 print(f"Shape: {det0PMT.shape}")
 print(f"Type: {type(det0PMT)}")
-#print(f"Dir: {dir(det0PMT)}")
-#print(det0PMT)
+# print(f"Dir: {dir(det0PMT)}")
+# print(det0PMT)
 
 evno = [1, 2, 3, 4, det0PMT.size - 1]
 for ev in evno:
     print(f"Event no {ev}")
     val = det0PMT.loc[ev]
     print(type(val))
-    #print(dir(val))
+    # print(dir(val))
     print(val)
 
 exit()

@@ -15,10 +15,12 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 import uproot
 
+from panter.config import conf_path
+
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
-cnf.read("evalRaw.ini")
+cnf.read(f"{conf_path}/evalRaw.ini")
 
 
 def ret_hist(

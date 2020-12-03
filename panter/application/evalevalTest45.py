@@ -9,16 +9,16 @@ from scipy.stats import chi2
 
 import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
-
+from panter.config import conf_path
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
-cnf.read("evalRaw.ini")
+cnf.read(f"{conf_path}/evalRaw.ini")
 
 outputFileDir = cnf["DEFAULT"]["expDir"]
 
 cnf2 = configparser.ConfigParser()
-cnf2.read("evalElec.ini")
+cnf2.read(f"{conf_path}/evalElec.ini")
 
 TYPE = cnf2["studyRes"]["evalTest"]
 bplot = cnf2["studyRes"].getboolean("BPLOT2")

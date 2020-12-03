@@ -216,6 +216,3 @@ class DLPerkeo:
             filt_meas.append(MeasPerkeo(**dick))
 
         return np.asarray(filt_meas)
-
-
-

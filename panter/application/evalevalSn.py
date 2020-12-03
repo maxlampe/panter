@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
-
+from panter.config import conf_path
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
-cnf.read("evalRaw.ini")
+cnf.read(f"{conf_path}/evalRaw.ini")
 
 outputFileDir = cnf["DEFAULT"]["expDir"]
 

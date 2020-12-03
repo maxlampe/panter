@@ -8,11 +8,12 @@ import pandas as pd
 import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
 import panter.core.dataFiles as dF
+from panter.config import conf_path
 
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
-cnf.read("evalElec.ini")
+cnf.read(f"{conf_path}/evalElec.ini")
 
 outputFileDir = cnf["DEFAULT"]["expDir"]
 LOGFILE = cnf["DEFAULT"]["logfile"]
