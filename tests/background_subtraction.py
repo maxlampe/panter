@@ -9,9 +9,9 @@ from panter.core.corrPerkeo import corrPerkeo
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 
-pd.set_option('display.max_rows', 500)
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 1000)
+pd.set_option("display.max_rows", 500)
+pd.set_option("display.max_columns", 500)
+pd.set_option("display.width", 1000)
 
 
 FIT_RANGE = [40000, 51500]
@@ -21,9 +21,9 @@ dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)
 dataloader.auto()
 
-batches = dataloader.ret_filt_meas(["src"], [5])[900:940]
+batches = dataloader.ret_filt_meas(["src"], [5])[900:930]
 res_df = pd.DataFrame(
-    columns=["r_c0", "r_c0_err", "r_rCh2", "p_c0", "p_c0_err", "p_rCh2", "rel_dev"],
+    columns=["r_c0", "r_c0_err", "r_rCh2", "p_c0", "p_c0_err", "p_rCh2", "rel_dev", "bpass"],
     index=range(len(batches)),
 )
 
@@ -66,8 +66,8 @@ for ind, meas in enumerate(batches):
 
     root_fitres = np.asarray(root_fitres)
     panter_fitres = np.asarray(panter_fitres)
-    rel_dev = abs((root_fitres - panter_fitres)) / root_fitres
-    av_dev = rel_dev.mean()
+    rel_dev_all = abs((root_fitres - panter_fitres)) / root_fitres
+    av_dev = rel_dev_all.mean()
 
     if av_dev <= MIN_ACC:
         print(
@@ -77,7 +77,7 @@ for ind, meas in enumerate(batches):
         print(
             f"FAILED: Test not passed. Average deviation {av_dev} > minimum accuracy {MIN_ACC}"
         )
-    print(f"Relative deviations:\n{rel_dev}")
+    print(f"Relative deviations:\n{rel_dev_all}")
 
     r_c0 = [root_fitres[0], root_fitres[3]]
     r_c0_err = [root_fitres[1], root_fitres[4]]
@@ -85,7 +85,8 @@ for ind, meas in enumerate(batches):
     p_c0 = [panter_fitres[0], panter_fitres[3]]
     p_c0_err = [panter_fitres[1], panter_fitres[4]]
     p_rCh2 = [panter_fitres[2], panter_fitres[5]]
-    rel_dev = [rel_dev[:3].mean(), rel_dev[3:].mean()]
+    rel_dev = [rel_dev_all[:3].mean(), rel_dev_all[3:].mean()]
+    bpass = (av_dev <= MIN_ACC)
     res_dict = {
         "r_c0": r_c0,
         "r_c0_err": r_c0_err,
@@ -94,7 +95,14 @@ for ind, meas in enumerate(batches):
         "p_c0_err": p_c0_err,
         "p_rCh2": p_rCh2,
         "rel_dev": rel_dev,
+        "bpass": bpass
     }
     res_df.loc[ind] = pd.Series(res_dict)
 
 print(res_df)
+no_passed = (res_df["bpass"].to_numpy() == 1).sum()
+if no_passed == len(batches):
+    print(f"GREAT SUCCESS: Unit test passed for all {len(batches)} files. ")
+else:
+    print(f"FAILRE: Only {no_passed} of {len(batches)} passed")
+
