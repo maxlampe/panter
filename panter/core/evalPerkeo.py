@@ -32,8 +32,8 @@ def calc_weights(sample: np.array) -> np.array:
     weights = []
     for ent in sample:
         if ent == 0.0:
-            weights.append(1.0)
-            # print("WARNING: Empty bin in weights calculation.")
+            weights.append(0.0000000000000000000000000001)
+            print("WARNING: Empty bin in weights calculation.")
         else:
             weights.append(ent ** (-1))
     return np.array(weights)

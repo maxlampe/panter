@@ -9,6 +9,9 @@ from panter.core.corrPerkeo import corrPerkeo
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 
+import matplotlib.pyplot as plt
+
+
 pd.set_option("display.max_rows", 500)
 pd.set_option("display.max_columns", 500)
 pd.set_option("display.width", 1000)
@@ -21,9 +24,18 @@ dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)
 dataloader.auto()
 
-batches = dataloader.ret_filt_meas(["src"], [5])[900:930]
+batches = dataloader.ret_filt_meas(["src"], [5])[900:901]
 res_df = pd.DataFrame(
-    columns=["r_c0", "r_c0_err", "r_rCh2", "p_c0", "p_c0_err", "p_rCh2", "rel_dev", "bpass"],
+    columns=[
+        "r_c0",
+        "r_c0_err",
+        "r_rCh2",
+        "p_c0",
+        "p_c0_err",
+        "p_rCh2",
+        "rel_dev",
+        "bpass",
+    ],
     index=range(len(batches)),
 )
 
@@ -54,6 +66,7 @@ for ind, meas in enumerate(batches):
 
     panter_fitres = []
     for hist in corr_class.histograms[0, 0]:
+
         fitclass = eP.DoFit(hist.hist)
         fitclass.setup(eFS.pol0)
         fitclass.limitrange([FIT_RANGE[0], FIT_RANGE[1]])
@@ -86,7 +99,7 @@ for ind, meas in enumerate(batches):
     p_c0_err = [panter_fitres[1], panter_fitres[4]]
     p_rCh2 = [panter_fitres[2], panter_fitres[5]]
     rel_dev = [rel_dev_all[:3].mean(), rel_dev_all[3:].mean()]
-    bpass = (av_dev <= MIN_ACC)
+    bpass = av_dev <= MIN_ACC
     res_dict = {
         "r_c0": r_c0,
         "r_c0_err": r_c0_err,
@@ -95,7 +108,7 @@ for ind, meas in enumerate(batches):
         "p_c0_err": p_c0_err,
         "p_rCh2": p_rCh2,
         "rel_dev": rel_dev,
-        "bpass": bpass
+        "bpass": bpass,
     }
     res_df.loc[ind] = pd.Series(res_dict)
 
@@ -105,4 +118,3 @@ if no_passed == len(batches):
     print(f"GREAT SUCCESS: Unit test passed for all {len(batches)} files. ")
 else:
     print(f"FAILRE: Only {no_passed} of {len(batches)} passed")
-
