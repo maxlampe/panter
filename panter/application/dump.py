@@ -5,6 +5,26 @@ from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
 from panter.core.corrPerkeo import corrPerkeo
 
 
+import pandas as pd
+
+bincent = [0, 1, 2, 3, 4, 5]
+hist = [0, 1, 3, 2, 1, 0]
+hist0 = pd.DataFrame({"x": bincent, "y": hist, "err": np.sqrt(hist)})
+
+
+def filt0(histDF: pd.DataFrame) -> pd.DataFrame:
+    """"""
+
+    filt = histDF["y"] >= 1
+    histDF = histDF[filt]
+
+    return histDF
+
+print(hist0)
+print(filt0(hist0))
+
+exit()
+
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)
 dataloader.auto()
