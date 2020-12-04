@@ -25,7 +25,7 @@ print(type(meas))
 print(meas)
 
 
-exit()
-
-corr_class = corrPerkeo(dataloader[0:4])
+corr_class = corrPerkeo(dataloader[0:1])
+corr_class.corrections["Pedestal"] = True
+corr_class.corrections["RateDepElec"] = True
 corr_class.corr()
