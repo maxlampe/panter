@@ -81,7 +81,6 @@ class HistPerkeo:
         self.low_lim = low_lim
         self.hist = ret_hist(self.data, self.bin_count, self.low_lim, self.up_lim)
 
-
     def plt(
         self,
         rng: list = [0.0, 0.0, 0.0, 0.0],
@@ -99,8 +98,8 @@ class HistPerkeo:
         plt.ylabel(ylabel)
         plt.xlabel(xlabel)
         plt.annotate(
-            f'Mean = {self.hist["y"].mean():0.2f}\n'
-            f'StDv = {self.hist["y"].std():0.2f}',
+            f"Mean = {np.array(self.data).mean():0.2f}\n"
+            f"StDv = {np.array(self.data).std():0.2f}",
             xy=(0.05, 0.95),
             xycoords="axes fraction",
             ha="left",
