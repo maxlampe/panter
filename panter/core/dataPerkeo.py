@@ -36,7 +36,16 @@ def ret_hist(
     for j in range(binedge.size - 1):
         bincent.append(0.5 * (binedge[j] + binedge[j + 1]))
 
-    return pd.DataFrame({"x": bincent, "y": hist, "err": np.sqrt(hist)})
+    return pd.DataFrame({"x": bincent, "y": hist, "err": np.sqrt(np.abs(hist))})
+
+
+def filt_zeros(histdf: pd.DataFrame) -> pd.DataFrame:
+    """"""
+
+    filt = histdf["y"] == 0.0
+    histdf = histdf[filt]
+
+    return histdf
 
 
 class HistPerkeo:
@@ -71,6 +80,7 @@ class HistPerkeo:
         self.up_lim = up_lim
         self.low_lim = low_lim
         self.hist = ret_hist(self.data, self.bin_count, self.low_lim, self.up_lim)
+
 
     def plt(
         self,
