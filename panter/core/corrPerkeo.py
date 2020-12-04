@@ -151,8 +151,11 @@ class corrPerkeo:
 
         return [res_old, res_new]
 
-    def corr(self, bstore: bool = False):
+    def corr(self, bstore: bool = False, bwrite: bool = True):
         """"""
+
+        if not bwrite and not bstore:
+            print("WARNING: Doing nothing with data ")
 
         corr = ""
         for (corr_name, is_active) in self.corrections.items():
@@ -185,26 +188,27 @@ class corrPerkeo:
             elif tp == 1:
                 [hist_o, hist_n] = self.__corr_src(files)
 
-            out_file_old = uproot.recreate(f"int_old.root")
-            out_file_new = uproot.recreate(f"int_new.root")
-            for det in [0, 1]:
-                out_file_old[f"DetSum{det}"] = hist_o[det].ret_asnumpyhist()
-                out_file_new[f"DetSum{det}"] = hist_n[det].ret_asnumpyhist()
+            if bwrite:
+                out_file_old = uproot.recreate(f"int_old.root")
+                out_file_new = uproot.recreate(f"int_new.root")
+                for det in [0, 1]:
+                    out_file_old[f"DetSum{det}"] = hist_o[det].ret_asnumpyhist()
+                    out_file_new[f"DetSum{det}"] = hist_n[det].ret_asnumpyhist()
 
-            root_cmd = "/home/max/Software/root_install/bin/root"
-            arg_old = (
-                f"{core_path}/recalcHistErr.cpp"
-                + f'("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
-            )
-            arg_new = (
-                f"{core_path}/recalcHistErr.cpp"
-                + f'("int_new.root", "{src_name}_{cyc_no}_{corr}_new.root")'
-            )
-            subprocess.run([root_cmd, arg_old])
-            subprocess.run([root_cmd, arg_new])
+                root_cmd = "/home/max/Software/root_install/bin/root"
+                arg_old = (
+                    f"{core_path}/recalcHistErr.cpp"
+                    + f'("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
+                )
+                arg_new = (
+                    f"{core_path}/recalcHistErr.cpp"
+                    + f'("int_new.root", "{src_name}_{cyc_no}_{corr}_new.root")'
+                )
+                subprocess.run([root_cmd, arg_old])
+                subprocess.run([root_cmd, arg_new])
 
-            subprocess.run(["rm", "int_old.root"])
-            subprocess.run(["rm", "int_new.root"])
+                subprocess.run(["rm", "int_old.root"])
+                subprocess.run(["rm", "int_new.root"])
 
             if bstore:
                 self.histograms.append(np.asarray([hist_o, hist_n]))
