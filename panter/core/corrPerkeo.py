@@ -1,6 +1,5 @@
 """Module for correcting Perkeo data."""
 
-import os
 import configparser
 import numpy as np
 import panter.core.dataPerkeo as dP
@@ -10,6 +9,7 @@ import subprocess
 import uproot
 import panter.core.evalFunctions as eF
 import panter.core.evalPerkeo as eP
+from panter.core import core_path
 from panter.config import conf_path
 from panter.config.params import delt_pmt
 from panter.config.params import k_pmt_fix
@@ -97,7 +97,7 @@ class corrPerkeo:
                     ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
                 )
 
-        hist_old = self.__calc_detsum(data.pmt_data, 1)
+        hist_old = self.__calc_detsum(data.pmt_data)
         hist_new = self.__calc_detsum(ampl_corr)
 
         return [[hist_old, hist_new], data.cy_valid_no]
@@ -160,7 +160,12 @@ class corrPerkeo:
                 corr += corr_name
 
         cyc_no = 0
-        for meas in self._dataloader:
+
+        if type(self._dataloader) != 'panter.core.dataloaderPerkeo.DLPerkeo':
+            batches = [self._dataloader]
+        else:
+            batches = self._dataloader
+        for meas in batches:
             tp = meas.tp
             src = meas.src
             files = meas.file_list
@@ -187,9 +192,8 @@ class corrPerkeo:
                 out_file_new[f"DetSum{det}"] = hist_n[det].ret_asnumpyhist()
 
             root_cmd = "/home/max/Software/root_install/bin/root"
-            this_dir = os.path.dirname(os.path.realpath(__file__))
-            arg_old = f'{this_dir}/recalcHistErr.cpp("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
-            arg_new = f'{this_dir}/recalcHistErr.cpp("int_new.root", "{src_name}_{cyc_no}_{corr}_new.root")'
+            arg_old = f'{core_path}/recalcHistErr.cpp("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
+            arg_new = f'{core_path}/recalcHistErr.cpp("int_new.root", "{src_name}_{cyc_no}_{corr}_new.root")'
             subprocess.run([root_cmd, arg_old])
             subprocess.run([root_cmd, arg_new])
 
