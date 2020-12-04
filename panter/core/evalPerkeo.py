@@ -74,12 +74,7 @@ class DoFit:
         self._data = data
         self._fitdata = None
         self._label = None
-        self._booldict = {
-            "boutput": False,
-            "blimfit": False,
-            "bfitall": False,
-            "brecfit": False,
-        }
+        self._booldict = None
         self._fitrange = None
         self.plotrange = None
         self._initvals = None
@@ -176,6 +171,9 @@ class DoFit:
             )
         else:
             self._fitdata = self._data
+
+        if self._booldict["bfilt0"]:
+            self._fitdata = dP.filt_zeros(self._fitdata)
 
         # check for label and then do case specific range limitationexit()
         if self._label == "gaus_pdec" or self._label == "gaus_expmod":
