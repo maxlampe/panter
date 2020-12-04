@@ -161,7 +161,7 @@ class corrPerkeo:
 
         cyc_no = 0
 
-        if type(self._dataloader) != 'panter.core.dataloaderPerkeo.DLPerkeo':
+        if type(self._dataloader) != "panter.core.dataloaderPerkeo.DLPerkeo":
             batches = [self._dataloader]
         else:
             batches = self._dataloader
@@ -192,8 +192,14 @@ class corrPerkeo:
                 out_file_new[f"DetSum{det}"] = hist_n[det].ret_asnumpyhist()
 
             root_cmd = "/home/max/Software/root_install/bin/root"
-            arg_old = f'{core_path}/recalcHistErr.cpp("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
-            arg_new = f'{core_path}/recalcHistErr.cpp("int_new.root", "{src_name}_{cyc_no}_{corr}_new.root")'
+            arg_old = (
+                f"{core_path}/recalcHistErr.cpp"
+                + f'("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
+            )
+            arg_new = (
+                f"{core_path}/recalcHistErr.cpp"
+                + f'("int_new.root", "{src_name}_{cyc_no}_{corr}_new.root")'
+            )
             subprocess.run([root_cmd, arg_old])
             subprocess.run([root_cmd, arg_new])
 
