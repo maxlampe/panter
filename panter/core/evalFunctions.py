@@ -22,21 +22,25 @@ def doublegaussian(x, mu1, sig1, norm1, mu2, sig2, norm2):
 
 def f_p0(x, c0):
     """Polynomial of 0th order"""
+    x = np.array(x, dtype=float)
     return c0
 
 
 def f_p1(x, c0, c1):
     """Polynomial of 1st order"""
-    return f_po(x, c0) + x * c1
+    x = np.array(x, dtype=float)
+    return f_p0(x, c0) + x * c1
 
 
 def f_p2(x, c0, c1, c2):
     """Polynomial of 2nd order"""
+    x = np.array(x, dtype=float)
     return f_p1(x, c0, c1) + c2 * x ** 2
 
 
 def f_p3(x, c0, c1, c2, c3):
     """Polynomial of 3rd order"""
+    x = np.array(x, dtype=float)
     return f_p2(x, c0, c1, c2) + c3 * x ** 3
 
 
