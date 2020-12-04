@@ -9,22 +9,20 @@ from panter.core.corrPerkeo import corrPerkeo
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 
-import matplotlib.pyplot as plt
-
 
 pd.set_option("display.max_rows", 500)
 pd.set_option("display.max_columns", 500)
 pd.set_option("display.width", 1000)
 
 
-FIT_RANGE = [40000, 51500]
+FIT_RANGE = [45000, 51500]
 MIN_ACC = 0.01
 
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)
 dataloader.auto()
 
-batches = dataloader.ret_filt_meas(["src"], [5])[900:901]
+batches = dataloader.ret_filt_meas(["src"], [5])[900:931]
 res_df = pd.DataFrame(
     columns=[
         "r_c0",
@@ -62,7 +60,7 @@ for ind, meas in enumerate(batches):
     corr_class = corrPerkeo(meas)
     corr_class.corrections["Pedestal"] = False
     corr_class.corrections["RateDepElec"] = False
-    corr_class.corr(bstore=True)
+    corr_class.corr(bstore=True, bwrite=False)
 
     panter_fitres = []
     for hist in corr_class.histograms[0, 0]:
