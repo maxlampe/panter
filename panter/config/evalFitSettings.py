@@ -140,5 +140,5 @@ pol0.paramvary = [True] * len(pol0.initvals)
 pol1 = FitSetting()
 pol1.label = "pol1"
 pol1.fitfunc = eF.f_p1
-pol1.initvals = {"c0": 0.0, "c1": 1.}
+pol1.initvals = {"c0": 0.0, "c1": 1.0}
 pol1.paramvary = [True] * len(pol1.initvals)
