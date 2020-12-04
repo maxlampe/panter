@@ -36,7 +36,7 @@ class FitSetting:
             "blimfit": False,
             "bfitall": False,
             "brecfit": False,
-            "bfilt0": False
+            "bfilt0": False,
         }
         self.initvals = None
         self.paramvary = None
