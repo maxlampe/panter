@@ -1,41 +1,51 @@
 """"""
 
-import os
-import subprocess
+
 import numpy as np
 import panter.core.dataPerkeo as dP
+import panter.core.evalPerkeo as eP
+import panter.config.evalFitSettings as eFS
+from tests.unittestroot import UnitTestRoot
 
-MIN_ACC = 0.00001
 
-HISTP_0 = 5
-HISTP_1 = 0
-HISTP_2 = 15
+class HistTestFit(UnitTestRoot):
+    """"""
+
+    def __init__(self, txtfile: str, params: dict, root_macro: str):
+        super().__init__(
+            test_label="HistTestFit", params=params, root_macro=root_macro
+        )
+        self.txtfile = txtfile
+        self.hist_par = params[0:3]
+        self.fit_par = params[3:]
+
+    def do_panter(self):
+        data_raw = open(self.txtfile).read().split()
+        data_raw = list(map(float, data_raw))
+
+        hpanter1 = dP.HistPerkeo(*[data_raw, *self.hist_par])
+        hpanter2 = dP.HistPerkeo(*[np.array(data_raw) + 2, *self.hist_par])
+        hpanter1.addhist(hpanter2, -0.5)
+
+        #do fit on hpanter1
+        fitclass = eP.DoFit(hpanter1.hist)
+        fitclass.setup(eFS.pol0)
+        fitclass.limitrange(self.fit_par)
+
+        fitres = fitclass.fit()
+
+        panter_fitres = [fitres.params["c0"].value, fitres.params["c0"].stderr,
+                         fitclass.ret_gof()["rChi2"]]
+
+        return np.asarray(panter_fitres)
+
+    def do_root(self):
+        return super().do_root([self.txtfile], self.params)
+
 
 file = "sample.txt"
-root_cmd = "/home/max/Software/root_install/bin/root"
-this_path = os.path.dirname(os.path.realpath(__file__))
-arg_old = f"{this_path}/histogram.cpp" + f'("{file}", {HISTP_0}, {HISTP_1}, {HISTP_2})'
-subprocess.run([root_cmd, arg_old])
+par = [5, 0, 15, 0, 15]
+root_mac = "basicfit.cpp"
 
-root_histres = open("root_histres.txt").read().split()
-root_histres = list(map(float, root_histres))
-subprocess.run(["rm", "root_histres.txt"])
-
-data_raw = open(file).read().split()
-data_raw = list(map(float, data_raw))
-
-hpanter1 = dP.HistPerkeo(data_raw, HISTP_0, HISTP_1, HISTP_2)
-hpanter2 = dP.HistPerkeo(np.array(data_raw) + 2, HISTP_0, HISTP_1, HISTP_2)
-hpanter1.addhist(hpanter2, -0.5)
-
-print(hpanter1.hist)
-
-abs_dev = ((root_histres - hpanter1.hist.to_numpy().flatten())).mean()
-MIN_ACC
-if abs_dev <= MIN_ACC:
-    print(
-        f"GREAT SUCCESS: Unit test passed for basic histograms with operations. "
-        + f"(Abs_Diff needs to be below {MIN_ACC})"
-    )
-else:
-    print(f"FAILURE: Numbers do not match within precision!")
+test = HistTestFit(txtfile=file, params=par, root_macro=root_mac)
+test.test(brel_dev=False, bprint=True)
