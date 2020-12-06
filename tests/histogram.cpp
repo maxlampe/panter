@@ -1,6 +1,6 @@
 
 
-int histogram(const char* Sfile, int hpar0 = 10, int hpar1 = 0, int hpar2 = 10){
+int histogram(const char* Sfile, const char* Outfile, int hpar0 = 10, int hpar1 = 0, int hpar2 = 10){
 
     TH1D* hist1 = new TH1D("hist1", "hist1", hpar0, hpar1, hpar2);
     hist1->Sumw2();
@@ -27,7 +27,7 @@ int histogram(const char* Sfile, int hpar0 = 10, int hpar1 = 0, int hpar2 = 10){
     hist1->Print("all");
 
     ofstream myfile;
-    myfile.open ("root_histres.txt");
+    myfile.open (Outfile);
     for(int i = 1; i < hpar0 +1; ++i){
         myfile << hist1->GetBinCenter(i) << "\t" << hist1->GetBinContent(i) << "\t" << hist1->GetBinError(i) << "\n";
     }
