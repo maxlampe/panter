@@ -83,7 +83,7 @@ class HistPerkeo:
 
     def plt(
         self,
-        rng: list = [0.0, 0.0, 0.0, 0.0],
+        rng: list = None,
         title: str = "",
         xlabel: str = "",
         ylabel: str = "",
@@ -92,7 +92,7 @@ class HistPerkeo:
 
         figure(figsize=(8, 6))
         plt.errorbar(self.hist["x"], self.hist["y"], self.hist["err"], fmt=".")
-        if rng != [0.0, 0.0, 0.0, 0.0]:
+        if rng is not None:
             plt.axis([rng[0], rng[1], rng[2], rng[3]])
         plt.title(title)
         plt.ylabel(ylabel)
@@ -111,14 +111,11 @@ class HistPerkeo:
         return 0
 
     def addhist(self, hist_p: HistPerkeo, fac: float = 1.0):
-        """Add another histogram to existing one with multiplicant."""
+        """Add another histogram to existing one with multiplicand."""
 
-        if (
-            self.hist["x"].values.size != hist_p.hist["x"].values.size
-            or self.hist["x"].values[0] != hist_p.hist["x"].values[0]
-        ):
-            print("ERROR: Binning does not match.")
-            sys.exit(1)
+        hist_par = [self.bin_count, self.low_lim, self.up_lim]
+        hist_par_2add = [hist_p.bin_count, hist_p.low_lim, hist_p.up_lim]
+        assert hist_par == hist_par_2add, "ERROR: Binning does not match."
 
         newhist = pd.DataFrame(
             {
@@ -201,7 +198,7 @@ class DirPerkeo:
         return liste
 
     def get_subset(self, liste: list(str)) -> list(str):
-        """Returns list of requ files (full name) out of list in dir"""
+        """Returns list of required files (full name) out of list in dir"""
 
         retlist = []
         for i in liste:
@@ -435,9 +432,7 @@ class RootPerkeo:
             "     from a total of:     ",
             self._cy_no,
         )
-        if self.cy_valid_no <= 0:
-            print("ERROR: No cycles left. This would leave no data.")
-            sys.exit(1)
+        assert self.cy_valid_no > 0, "ERROR: No cycles left. This would leave no data."
 
         if self.cy_valid_no == self._cy_no:
             print("All cycles valid. Deactivate data cycle filter")
@@ -508,9 +503,7 @@ class RootPerkeo:
             self._ev_no,
         )
 
-        if self._ev_valid_no <= 0:
-            print("ERROR: No events left. This would leave no data.")
-            sys.exit(1)
+        assert self._ev_valid_no > 0, "ERROR: No events left. This wouldn't leave data."
 
         return 0
 
@@ -568,18 +561,14 @@ class RootPerkeo:
         self.hist_sums = [None] * 2
 
         # check for mode
+        assert no_tadc != 0, "ERROR: TADC format is wrong."
         if no_tadc == 1:
             self.mode = 1  # Delta
         elif no_tadc == 2:
             self.mode = 2  # Both
         elif no_tadc == 33:
             self.mode = 3  # All
-        elif no_tadc == 0:
-            print("ERROR: TADC format is wrong.")
-            sys.exit(1)
-        else:
-            print("ERROR: Mode could not be determined")
-            sys.exit(1)
+        assert self.mode is not None, "ERROR: Mode could not be determined"
 
         if self.mode == 1:
             self.pmt_data = data_pmt_tran[self._tadc]
