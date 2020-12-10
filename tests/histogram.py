@@ -35,6 +35,3 @@ root_mac = "histogram.cpp"
 
 test = HistTestBasic(txtfile=file, params=par, root_macro=root_mac)
 test.test(False)
-
-
-

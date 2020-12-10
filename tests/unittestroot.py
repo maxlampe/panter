@@ -23,16 +23,16 @@ class UnitTestRoot:
         root_cmd = "/home/max/Software/root_install/bin/root"
         this_path = os.path.dirname(os.path.realpath(__file__))
         sp_args.append(self._root_outfile)
-        arg_macro = '('
+        arg_macro = "("
         for sp_arg in sp_args:
             arg_macro += f'"{sp_arg}", '
         for arg in args:
-            arg_macro += f'{arg}, '
+            arg_macro += f"{arg}, "
         arg_macro = arg_macro[:-2]
-        arg_macro += ')'
+        arg_macro += ")"
 
         macro_name = self.root_macro
-        arg_old = f'{this_path}/{macro_name}{arg_macro}'
+        arg_old = f"{this_path}/{macro_name}{arg_macro}"
         subprocess.run([root_cmd, arg_old])
 
         root_outfile = self._root_outfile

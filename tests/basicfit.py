@@ -12,9 +12,7 @@ class HistTestFit(UnitTestRoot):
     """"""
 
     def __init__(self, txtfile: str, params: dict, root_macro: str):
-        super().__init__(
-            test_label="HistTestFit", params=params, root_macro=root_macro
-        )
+        super().__init__(test_label="HistTestFit", params=params, root_macro=root_macro)
         self.txtfile = txtfile
         self.hist_par = params[0:3]
         self.fit_par = params[3:]
@@ -27,15 +25,18 @@ class HistTestFit(UnitTestRoot):
         hpanter2 = dP.HistPerkeo(*[np.array(data_raw) + 2, *self.hist_par])
         hpanter1.addhist(hpanter2, -0.5)
 
-        #do fit on hpanter1
+        # do fit on hpanter1
         fitclass = eP.DoFit(hpanter1.hist)
         fitclass.setup(eFS.pol0)
         fitclass.limitrange(self.fit_par)
 
         fitres = fitclass.fit()
 
-        panter_fitres = [fitres.params["c0"].value, fitres.params["c0"].stderr,
-                         fitclass.ret_gof()["rChi2"]]
+        panter_fitres = [
+            fitres.params["c0"].value,
+            fitres.params["c0"].stderr,
+            fitclass.ret_gof()["rChi2"],
+        ]
 
         return np.asarray(panter_fitres)
 
