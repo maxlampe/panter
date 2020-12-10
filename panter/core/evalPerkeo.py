@@ -426,9 +426,9 @@ class DoFitData:
         """Depending on set datatype, fit will be done."""
 
         # check for valid fitmodel input
-        if (np.array(self._valid_datatypes) == self._datatype).sum() <= 0:
-            print("ERROR: Wrong fitmodel/datatype input!")
-            sys.exit(1)
+        assert (
+            np.array(self._valid_datatypes) == self._datatype
+        ).sum() > 0, "ERROR: Wrong fitmodel/datatype input!"
 
         if self._datatype == self._valid_datatypes[0]:
             self._fitsettings = eFS.gaus_expmod
