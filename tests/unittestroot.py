@@ -66,13 +66,21 @@ class UnitTestRoot:
             )
             return 0
         else:
-            print(f"FAILURE: Numbers do not match within precision!")
+            print(
+                f"FAILURE: Numbers do not match within precision:"
+                + f"{dev} > {self.MIN_ACC}"
+            )
             return 1
 
-    def test(self, brel_dev: bool = True, bprint: bool = False):
+    def test(self, brel_dev: bool = True, bprint: bool = False, bround: bool = False):
         """"""
+
         root_res = self.do_root()
         panter_res = self.do_panter()
+        if bround:
+            root_res = np.round(root_res, 5)
+            panter_res = np.round(panter_res, 5)
+
         if bprint:
             results = np.array([root_res, panter_res]).T
             print(results)
