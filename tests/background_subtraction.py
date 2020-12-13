@@ -22,7 +22,7 @@ dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)
 dataloader.auto()
 
-batches = dataloader.ret_filt_meas(["src"], [5])[900:931]
+batches = dataloader.ret_filt_meas(["src"], [5])[900:903]
 res_df = pd.DataFrame(
     columns=[
         "r_c0",
