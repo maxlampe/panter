@@ -1,6 +1,5 @@
 """"""
 
-import numpy as np
 import panter.core.dataPerkeo as dP
 
 from tests.unittestroot import UnitTestRoot

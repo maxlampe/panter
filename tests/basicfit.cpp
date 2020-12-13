@@ -38,7 +38,7 @@ int basicfit(const char* Sfile, const char* Outfile, int hpar0 = 10, int hpar1 =
 
     ofstream myfile;
     myfile.open (Outfile);
-    myfile << p0 << "\t" << p0_err << "\t" << float(chi2)/float(ndf) << "\n";
+    myfile << std::setprecision(9) << p0 << "\t" << p0_err << "\t" << float(chi2)/float(ndf) << "\n";
     myfile.close();
 
     gApplication->Terminate();
