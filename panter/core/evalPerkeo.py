@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import sys
 from copy import deepcopy
 import configparser
 
@@ -31,7 +30,7 @@ def calc_weights(sample: np.array) -> np.array:
 
     weights = []
     for ent in sample:
-        assert ent != 0., "ERROR: Empty bin in weights calculation."
+        assert ent != 0.0, "ERROR: Empty bin in weights calculation."
         weights.append(ent ** (-1))
 
     return np.array(weights)
@@ -193,7 +192,7 @@ class DoFit:
             self._fitparams,
             x=self._fitdata["x"],
             weights=err_weights,
-            scale_covar=False
+            scale_covar=False,
         )
 
         if self._booldict["brecfit"]:
@@ -216,8 +215,6 @@ class DoFit:
                 x=self._fitdata["x"],
                 weights=err_weights,
             )
-
-
 
         pval = 1.0 - chi2.cdf(self._fitresult.chisqr, self._fitresult.nfree)
         self._gof = {"rChi2": self._fitresult.redchi, "pval": pval}
