@@ -172,10 +172,9 @@ class DoFit:
         else:
             self._fitdata = self._data
 
-        if self._booldict["bfilt0"]:
-            self._fitdata = dP.filt_zeros(self._fitdata)
+        self._fitdata = dP.filt_zeros(self._fitdata)
 
-        # check for label and then do case specific range limitationexit()
+        # check for label and then do case specific range limitation
         if self._label == "gaus_pdec" or self._label == "gaus_expmod":
             maxpos = np.argmax(self._fitdata["y"])
             peakpos = self._fitdata["x"].values[maxpos]
