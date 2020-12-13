@@ -29,7 +29,7 @@ int filter(const char* Sfile, const char* Outfile, int hpar0 = 10, int hpar1 = 0
     ofstream myfile;
     myfile.open (Outfile);
     for(int i = 1; i < hpar0 +1; ++i){
-        myfile << hist1->GetBinCenter(i) << "\t" << hist1->GetBinContent(i) << "\t" << hist1->GetBinError(i) << "\n";
+        myfile << std::setprecision(9) <<  hist1->GetBinCenter(i) << "\t" << hist1->GetBinContent(i) << "\t" << hist1->GetBinError(i) << "\n";
     }
     myfile.close();
 
