@@ -52,8 +52,9 @@ class UnitTestRoot:
         assert p_res is not None
 
         if brel_dev:
-            assert (r_res != 0).sum() < 1
-            self.rel_dev = (abs(r_res - p_res)).mean() / r_res
+            assert (r_res != 0).prod() != 0
+
+            self.rel_dev = (abs(r_res - p_res)).mean() / r_res.mean()
             dev = self.rel_dev
         else:
             self.abs_dev = (abs(r_res - p_res)).mean()
@@ -64,13 +65,14 @@ class UnitTestRoot:
                 f"GREAT SUCCESS: Unit test passed for test:{self.test_label}. "
                 + f"(Abs_Diff is {dev} and needs to be below {self.MIN_ACC})"
             )
-            return 0
+            return True
         else:
             print(
                 f"FAILURE: Numbers do not match within precision:"
                 + f"{dev} > {self.MIN_ACC}"
             )
-            return 1
+            print(np.array([r_res, p_res]).T)
+            return False
 
     def test(self, brel_dev: bool = True, bprint: bool = False, bround: bool = False):
         """"""
