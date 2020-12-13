@@ -1,6 +1,6 @@
 
 
-int background_subtraction(const char* Sfile, int fitlim_low = 45e3, int fitlim_high = 52e3){
+int background_subtraction(const char* Sfile, const char* Outfile, int hpar0 = 10, int hpar1 = 0, int hpar2 = 10, int fitlim_low = 45e3, int fitlim_high = 52e3){
 
     //Import file
 	TFile* fsourceS = new TFile(Sfile);
@@ -13,8 +13,8 @@ int background_subtraction(const char* Sfile, int fitlim_low = 45e3, int fitlim_
 
     //Detector 0
 
-    TH1D* histSig = new TH1D("histSig", "histSig", 2000, 0, 52e3);
-    TH1D* histBg = new TH1D("histBg", "histSig", 2000, 0, 52e3);
+    TH1D* histSig = new TH1D("histSig", "histSig", hpar0, hpar1, hpar2);
+    TH1D* histBg = new TH1D("histBg", "histSig", hpar0, hpar1, hpar2);
     histSig->Sumw2();
     histBg->Sumw2();
 
@@ -28,8 +28,8 @@ int background_subtraction(const char* Sfile, int fitlim_low = 45e3, int fitlim_
 
     //Detector 1
 
-    TH1D* histSig1 = new TH1D("histSig1", "histSig1", 2000, 0, 52e3);
-    TH1D* histBg1 = new TH1D("histBg1", "histSig1", 2000, 0, 52e3);
+    TH1D* histSig1 = new TH1D("histSig1", "histSig1", hpar0, hpar1, hpar2);
+    TH1D* histBg1 = new TH1D("histBg1", "histSig1", hpar0, hpar1, hpar2);
     histSig1->Sumw2();
     histBg1->Sumw2();
 
@@ -64,9 +64,9 @@ int background_subtraction(const char* Sfile, int fitlim_low = 45e3, int fitlim_
     std::cout << p01 << "   " << p0_err1 << "   " << float(chi21)/float(ndf1) << std::endl;
 
     ofstream myfile;
-    myfile.open ("root_fitres.txt");
-    myfile << p0 << "\t" << p0_err << "\t" << float(chi2)/float(ndf) << "\n";
-    myfile << p01 << "\t" << p0_err1 << "\t" << float(chi21)/float(ndf1) << "\n";
+    myfile.open (Outfile);
+    myfile << std::setprecision(9) << p0 << "\t" << p0_err << "\t" << float(chi2)/float(ndf) << "\n";
+    myfile << std::setprecision(9) << p01 << "\t" << p0_err1 << "\t" << float(chi21)/float(ndf1) << "\n";
     myfile.close();
 
     gApplication->Terminate();
