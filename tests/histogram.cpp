@@ -6,7 +6,7 @@ int histogram(const char* Sfile, const char* Outfile, int hpar0 = 10, int hpar1 
     hist1->Sumw2();
     TH1D* hist2 = new TH1D("hist2", "hist2", hpar0, hpar1, hpar2);
     hist2->Sumw2();
-    int sum = 0;
+
     int x;
     ifstream inFile;
 

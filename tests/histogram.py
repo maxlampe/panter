@@ -30,8 +30,8 @@ class HistTestBasic(UnitTestRoot):
 
 
 file = "sample.txt"
-par = [5, 0, 15]
+par = [2, 0, 5]
 root_mac = "histogram.cpp"
 
 test = HistTestBasic(txtfile=file, params=par, root_macro=root_mac)
-test.test(False)
+test.test(False, True)
