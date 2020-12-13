@@ -31,11 +31,9 @@ def calc_weights(sample: np.array) -> np.array:
 
     weights = []
     for ent in sample:
-        if ent == 0.0:
-            weights.append(0.0000000000000000000000000001)
-            print("WARNING: Empty bin in weights calculation.")
-        else:
-            weights.append(ent ** (-1))
+        assert ent != 0., "ERROR: Empty bin in weights calculation."
+        weights.append(ent ** (-1))
+
     return np.array(weights)
 
 
@@ -217,6 +215,8 @@ class DoFit:
                 x=self._fitdata["x"],
                 weights=err_weights,
             )
+
+
 
         pval = 1.0 - chi2.cdf(self._fitresult.chisqr, self._fitresult.nfree)
         self._gof = {"rChi2": self._fitresult.redchi, "pval": pval}
