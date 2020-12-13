@@ -31,12 +31,19 @@ def ret_hist(
 ):
     """Create a histogram as pd.DataFrame from an input array."""
 
-    hist, binedge = np.histogram(data, bincount, (range_lowlim, range_uplim))
+    raw_bins = np.linspace(range_lowlim, range_uplim, bincount + 1)
+    use_bins = [np.array([-np.inf]), raw_bins, np.array([np.inf])]
+    use_bins = np.concatenate(use_bins)
+
+    hist, binedge = np.histogram(data, bins=use_bins)
+
     bincent = []
     for j in range(binedge.size - 1):
         bincent.append(0.5 * (binedge[j] + binedge[j + 1]))
 
-    return pd.DataFrame({"x": bincent, "y": hist, "err": np.sqrt(np.abs(hist))})
+    return pd.DataFrame(
+        {"x": bincent[1:-1], "y": hist[1:-1], "err": np.sqrt(np.abs(hist[1:-1]))}
+    )
 
 
 def filt_zeros(histdf: pd.DataFrame) -> pd.DataFrame:
