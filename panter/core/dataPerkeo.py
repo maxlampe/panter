@@ -41,15 +41,16 @@ def ret_hist(
     for j in range(binedge.size - 1):
         bincent.append(0.5 * (binedge[j] + binedge[j + 1]))
 
-    return pd.DataFrame(
-        {"x": bincent[1:-1], "y": hist[1:-1], "err": np.sqrt(np.abs(hist[1:-1]))}
-    )
+    hist = hist[1:-1]
+    bincent = bincent[1:-1]
+
+    return pd.DataFrame({"x": bincent, "y": hist, "err": np.sqrt(np.abs(hist))})
 
 
 def filt_zeros(histdf: pd.DataFrame) -> pd.DataFrame:
     """"""
 
-    filt = histdf["y"] == 0.0
+    filt = histdf["err"] != 0.0
     histdf = histdf[filt]
 
     return histdf
