@@ -50,7 +50,15 @@ par2 = [3, 0, 500, 1]
 root_mac = "filter.cpp"
 
 test_wo_filter = HistTestFilter(txtfile=file, params=par1, root_macro=root_mac)
-test_wo_filter.test(brel_dev=False, bprint=True)
+restult_wo_filter = test_wo_filter.test(brel_dev=False, bprint=True)
 
 test_wi_filter = HistTestFilter(txtfile=file, params=par2, root_macro=root_mac)
-test_wi_filter.test(brel_dev=False, bprint=True)
+restult_wi_filter = test_wi_filter.test(brel_dev=False, bprint=True)
+
+if not restult_wo_filter and not restult_wi_filter:
+    print(f"GREAT SUCCESS: Unit test passed with and without filter. ")
+else:
+    print(
+        f"FAILURE: Unit test not passed. Result with and without filter: "
+        + f"{restult_wo_filter} / {restult_wi_filter}"
+    )
