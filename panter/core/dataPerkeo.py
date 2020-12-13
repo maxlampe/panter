@@ -675,7 +675,9 @@ class RootPerkeo:
 
         return liste
 
-    def gen_hist(self, lpmt: list(int)):
+    def gen_hist(
+        self, lpmt: list(int), cust_hist_par: list = None, cust_histsum_par: list = None
+    ):
         """Generate histograms from pmt_data. Last function to call.
 
         Parameters
@@ -686,9 +688,17 @@ class RootPerkeo:
 
         detsum0 = (self.pmt_data[:8]).sum(axis=0)
         detsum1 = (self.pmt_data[8:]).sum(axis=0)
-        self.hist_sums[0] = HistPerkeo(detsum0, **self._histsum_par)
-        self.hist_sums[1] = HistPerkeo(detsum1, **self._histsum_par)
+        if cust_histsum_par is None:
+            self.hist_sums[0] = HistPerkeo(detsum0, **self._histsum_par)
+            self.hist_sums[1] = HistPerkeo(detsum1, **self._histsum_par)
+        else:
+            self.hist_sums[0] = HistPerkeo(detsum0, **cust_histsum_par)
+            self.hist_sums[1] = HistPerkeo(detsum1, **cust_histsum_par)
+
         for i in lpmt:
-            self.hists[i] = HistPerkeo(self.pmt_data[i], **self._hist_par)
+            if cust_hist_par is None:
+                self.hists[i] = HistPerkeo(self.pmt_data[i], **self._hist_par)
+            else:
+                self.hists[i] = HistPerkeo(self.pmt_data[i], **cust_hist_par)
 
         return 0
