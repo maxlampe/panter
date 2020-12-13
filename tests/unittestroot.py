@@ -9,7 +9,7 @@ class UnitTestRoot:
     """"""
 
     def __init__(self, test_label: str, params: dict, root_macro: str):
-        self.MIN_ACC = 0.000001
+        self.MIN_ACC = 0.00001
         self.rel_dev = None
         self.abs_dev = None
         self.test_label = test_label
@@ -74,8 +74,8 @@ class UnitTestRoot:
         root_res = self.do_root()
         panter_res = self.do_panter()
         if bprint:
-            print(root_res)
-            print(panter_res)
+            results = np.array([root_res, panter_res]).T
+            print(results)
         result = self.check(root_res, panter_res, brel_dev=brel_dev)
 
         return result
