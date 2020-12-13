@@ -44,9 +44,12 @@ class HistTestFit(UnitTestRoot):
         return super().do_root([self.txtfile], self.params)
 
 
-file = "sample.txt"
-par = [5, 0, 15, 0, 15]
-root_mac = "basicfit.cpp"
+def do_histtestfit():
+    """"""
 
-test = HistTestFit(txtfile=file, params=par, root_macro=root_mac)
-test.test(brel_dev=False, bprint=True)
+    file = "sample.txt"
+    par = [5, 0, 15, 0, 15]
+    root_mac = "basicfit.cpp"
+
+    test = HistTestFit(txtfile=file, params=par, root_macro=root_mac)
+    return test.test(brel_dev=False, bprint=True)

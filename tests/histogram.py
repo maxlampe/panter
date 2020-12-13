@@ -29,9 +29,12 @@ class HistTestBasic(UnitTestRoot):
         return super().do_root([self.txtfile], self.params)
 
 
-file = "sample.txt"
-par = [5, 0, 15]
-root_mac = "histogram.cpp"
+def do_histtestbasic():
+    """"""
 
-test = HistTestBasic(txtfile=file, params=par, root_macro=root_mac)
-test.test(False, True)
+    file = "sample.txt"
+    par = [5, 0, 15]
+    root_mac = "histogram.cpp"
+
+    test = HistTestBasic(txtfile=file, params=par, root_macro=root_mac)
+    return test.test(False)
