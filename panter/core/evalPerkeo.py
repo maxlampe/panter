@@ -193,6 +193,7 @@ class DoFit:
             self._fitparams,
             x=self._fitdata["x"],
             weights=err_weights,
+            scale_covar=False
         )
 
         if self._booldict["brecfit"]:
