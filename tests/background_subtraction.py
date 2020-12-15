@@ -1,38 +1,63 @@
-""""""
+"""Unit test for background subtraction in beta spec + fitting a constant to high E."""
 
-from tests.unittestroot import UnitTestRoot
 import configparser
-from panter.config import conf_path
-
 import numpy as np
+from panter.config import conf_path
 from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
 from panter.core.corrPerkeo import corrPerkeo
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
+from tests.unittestroot import UnitTestRoot
 
 
 class BackgroundFitTest(UnitTestRoot):
-    """"""
+    """Unit test class for background subtraction and constant fit.
 
-    def __init__(self, dirname: str, params: list, root_macro: str):
+    Inherits from UnitTestRoot. Takes root file of PERKEO beam measurement, creates
+    signal spectra via background subtraction and fits a constant to very high energies.
+    Runs over several files and only if unit test is passed for all files, it will
+    return a final pass.
+
+    Parameters
+    ----------
+    dirname : str
+        Name of data directory.
+    params: [int, float, float, float, float]
+        List of parameters to be used for histograms and fit:
+        [BinCounts, HistLowLim, HistUpLim, FitRangeLow, FitRangeUp]
+
+    Attributes
+    ----------
+    dataloader : DLPerkeo
+        Data loader for data directory.
+    files_2do : [900, 903]
+        Iterator for defining batches from data loader.
+    batch : np.array(MeasPerkeo)
+        Array of filtered MeasPerkeo from data loader.
+    """
+
+    def __init__(self, dirname: str, params: list):
+        self._dirname = dirname
+        self._root_macro = "background_subtraction.cpp"
         super().__init__(
-            test_label="BackgroundFitTest", params=params, root_macro=root_macro
+            test_label="BackgroundFitTest", params=params, root_macro=self._root_macro
         )
-        self.dirname = dirname
-        self.files_2do = 3
-        self.dataloader = DLPerkeo(self.dirname)
+
+        self.dataloader = DLPerkeo(self._dirname)
         self.dataloader.auto()
-        self.batches = self.dataloader.ret_filt_meas(["src"], [5])[
-            900 : 900 + self.files_2do
+        self.files_2do = [900, 903]
+        self.batch = self.dataloader.ret_filt_meas(["src"], [5])[
+            self.files_2do[0] : self.files_2do[1]
         ]
 
-    def do_root(self, filename: str):
-        return super().do_root([filename], self.params)
+    def _do_root(self, filename: str):
+        """Do ROOT evaluation part for the unit test."""
+        return super()._do_root([filename], self._params)
 
-    def do_panter(self, meas: MeasPerkeo):
-        """"""
+    def _do_panter(self, meas: MeasPerkeo):
+        """Do panter evaluation part for the unit test."""
 
-        fit_range = [self.params[3], self.params[4]]
+        fit_range = [self._params[3], self._params[4]]
         corr_class = corrPerkeo(meas)
         corr_class.corrections["Pedestal"] = False
         corr_class.corrections["RateDepElec"] = False
@@ -51,28 +76,28 @@ class BackgroundFitTest(UnitTestRoot):
 
         return np.asarray(panter_fitres)
 
-    def test(self):
-        """"""
+    def test(self) -> bool:
+        """Run this unit test."""
 
         results = []
-        for ind, meas in enumerate(self.batches):
+        for ind, meas in enumerate(self.batch):
             file = meas()[2][0]
-            root_res = self.do_root(file)
-            panter_res = self.do_panter(meas)
+            root_res = self._do_root(file)
+            panter_res = self._do_panter(meas)
 
-            results.append(super().check(root_res, panter_res))
+            results.append(super()._check(root_res, panter_res))
 
         no_passed = np.asarray(results).sum()
-        if no_passed == len(self.batches):
-            print(f"GREAT SUCCESS: Unit test passed for all {len(self.batches)} files.")
+        if no_passed == len(self.batch):
+            print(f"GREAT SUCCESS: Unit test passed for all {len(self.batch)} files.")
         else:
-            print(f"FAILURE: Only {no_passed} of {len(self.batches)} passed")
+            print(f"FAILURE: Only {no_passed} of {len(self.batch)} passed")
 
-        return no_passed == len(self.batches)
+        return no_passed == len(self.batch)
 
 
-def do_backgroundfittest():
-    """"""
+def do_backgroundfittest() -> bool:
+    """Run this unit test with hard coded, default parameters."""
 
     cnf = configparser.ConfigParser()
     cnf.read(f"{conf_path}/evalRaw.ini")
@@ -84,8 +109,7 @@ def do_backgroundfittest():
 
     dirname = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
     par = [histsum_par[0], histsum_par[1], histsum_par[2], 45000, 51500]
-    root_mac = "background_subtraction.cpp"
 
-    test = BackgroundFitTest(dirname=dirname, params=par, root_macro=root_mac)
+    test = BackgroundFitTest(dirname=dirname, params=par)
 
     return test.test()

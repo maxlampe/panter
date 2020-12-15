@@ -1,4 +1,4 @@
-""""""
+"""Module for running all unit tests of panter."""
 
 import numpy as np
 
@@ -9,7 +9,7 @@ from tests.background_subtraction import do_backgroundfittest
 
 
 def run_all():
-    """"""
+    """Running all unit tests for a global test of panter."""
 
     tests = [
         do_histtestbasic(),

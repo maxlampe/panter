@@ -17,7 +17,6 @@ import uproot
 
 from panter.config import conf_path
 
-
 # import global analysis parameters
 cnf = configparser.ConfigParser()
 cnf.read(f"{conf_path}/evalRaw.ini")
@@ -48,7 +47,7 @@ def ret_hist(
 
 
 def filt_zeros(histdf: pd.DataFrame) -> pd.DataFrame:
-    """"""
+    """Taking a pandas data frame and removing all entries where "err" = 0."""
 
     filt = histdf["err"] != 0.0
     histdf = histdf[filt]

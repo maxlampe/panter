@@ -1,5 +1,4 @@
-""""""
-
+"""Unit test for basic histogram creation, subtraction and fitting with errors."""
 
 import numpy as np
 import panter.core.dataPerkeo as dP
@@ -9,23 +8,42 @@ from tests.unittestroot import UnitTestRoot
 
 
 class HistTestFit(UnitTestRoot):
-    """"""
+    """Unit test class for basic histogram creation, subtraction and fitting.
 
-    def __init__(self, txtfile: str, params: dict, root_macro: str):
-        super().__init__(test_label="HistTestFit", params=params, root_macro=root_macro)
-        self.txtfile = txtfile
+    Inherited from base class UnitTestRoot.
+
+    Parameters
+    ----------
+    txtfile: str
+        Name of sample txt file with data to fill the histogram with.
+    params: [int, float, float, float, float]
+        List of parameters to be used for histograms and fit:
+        [BinCounts, HistLowLim, HistUpLim, FitRangeLow, FitRangeUp]
+    """
+
+    def __init__(self, txtfile: str, params: list):
+        self._txtfile = txtfile
         self.hist_par = params[0:3]
         self.fit_par = params[3:]
+        self._root_macro = "basicfit.cpp"
+        super().__init__(
+            test_label="HistTestFit", params=params, root_macro=self._root_macro
+        )
 
-    def do_panter(self):
-        data_raw = open(self.txtfile).read().split()
+    def _do_root(self):
+        """Do ROOT evaluation part for the unit test."""
+        return super()._do_root([self._txtfile], self._params)
+
+    def _do_panter(self):
+        """Do panter evaluation part for the unit test."""
+
+        data_raw = open(self._txtfile).read().split()
         data_raw = list(map(float, data_raw))
 
         hpanter1 = dP.HistPerkeo(*[data_raw, *self.hist_par])
         hpanter2 = dP.HistPerkeo(*[np.array(data_raw) + 2, *self.hist_par])
         hpanter1.addhist(hpanter2, -0.5)
 
-        # do fit on hpanter1
         fitclass = eP.DoFit(hpanter1.hist)
         fitclass.setup(eFS.pol0)
         fitclass.limitrange(self.fit_par)
@@ -40,16 +58,12 @@ class HistTestFit(UnitTestRoot):
 
         return np.asarray(panter_fitres)
 
-    def do_root(self):
-        return super().do_root([self.txtfile], self.params)
 
-
-def do_histtestfit():
-    """"""
+def do_histtestfit() -> bool:
+    """Run this unit test with hard coded, default parameters."""
 
     file = "sample.txt"
     par = [5, 0, 15, 0, 15]
-    root_mac = "basicfit.cpp"
 
-    test = HistTestFit(txtfile=file, params=par, root_macro=root_mac)
+    test = HistTestFit(txtfile=file, params=par)
     return test.test(brel_dev=False, bprint=True)

@@ -1,14 +1,13 @@
-"""Module for correcting Perkeo data."""
+"""Module for correcting PERKEO data."""
 
 import configparser
 import numpy as np
-import panter.core.dataPerkeo as dP
-from panter.core.dataloaderPerkeo import DLPerkeo
-
 import subprocess
 import uproot
+import panter.core.dataPerkeo as dP
 import panter.core.evalFunctions as eF
 import panter.core.evalPerkeo as eP
+from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.core import core_path
 from panter.config import conf_path
 from panter.config.params import delt_pmt
@@ -35,7 +34,31 @@ BEAM_MEAS_TIME = {
 
 
 class corrPerkeo:
-    """"""
+    """Class for doing correction on PERKEO data.
+
+    Takes a data loader and corrects all entries in it.
+
+    Parameters
+    ----------
+    dataloader: DLPerkeo
+
+    Attributes
+    ----------
+    corrections : {"Pedestal": True, "RateDepElec": False}
+    histograms : []
+        List to store created histograms to, if bstore=True in self.corr()
+
+    Examples
+    --------
+    Can be used to just calculate background subtracted data. If corrections were to be
+    set to True, data would be individually corrected and then background subtracted.
+
+    >>> meas = DLPerkeo()
+    >>> corr_class = corrPerkeo(meas)
+    >>> corr_class.corrections["Pedestal"] = False
+    >>> corr_class.corrections["RateDepElec"] = False
+    >>> corr_class.corr(bstore=True, bwrite=False)
+    """
 
     def __init__(self, dataloader: DLPerkeo):
         self._dataloader = dataloader
@@ -44,10 +67,10 @@ class corrPerkeo:
         self.corrections = {"Pedestal": True, "RateDepElec": False}
         self.histograms = []
 
-    def __calc_detsum(
+    def _calc_detsum(
         self, vals: list, start_it: int = 0
     ) -> [dP.HistPerkeo, dP.HistPerkeo]:
-        """Calculate the detsum for list of ADC values."""
+        """Calculate the DetSum for list of ADC values."""
 
         detsum0 = np.array(vals[:8]).sum(axis=0)[start_it:]
         detsum1 = np.array(vals[8:]).sum(axis=0)[start_it:]
@@ -56,12 +79,12 @@ class corrPerkeo:
 
         return [hist0, hist1]
 
-    def __set_corr(self):
-        """Activate corrections from list"""
+    def _set_corr(self):
+        """Activate corrections from list."""
         pass
 
-    def __filt_data(self, data: dP.RootPerkeo, bbeam=False, key=""):
-        """"""
+    def _filt_data(self, data: dP.RootPerkeo, bbeam=False, key=""):
+        """Filter data set."""
 
         data.info()
         if bbeam:
@@ -75,7 +98,7 @@ class corrPerkeo:
 
         return 0
 
-    def __calc_corr(self, data: dP.RootPerkeo):
+    def _calc_corr(self, data: dP.RootPerkeo):
         """Calculate corrected amplitude for each event and file."""
 
         pedestals = [[0]] * data.no_pmts
@@ -97,13 +120,13 @@ class corrPerkeo:
                     ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
                 )
 
-        hist_old = self.__calc_detsum(data.pmt_data)
-        hist_new = self.__calc_detsum(ampl_corr)
+        hist_old = self._calc_detsum(data.pmt_data)
+        hist_new = self._calc_detsum(ampl_corr)
 
         return [[hist_old, hist_new], data.cy_valid_no]
 
-    def __corr_beam(self, ev_file: list):
-        """"""
+    def _corr_beam(self, ev_file: list):
+        """Correct beam-like data (i.e. background in same file)."""
 
         res = []
         data_sg = dP.RootPerkeo(ev_file[0])
@@ -111,8 +134,8 @@ class corrPerkeo:
         data_dict = {"sg": data_sg, "bg": data_bg}
 
         for (key, data) in data_dict.items():
-            self.__filt_data(data, bbeam=True, key=key)
-            r, s = self.__calc_corr(data)
+            self._filt_data(data, bbeam=True, key=key)
+            r, s = self._calc_corr(data)
             res.append(r)
 
         fac = (self._beam_mtime["sg"][1] - self._beam_mtime["sg"][0]) / (
@@ -128,17 +151,17 @@ class corrPerkeo:
 
         return [res_old, res_new]
 
-    def __corr_src(self, ev_files: list):
-        """"""
+    def _corr_src(self, ev_files: list):
+        """Correct source-like data (i.e. background in different file)."""
 
         res = []
         scal = []
 
         for file_name in ev_files:
             data = dP.RootPerkeo(file_name)
-            self.__filt_data(data)
+            self._filt_data(data)
 
-            r, s = self.__calc_corr(data)
+            r, s = self._calc_corr(data)
             res.append(r)
             scal.append(s)
 
@@ -152,7 +175,15 @@ class corrPerkeo:
         return [res_old, res_new]
 
     def corr(self, bstore: bool = False, bwrite: bool = True):
-        """"""
+        """Correcting data according to chosen settings.
+
+        Parameters
+        ----------
+         bstore: False
+            Bool whether to append created histograms in self.histograms
+         bwrite: True
+            Bool whether to write created histograms to a ROOT file.
+        """
 
         if not bwrite and not bstore:
             print("WARNING: Doing nothing with data ")
@@ -184,9 +215,9 @@ class corrPerkeo:
                 src_name = f"Src{src}"
 
             if tp == 0:
-                [hist_o, hist_n] = self.__corr_beam(files)
+                [hist_o, hist_n] = self._corr_beam(files)
             elif tp == 1:
-                [hist_o, hist_n] = self.__corr_src(files)
+                [hist_o, hist_n] = self._corr_src(files)
 
             if bwrite:
                 out_file_old = uproot.recreate(f"int_old.root")
