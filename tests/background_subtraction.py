@@ -108,7 +108,7 @@ def do_backgroundfittest() -> bool:
     ]
 
     dirname = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-    par = [histsum_par[0], histsum_par[1], histsum_par[2], 45000, 51500]
+    par = [histsum_par[0], histsum_par[1], histsum_par[2], 48000, 51500]
 
     test = BackgroundFitTest(dirname=dirname, params=par)
 
