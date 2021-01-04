@@ -73,7 +73,7 @@ class DoFit:
         self._label = None
         self._booldict = None
         self._fitrange = None
-        self.plotrange = None
+        self.plotrange = {"x": None, "y": None}
         self._initvals = None
         self._fitfunc = None
         self._fitmodel = None
@@ -294,8 +294,10 @@ class DoFit:
         axs[0].set_title(self.plot_labels[0])
 
         axs.flat[0].set(ylabel=self.plot_labels[2])
-        if self.plotrange is not None:
-            axs[0].set_xlim(self.plotrange)
+        if self.plotrange["x"] is not None:
+            axs[0].set_xlim(self.plotrange["x"])
+        if self.plotrange["y"] is not None:
+            axs[0].set_ylim(self.plotrange["y"])
 
         axs[0].errorbar(self._data["x"], self._data["y"], self._data["err"], fmt=".")
 

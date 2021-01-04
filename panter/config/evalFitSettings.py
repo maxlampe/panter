@@ -24,7 +24,7 @@ class FitSetting:
         Parameter range fit limits by keyword.
     fitfunc : function
     fitrange : [float, float]
-    plotrange : [float, float]
+    plotrange : {"x": float, "y": float}
     plot_labels : [str, str, str]
         (PlotLabel, XLabel, YLabel)
     """
@@ -42,7 +42,7 @@ class FitSetting:
         self.param_limit = None
         self.fitfunc = None
         self.fitrange = None
-        self.plotrange = None
+        self.plotrange = {"x": None, "y": None}
         self.plot_labels = None
 
 
