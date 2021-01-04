@@ -66,6 +66,7 @@ class corrPerkeo:
         self._beam_mtime = BEAM_MEAS_TIME
         self.corrections = {"Pedestal": True, "RateDepElec": False}
         self.histograms = []
+        self.corr_deadtime = True
 
     def _calc_detsum(
         self, vals: list, start_it: int = 0
@@ -123,6 +124,11 @@ class corrPerkeo:
         hist_old = self._calc_detsum(data.pmt_data)
         hist_new = self._calc_detsum(ampl_corr)
 
+        if self.corr_deadtime:
+            for det in [0, 1]:
+                hist_old[det].scal(data.dt_fac[det])
+                hist_new[det].scal(data.dt_fac[det])
+
         return [[hist_old, hist_new], data.cy_valid_no]
 
     def _corr_beam(self, ev_file: list):
@@ -138,13 +144,14 @@ class corrPerkeo:
             r, s = self._calc_corr(data)
             res.append(r)
 
-        fac = (self._beam_mtime["sg"][1] - self._beam_mtime["sg"][0]) / (
-            self._beam_mtime["bg"][1] - self._beam_mtime["bg"][0]
-        )
+        fac = [
+            (self._beam_mtime["sg"][1] - self._beam_mtime["sg"][0])
+            / (self._beam_mtime["bg"][1] - self._beam_mtime["bg"][0])
+        ] * 2
 
         for det in [0, 1]:
-            res[0][0][det].addhist(res[1][0][det], -fac)
-            res[0][1][det].addhist(res[1][1][det], -fac)
+            res[0][0][det].addhist(res[1][0][det], -fac[0])
+            res[0][1][det].addhist(res[1][1][det], -fac[1])
 
         res_old = [res[0][0][0], res[0][0][1]]
         res_new = [res[0][1][0], res[0][1][1]]
