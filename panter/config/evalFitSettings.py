@@ -142,3 +142,9 @@ pol1.label = "pol1"
 pol1.fitfunc = eF.f_p1
 pol1.initvals = {"c0": 0.0, "c1": 1.0}
 pol1.paramvary = [True] * len(pol1.initvals)
+
+pol2 = FitSetting()
+pol2.label = "pol2"
+pol2.fitfunc = eF.f_p2
+pol2.initvals = {"c0": 0.0, "c1": 1.0, "c2": 1.0}
+pol2.paramvary = [True] * len(pol2.initvals)
