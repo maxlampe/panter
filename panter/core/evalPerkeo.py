@@ -657,6 +657,7 @@ class PedPerkeo:
             "up_lim": int(cnf["dataPerkeo"]["PED_hist_max"]),
         }
         self._pedvalues = np.asarray(self.calc_ped())
+        self.ped_hists = None
 
     def calc_ped(self):
         """Calculating pedestals"""
@@ -688,7 +689,7 @@ class PedPerkeo:
                     fitclass = DoFit(histogram)
                     fitclass.setup(eFS.gaus_gen)
                     fitclass.set_fitparam(namekey="mu", valpar=0.0)
-                    # fitclass.set_bool("boutput", True)
+                    fitclass.set_bool("boutput", True)
                     fitclass.fit()
                     ped_list[ind_hist] = [
                         fitclass.ret_results().params["mu"].value,
@@ -696,6 +697,9 @@ class PedPerkeo:
                         np.abs(fitclass.ret_results().params["sig"].value),
                         fitclass.ret_results().params["sig"].stderr,
                     ]
+
+        self.ped_hists = ped_hists
+        print(self.ped_hists)
 
         return ped_list
 
