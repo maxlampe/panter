@@ -273,9 +273,17 @@ class RootPerkeo:
         List of arrays with all PMT data after generation with filters
     dptt : array
         Array to store DeltaPrevTriggerTime values for files without it.
+    val_rtime : float
+        Valid measurement time. After cycles are filtered, measurement time is summed up
+        for remaining cycles. None on instantiation.
+    dt_fac : [float, float]
+        Dead time correction factor to correct number of detected events.
+        n_true = n_meas * dt_fac. None on instantiation.
+    deadtime : float
+        Dead time value from measurement. Imported from ini file (evalRaw.ini).
     stats : dict of lists
         Dictionary for PMT statistics: mean, stddev, max xval, 'active'
-        for each PMT (array in pmt_data).
+        for each PMT (array in pmt_data). None on instantiation.
     _pmt_thres : int
         Virtual threshhold for mean of a PMT data array to be
         considered 'active'. Has no effect outside this label. Is for
@@ -346,6 +354,9 @@ class RootPerkeo:
 
         self.pmt_data = None
         self.dptt = None
+        self.val_rtime = None
+        self.dt_fac = None
+        self.deadtime = float(cnf["dataPerkeo"]["DeadTime"])
         self.stats = None
         self._pmt_thres = float(cnf["dataPerkeo"]["PMT_Thres"])
         self.hists = None
@@ -550,6 +561,22 @@ class RootPerkeo:
 
         return 0
 
+    def calc_times(self):
+        """Calculate total measurement time and dead time correction factor."""
+
+        dtime0 = (self.file["cycleTree"].array("DeadTime1") * self._cy_valid).sum()
+        dtime1 = (self.file["cycleTree"].array("DeadTime2") * self._cy_valid).sum()
+        self.val_rtime = (self.file["cycleTree"].array("RealTime") * self._cy_valid).sum()
+
+        uncorr_rate = self._ev_valid_no / self.val_rtime * 1e8
+        corr_rate = uncorr_rate / (1. - uncorr_rate * self.deadtime)
+        print(f"Raw Rate\t{uncorr_rate}\t\tDead time corrected Rate\t{corr_rate}")
+        dt_fac0 = 1. / (1. - dtime0 / self.val_rtime)
+        dt_fac1 = 1. / (1. - dtime1 / self.val_rtime)
+        self.dt_fac = [dt_fac0, dt_fac1]
+
+        return 0
+
     def gen_pmtdata(self):
         """Generate pmt_data according to calc filter arrays."""
 
@@ -666,6 +693,7 @@ class RootPerkeo:
             if setfiltmode == 2:
                 self.clear_filt()
         self.calc_filt()
+        self.calc_times()
         self.gen_pmtdata()
         self.gen_dptt()
         self.calc_stats()
