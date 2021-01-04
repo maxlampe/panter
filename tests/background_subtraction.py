@@ -66,6 +66,7 @@ class BackgroundFitTest(UnitTestRoot):
         panter_fitres = []
         for hist in corr_class.histograms[0, 0]:
             fitclass = eP.DoFit(hist.hist)
+            # hist.plt([48000, 51500, -40, 40])
             fitclass.setup(eFS.pol0)
             fitclass.limitrange([fit_range[0], fit_range[1]])
             fitres = fitclass.fit()
@@ -84,7 +85,7 @@ class BackgroundFitTest(UnitTestRoot):
             file = meas()[2][0]
             root_res = self._do_root(file)
             panter_res = self._do_panter(meas)
-
+            # print(panter_res)
             results.append(super()._check(root_res, panter_res))
 
         no_passed = np.asarray(results).sum()
@@ -113,3 +114,6 @@ def do_backgroundfittest() -> bool:
     test = BackgroundFitTest(dirname=dirname, params=par)
 
     return test.test()
+
+
+# do_backgroundfittest()
