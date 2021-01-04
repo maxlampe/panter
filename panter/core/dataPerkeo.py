@@ -564,7 +564,7 @@ class RootPerkeo:
     def calc_times(self):
         """Calculate total measurement time and dead time correction factor.
 
-        Uses formula for non-paralyzable analysis."""
+        Uses formula for non-paralyzable analysis. Prints corrected total rate."""
 
         dtime0 = (self.file["cycleTree"].array("DeadTime1") * self._cy_valid).sum()
         dtime1 = (self.file["cycleTree"].array("DeadTime2") * self._cy_valid).sum()
