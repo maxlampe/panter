@@ -18,6 +18,7 @@ def run_all():
         do_backgroundfittest(),
     ]
 
+    print(tests)
     assert np.asarray(tests).sum() == len(tests)
 
     print("GREAT SUCCESS. \nAll unit tests passed. \nVERY NICE. ")

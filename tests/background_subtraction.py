@@ -59,6 +59,7 @@ class BackgroundFitTest(UnitTestRoot):
 
         fit_range = [self._params[3], self._params[4]]
         corr_class = corrPerkeo(meas)
+        corr_class.corr_deadtime = False
         corr_class.corrections["Pedestal"] = False
         corr_class.corrections["RateDepElec"] = False
         corr_class.corr(bstore=True, bwrite=False)
