@@ -136,6 +136,21 @@ class HistPerkeo:
 
         return 0
 
+    def scal(self, fac: float):
+        """Scale histogram by a factor."""
+
+        newhist = pd.DataFrame(
+            {
+                "x": self.hist["x"],
+                "y": (self.hist["y"] * fac),
+                "err": np.sqrt((fac * self.hist["err"]) ** 2),
+            }
+        )
+        # Changes input ret_hist like in Root
+        self.hist = newhist
+
+        return 0
+
     def ret_asnumpyhist(self):
         """Return histogram in np.histogram format from current histogram.
 
@@ -568,13 +583,15 @@ class RootPerkeo:
 
         dtime0 = (self.file["cycleTree"].array("DeadTime1") * self._cy_valid).sum()
         dtime1 = (self.file["cycleTree"].array("DeadTime2") * self._cy_valid).sum()
-        self.val_rtime = (self.file["cycleTree"].array("RealTime") * self._cy_valid).sum()
+        self.val_rtime = (
+            self.file["cycleTree"].array("RealTime") * self._cy_valid
+        ).sum()
 
         uncorr_rate = self._ev_valid_no / self.val_rtime * 1e8
-        corr_rate = uncorr_rate / (1. - uncorr_rate * self.deadtime)
+        corr_rate = uncorr_rate / (1.0 - uncorr_rate * self.deadtime)
         print(f"Raw Rate\t{uncorr_rate}\t\tDead time corrected Rate\t{corr_rate}")
-        dt_fac0 = 1. / (1. - dtime0 / self.val_rtime)
-        dt_fac1 = 1. / (1. - dtime1 / self.val_rtime)
+        dt_fac0 = 1.0 / (1.0 - dtime0 / self.val_rtime)
+        dt_fac1 = 1.0 / (1.0 - dtime1 / self.val_rtime)
         self.dt_fac = [dt_fac0, dt_fac1]
 
         return 0
