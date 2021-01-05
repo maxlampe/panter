@@ -239,18 +239,22 @@ class FiltPerkeo:
     type : str
         Filter type for safety handling: 'bool', 'num' or special
         type 'cyc'
-    lowerlimit, upperlimit: float
+    low_lim, up_lim: float
         Filter range for 'num' type filter
     rightval
         Value for 'bool' type filter to check quality for
+    index
+        index to be used, e.g. CoinTime[index]
     """
 
-    def __init__(self, active: bool, ftype: str):
-        self.active = active
-        self.ftype = ftype
-        self.lowerlimit = None
-        self.upperlimit = None
-        self.rightval = None
+    def __init__(self, low_lim=None, up_lim=None, rightval=None, index=None, **kwargs):
+        self.active = kwargs["active"]
+        self.ftype = kwargs["ftype"]
+        self.fkey = kwargs["fkey"]
+        self.low_lim = low_lim
+        self.up_lim = up_lim
+        self.rightval = rightval
+        self.index = index
 
 
 class RootPerkeo:
@@ -326,9 +330,14 @@ class RootPerkeo:
             data.auto()
         else:
             data.set_filtdef()
-            data.datafilter['DeltaTriggerTime'].active = True
-            data.datafilter['DeltaTriggerTime'].upperlimit = ()
-            data.datafilter['DeltaTriggerTime'].lowerlimit = ()
+            data.set_filt(
+                "data",
+                fkey="DeltaTriggerTime",
+                active=True,
+                ftype="num",
+                low_lim=x,
+                up_lim=y,
+            )
             data.auto(1)
     >>> data.gen_hist(data.ret_actpmt())
     >>> dtt = 0.01 * data.ret_array_by_key("DeltaTriggerTime") # [mus]
@@ -349,23 +358,8 @@ class RootPerkeo:
         self._ev_valid_no = None
         self.cy_valid_no = None
 
-        self.cyclefilter = {
-            "Cycle": FiltPerkeo(False, "num"),
-            "Valid": FiltPerkeo(True, "bool"),
-            "ChopperSpeed": FiltPerkeo(False, "num"),
-        }
-        self.datafilter = {
-            "Cycle": FiltPerkeo(True, "cyc"),
-            "PMT": FiltPerkeo(False, "num"),
-            "DetSum": FiltPerkeo(False, "num"),
-            "Detector": FiltPerkeo(False, "bool"),
-            "CoinTime": FiltPerkeo(False, "num"),
-            "TDC": FiltPerkeo(False, "num"),
-            "DeltaPrevTriggerTime": FiltPerkeo(False, "num"),
-            "DeltaTriggerTime": FiltPerkeo(False, "num"),
-            "DeltaCoinTime": FiltPerkeo(False, "num"),
-            "EventNumber": FiltPerkeo(False, "num"),
-        }
+        self.cyclefilter = []
+        self.datafilter = []
 
         self.pmt_data = None
         self.dptt = None
@@ -416,11 +410,11 @@ class RootPerkeo:
         """Print current filter settings."""
 
         print("---\t cycleTree filters: \t ---")
-        for i in self.cyclefilter:
-            print(i, "\t\t", self.cyclefilter[i].active)
+        for filt in self.cyclefilter:
+            print(filt.fkey, "\t\t", filt.active)
         print("---\t dataTree filters: \t ---")
-        for i in self.datafilter:
-            print(i, "\t\t", self.datafilter[i].active)
+        for filt in self.datafilter:
+            print(filt.fkey, "\t\t", filt.active)
 
         return 0
 
@@ -438,18 +432,16 @@ class RootPerkeo:
 
         print("---\t Applying cycleTree filters: \t ---")
         start_time = time.time()
-        for i in self.cyclefilter:
-            if self.cyclefilter[i].active:
+        for filt in self.cyclefilter:
+            if filt.active:
                 last_valcycles = self._cy_valid
-                arr = self.file["cycleTree"].array(i)
+                arr = self.file["cycleTree"].array(filt.fkey)
 
-                if self.cyclefilter[i].ftype == "bool":
-                    self._cy_valid = arr == self.cyclefilter[i].rightval
+                if filt.ftype == "bool":
+                    self._cy_valid = arr == filt.rightval
 
-                elif self.cyclefilter[i].ftype == "num":
-                    self._cy_valid = (arr >= self.cyclefilter[i].lowerlimit) == (
-                        arr < self.cyclefilter[i].upperlimit
-                    )
+                elif filt.ftype == "num":
+                    self._cy_valid = (arr >= filt.low_lim) == (arr < filt.up_lim)
 
                 else:
                     print("ERROR: Invalid filter type.", " Filter cannot be applied.")
@@ -469,7 +461,9 @@ class RootPerkeo:
 
         if self.cy_valid_no == self._cy_no:
             print("All cycles valid. Deactivate data cycle filter")
-            self.datafilter["Cycle"].active = False
+            for filt in self.datafilter:
+                if filt.fkey == "Cycle":
+                    filt.active = False
 
         return 0
 
@@ -479,16 +473,16 @@ class RootPerkeo:
         print("---\t Applying dataTree filters: \t ---")
 
         start_time = time.time()
-        for i in self.datafilter:
-            if self.datafilter[i].active:
+        for filt in self.datafilter:
+            if filt.active:
                 last_valevents = self._ev_valid
-                if i == "DeltaPrevTriggerTime" and not self._bDPTT:
+                if filt.fkey == "DeltaPrevTriggerTime" and not self._bDPTT:
                     print("Doing DeltaPrevTriggerTime filter manually.")
                     arr = self.dptt
                 else:
-                    arr = self.file["dataTree"].array(i)
+                    arr = self.file["dataTree"].array(filt.fkey)
 
-                if self.datafilter[i].ftype == "cyc":
+                if filt.ftype == "cyc":
                     print("Applying cycle filter in dataTree")
 
                     cycarr = self.file["cycleTree"].array("Cycle")
@@ -503,20 +497,20 @@ class RootPerkeo:
                             res *= int2
                     self._ev_valid = res
 
-                elif self.datafilter[i].ftype == "bool":
+                elif filt.ftype == "bool":
                     print(
                         "Applying bool filter for:\t",
-                        i,
+                        filt.fkey,
                         "\t desired value:\t",
-                        self.datafilter[i].rightval,
+                        filt.rightval,
                     )
-                    self._ev_valid = arr == self.datafilter[i].rightval
+                    self._ev_valid = arr == filt.rightval
 
-                elif self.datafilter[i].ftype == "num":
-                    print("Applying number filter for:\t", i)
-                    self._ev_valid = (arr >= self.datafilter[i].lowerlimit) == (
-                        arr < self.datafilter[i].upperlimit
-                    )
+                elif filt.ftype == "num":
+                    print("Applying number filter for:\t", filt.fkey)
+                    if filt.index is not None:
+                        arr = arr[:, filt.index]
+                    self._ev_valid = (arr >= filt.low_lim) == (arr < filt.up_lim)
 
                 else:
                     print(
@@ -550,14 +544,22 @@ class RootPerkeo:
 
         return 0
 
+    def set_filt(self, tree: str, **kwargs):
+        """Set filter"""
+
+        if tree == "data":
+            self.datafilter.append(FiltPerkeo(**kwargs))
+        if tree == "cycle":
+            self.cyclefilter.append(FiltPerkeo(**kwargs))
+
+        return 0
+
     def clear_filt(self):
         """Set all filters to inactive. Data needs to be refiltered."""
 
         print("---\t Clearing all filters: \t ---")
-        for i in self.cyclefilter:
-            self.cyclefilter[i].active = False
-        for i in self.datafilter:
-            self.datafilter[i].active = False
+        self.cyclefilter.clear()
+        self.datafilter.clear()
 
         return 0
 
@@ -565,14 +567,9 @@ class RootPerkeo:
         """Set filter default settings: filter invalid cycles only."""
 
         print("---\t Clearing all filters and set to default: \t ---")
-        for i in self.cyclefilter:
-            self.cyclefilter[i].active = False
-        for i in self.datafilter:
-            self.datafilter[i].active = False
-
-        self.datafilter["Cycle"].active = True
-        self.cyclefilter["Valid"].active = True
-        self.cyclefilter["Valid"].rightval = True
+        self.clear_filt()
+        self.set_filt("cycle", fkey="Valid", active=True, ftype="bool", rightval=True)
+        self.set_filt("data", fkey="Cycle", active=True, ftype="cyc")
 
         return 0
 

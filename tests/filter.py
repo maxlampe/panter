@@ -37,9 +37,14 @@ class HistTestFilter(UnitTestRoot):
         data.info()
         if self._bfilter:
             data.set_filtdef()
-            data.datafilter["DeltaTriggerTime"].active = True
-            data.datafilter["DeltaTriggerTime"].upperlimit = 380e3
-            data.datafilter["DeltaTriggerTime"].lowerlimit = 650e3
+            data.set_filt(
+                "data",
+                fkey="DeltaTriggerTime",
+                active=True,
+                ftype="num",
+                low_lim=380e3,
+                up_lim=650e3,
+            )
             data.auto(1)
         else:
             data.auto()

@@ -90,9 +90,14 @@ class corrPerkeo:
         data.info()
         if bbeam:
             data.set_filtdef()
-            data.datafilter["DeltaTriggerTime"].active = True
-            data.datafilter["DeltaTriggerTime"].upperlimit = self._beam_mtime[key][1]
-            data.datafilter["DeltaTriggerTime"].lowerlimit = self._beam_mtime[key][0]
+            data.set_filt(
+                "data",
+                fkey="DeltaTriggerTime",
+                active=True,
+                ftype="num",
+                low_lim=self._beam_mtime[key][0],
+                up_lim=self._beam_mtime[key][1],
+            )
             data.auto(1)
         else:
             data.auto()
