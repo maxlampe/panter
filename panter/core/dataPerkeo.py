@@ -492,7 +492,6 @@ class RootPerkeo:
                     print("Applying cycle filter in dataTree")
 
                     cycarr = self.file["cycleTree"].array("Cycle")
-
                     res = True
                     for k, cycval in enumerate(cycarr):
                         # check if cycle invalid
@@ -526,6 +525,7 @@ class RootPerkeo:
                     )
                     sys.exit(1)
                 self._ev_valid = last_valevents * self._ev_valid
+
         end_time = time.time()
         print(f"Time taken for data Filt: {end_time - start_time:0.5f} s")
         self._ev_valid_no = int(self._ev_valid.sum())
@@ -683,7 +683,7 @@ class RootPerkeo:
 
         return 0
 
-    def auto(self, setfiltmode: int = 0):
+    def auto(self, set_mode: int = 0):
         """Run functions in correct order to get data out of file.
 
         This function calls all other necessary functions in
@@ -692,7 +692,7 @@ class RootPerkeo:
 
         Parameters
         ----------
-        setfiltmode: int
+        set_mode: int
             0 = use default settings (only filter invalid cycles/events)
             2 = ignore all filters and use raw data
             any other int = use set filters (before running this)
@@ -706,10 +706,10 @@ class RootPerkeo:
         else:
             print("DPTT doesnt exist. Is calculated.")
             self.calc_dptt()
-        if setfiltmode == 0:
+        if set_mode == 0:
             self.set_filtdef()
         else:
-            if setfiltmode == 2:
+            if set_mode == 2:
                 self.clear_filt()
         self.calc_filt()
         self.calc_times()
