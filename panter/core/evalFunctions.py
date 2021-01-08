@@ -122,3 +122,8 @@ def calc_Acorr_ratedep(
 
     A_meas = np.array(A_meas, dtype=float)
     return A_meas + exp_dec(t_1, A_1 * delta, k)
+
+
+def trigger_func(x: float, a: float, p: float):
+    """Effective trigger model function according to [Mun06]"""
+    return 1.0 - (1.0 - p) ** (a * x) * (1.0 + (a * p * x) / (1.0 - p))

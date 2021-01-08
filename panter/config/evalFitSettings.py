@@ -148,3 +148,9 @@ pol2.label = "pol2"
 pol2.fitfunc = eF.f_p2
 pol2.initvals = {"c0": 0.0, "c1": 1.0, "c2": 1.0}
 pol2.paramvary = [True] * len(pol2.initvals)
+
+trigger_func = FitSetting()
+trigger_func.label = "trigger_func"
+trigger_func.fitfunc = eF.trigger_func
+trigger_func.initvals = {"a": 0.32, "p": 0.78}
+trigger_func.paramvary = [True] * len(trigger_func.initvals)
