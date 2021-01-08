@@ -52,6 +52,10 @@ def filt_zeros(histdf: pd.DataFrame) -> pd.DataFrame:
     filt = histdf["err"] != 0.0
     histdf = histdf[filt]
 
+    assert not histdf["x"].isnull().values.any()
+    assert not histdf["y"].isnull().values.any()
+    assert not histdf["err"].isnull().values.any()
+
     return histdf
 
 
