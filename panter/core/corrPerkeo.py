@@ -47,6 +47,9 @@ class corrPerkeo:
     corrections : {"Pedestal": True, "RateDepElec": False}
     histograms : []
         List to store created histograms to, if bstore=True in self.corr()
+    addition_filters: []
+        List of individual entries to be used as filters with data
+        RootPerkeo.set_filt() in _filt_data().
 
     Examples
     --------
@@ -67,6 +70,7 @@ class corrPerkeo:
         self.corrections = {"Pedestal": True, "RateDepElec": False}
         self.histograms = []
         self.corr_deadtime = True
+        self.addition_filters = []
 
     def _calc_detsum(
         self, vals: list, start_it: int = 0
@@ -98,9 +102,18 @@ class corrPerkeo:
                 low_lim=self._beam_mtime[key][0],
                 up_lim=self._beam_mtime[key][1],
             )
+            if len(self.addition_filters) != 0:
+                for entry in self.addition_filters:
+                    data.set_filt(**entry)
             data.auto(1)
         else:
-            data.auto()
+            if len(self.addition_filters) != 0:
+                data.set_filtdef()
+                for entry in self.addition_filters:
+                    data.set_filt(**entry)
+                data.auto(1)
+            else:
+                data.auto()
 
         return 0
 
