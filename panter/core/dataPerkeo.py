@@ -136,6 +136,34 @@ class HistPerkeo:
 
         return 0
 
+    def divbyhist(self, hist_p: HistPerkeo):
+        """Divide by another histogram."""
+
+        hist_par = [self.bin_count, self.low_lim, self.up_lim]
+        hist_par_2add = [hist_p.bin_count, hist_p.low_lim, hist_p.up_lim]
+        assert hist_par == hist_par_2add, "ERROR: Binning does not match."
+
+        filt = hist_p.hist["y"] != 0.0
+        hist_p.hist = hist_p.hist[filt]
+        self.hist = self.hist[filt]
+
+        newhist = pd.DataFrame(
+            {
+                "x": self.hist["x"],
+                "y": (self.hist["y"] / hist_p.hist["y"]),
+                "err": np.sqrt(
+                    (self.hist["err"] / hist_p.hist["y"]) ** 2
+                    + (self.hist["err"] * hist_p.hist["err"] / (hist_p.hist["y"] ** 2))
+                    ** 2
+                ),
+            }
+        )
+
+        # Changes input ret_hist like in Root
+        self.hist = newhist
+
+        return 0
+
     def scal(self, fac: float):
         """Scale histogram by a factor."""
 
