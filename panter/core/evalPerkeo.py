@@ -662,22 +662,28 @@ class PedPerkeo:
     def calc_ped(self):
         """Calculating pedestals"""
 
-        self._dataclass.datafilter["Detector"].active = True
         ped_list = [None] * self._dataclass.no_pmts
         ped_hists = np.asarray([None] * self._dataclass.no_pmts)
 
+        #store filters:
+        cyclefilter = self._dataclass.cyclefilter
+        datafilter = self._dataclass.datafilter
+
         for DET in [0, 1]:
+            self._dataclass.clear_filt()
+            self._dataclass.cyclefilter = cyclefilter
+            self._dataclass.datafilter = datafilter
+            self._dataclass.set_filt(
+                "data", fkey="Detector", active=True, ftype="bool", rightval=1-DET
+            )
+            self._dataclass.auto(1)
             if DET == 0:
-                self._dataclass.datafilter["Detector"].rightval = 1
-                self._dataclass.auto(1)
                 for i in range(0, 8):
                     ped_hists[i] = dP.HistPerkeo(
                         self._dataclass.pmt_data[i], **self._ped_hist_par
                     )
 
             elif DET == 1:
-                self._dataclass.datafilter["Detector"].rightval = 0
-                self._dataclass.auto(1)
                 for i in range(8, 16):
                     ped_hists[i] = dP.HistPerkeo(
                         self._dataclass.pmt_data[i], **self._ped_hist_par
@@ -689,7 +695,7 @@ class PedPerkeo:
                     fitclass = DoFit(histogram)
                     fitclass.setup(eFS.gaus_gen)
                     fitclass.set_fitparam(namekey="mu", valpar=0.0)
-                    fitclass.set_bool("boutput", True)
+                    # fitclass.set_bool("boutput", True)
                     fitclass.fit()
                     ped_list[ind_hist] = [
                         fitclass.ret_results().params["mu"].value,
@@ -699,6 +705,7 @@ class PedPerkeo:
                     ]
 
         self.ped_hists = ped_hists
+        #TODO: there was an issue here. see pedestal_analysis
         print(self.ped_hists)
 
         return ped_list
