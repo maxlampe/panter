@@ -258,26 +258,13 @@ class corrPerkeo:
                 [hist_o, hist_n] = self._corr_src(files)
 
             if bwrite:
-                out_file_old = uproot.recreate(f"int_old.root")
-                out_file_new = uproot.recreate(f"int_new.root")
-                for det in [0, 1]:
-                    out_file_old[f"DetSum{det}"] = hist_o[det].ret_asnumpyhist()
-                    out_file_new[f"DetSum{det}"] = hist_n[det].ret_asnumpyhist()
-
-                root_cmd = "/home/max/Software/root_install/bin/root"
-                arg_old = (
-                    f"{core_path}/recalcHistErr.cpp"
-                    + f'("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
-                )
-                arg_new = (
-                    f"{core_path}/recalcHistErr.cpp"
-                    + f'("int_new.root", "{src_name}_{cyc_no}_{corr}_new.root")'
-                )
-                subprocess.run([root_cmd, arg_old])
-                subprocess.run([root_cmd, arg_new])
-
-                subprocess.run(["rm", "int_old.root"])
-                subprocess.run(["rm", "int_new.root"])
+                filename = f"{src_name}_{cyc_no}_{corr}.root"
+                det = 0
+                hist_o[det].write2root(f"DetSum{det}", filename)
+                hist_n[det].write2root(f"DetSum{det}", filename, True)
+                det = 1
+                hist_o[det].write2root(f"DetSum{det}", filename, True)
+                hist_n[det].write2root(f"DetSum{det}", filename, True)
 
             if bstore:
                 self.histograms.append(np.asarray([hist_o, hist_n]))
