@@ -1,6 +1,5 @@
 """Dump"""
 
-import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 from panter.core.corrPerkeo import corrPerkeo
@@ -18,7 +17,7 @@ for primary_detector in [0, 1]:
     det_prim = primary_detector
     det_sec = 1 - det_prim
 
-    for i in range(50):
+    for i in range(100):
         meas = dataloader[100 + i]
 
         corr_class = corrPerkeo(meas)
@@ -50,8 +49,8 @@ for primary_detector in [0, 1]:
         hist_onlysec = corr_class.histograms[0][0]
 
         # TODO: make clear function for reusability
-        corr_class.addition_filters = []
-        corr_class.histograms = []
+        corr_class.clear()
+
         corr_class.addition_filters.append(
             {
                 "tree": "data",
@@ -119,5 +118,8 @@ a:  0.00287972 +/- 7.5364e-05 (2.62%) (init = 0.003)
 p:  0.68840456 +/- 0.01481232 (2.15%) (init = 0.655)
 
 corr:
-
+a:  0.00251647 +/- 3.1369e-05 (1.25%) (init = 0.003)
+p:  0.73960438 +/- 0.00779516 (1.05%) (init = 0.655)
+a:  0.00287115 +/- 5.2395e-05 (1.82%) (init = 0.003)
+p:  0.68867295 +/- 0.01034353 (1.50%) (init = 0.655)
 """
