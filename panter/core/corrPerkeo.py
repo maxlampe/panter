@@ -3,6 +3,7 @@
 import configparser
 import numpy as np
 import subprocess
+import copy
 import uproot
 import panter.core.dataPerkeo as dP
 import panter.core.evalFunctions as eF
@@ -133,7 +134,6 @@ class corrPerkeo:
         ampl_corr = [None] * data.no_pmts
 
         if self.corrections["Pedestal"]:
-            import copy
             datacop = copy.copy(data)
             datacop.set_filtdef()
             pedestals = eP.PedPerkeo(datacop).ret_pedestals()
