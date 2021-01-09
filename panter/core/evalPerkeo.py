@@ -665,16 +665,10 @@ class PedPerkeo:
         ped_list = [None] * self._dataclass.no_pmts
         ped_hists = np.asarray([None] * self._dataclass.no_pmts)
 
-        #store filters:
-        cyclefilter = self._dataclass.cyclefilter
-        datafilter = self._dataclass.datafilter
-
         for DET in [0, 1]:
             self._dataclass.clear_filt()
-            self._dataclass.cyclefilter = cyclefilter
-            self._dataclass.datafilter = datafilter
             self._dataclass.set_filt(
-                "data", fkey="Detector", active=True, ftype="bool", rightval=1-DET
+                "data", fkey="Detector", active=True, ftype="bool", rightval=1 - DET
             )
             self._dataclass.auto(1)
             if DET == 0:
@@ -705,8 +699,9 @@ class PedPerkeo:
                     ]
 
         self.ped_hists = ped_hists
-        #TODO: there was an issue here. see pedestal_analysis
-        print(self.ped_hists)
+        self._dataclass.clear_filt()
+        # TODO: there was an issue here. see pedestal_analysis
+        # print(self.ped_hists)
 
         return ped_list
 

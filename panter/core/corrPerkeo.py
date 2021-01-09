@@ -69,6 +69,7 @@ class corrPerkeo:
         self._beam_mtime = BEAM_MEAS_TIME
         self.corrections = {"Pedestal": True, "RateDepElec": False}
         self.histograms = []
+        # TODO merge dead time into corrections
         self.corr_deadtime = True
         self.addition_filters = []
 
@@ -87,6 +88,14 @@ class corrPerkeo:
     def _set_corr(self):
         """Activate corrections from list."""
         pass
+
+    def clear(self):
+        """Clear relevant attributes enabling re-usability without new instantiation."""
+
+        self.addition_filters = []
+        self.histograms = []
+
+        return 0
 
     def _filt_data(self, data: dP.RootPerkeo, bbeam=False, key=""):
         """Filter data set."""
@@ -122,8 +131,12 @@ class corrPerkeo:
 
         pedestals = [[0]] * data.no_pmts
         ampl_corr = [None] * data.no_pmts
+
         if self.corrections["Pedestal"]:
-            pedestals = eP.PedPerkeo(data).ret_pedestals()
+            import copy
+            datacop = copy.copy(data)
+            datacop.set_filtdef()
+            pedestals = eP.PedPerkeo(datacop).ret_pedestals()
             # or get fixed values from params.py
 
         for i in range(0, data.no_pmts):
