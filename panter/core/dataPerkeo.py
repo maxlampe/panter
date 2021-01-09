@@ -8,11 +8,11 @@ import time
 import configparser
 import glob
 import pickle
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
+from ROOT import TFile, TH1F
 import uproot
 
 from panter.config import conf_path
@@ -194,27 +194,21 @@ class HistPerkeo:
 
         return self.hist["y"].values, binedge
 
-    def write2root(self):
-        """Write histogram into root file."""
+    def write2root(self, histname: str, filename: str, bupdate: bool = False):
+        """Write the histogram into a root file."""
 
-        # TODO
-        # WIP
-        """
-        out_file_old = uproot.recreate(f"int_old.root")
-        for det in [0, 1]:
-            out_file_old[f"DetSum{det}"] = hist_o[det].ret_asnumpyhist()
-
-        root_cmd = "/home/max/Software/root_install/bin/root"
-        arg_old = (
-            f"{core_path}/recalcHistErr.cpp"
-            + f'("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
+        opt = "UPDATE" if bupdate else "RECREATE"
+        hfile = TFile(f"{filename}.root", opt, "Panter Output")
+        rhist = TH1F(
+            f"{histname}", f"{histname}", self.bin_count, self.low_lim, self.up_lim
         )
-        subprocess.run([root_cmd, arg_old])
-        subprocess.run(["rm", "int_old.root"])
+        for i in range(1, rhist.GetNbinsX()):
+            rhist.SetBinContent(i, self.hist["y"][i - 1])
+            rhist.SetBinError(i, self.hist["err"][i - 1])
+        rhist.Draw()
+        hfile.Write()
 
         return 0
-        """
-        pass
 
 
 class FilePerkeo:
