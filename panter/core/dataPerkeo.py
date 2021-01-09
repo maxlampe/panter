@@ -197,22 +197,24 @@ class HistPerkeo:
     def write2root(self):
         """Write histogram into root file."""
 
-        #TODO
-        #WIP
+        # TODO
+        # WIP
+        """
         out_file_old = uproot.recreate(f"int_old.root")
         for det in [0, 1]:
             out_file_old[f"DetSum{det}"] = hist_o[det].ret_asnumpyhist()
 
         root_cmd = "/home/max/Software/root_install/bin/root"
         arg_old = (
-                f"{core_path}/recalcHistErr.cpp"
-                + f'("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
+            f"{core_path}/recalcHistErr.cpp"
+            + f'("int_old.root", "{src_name}_{cyc_no}_{corr}_old.root")'
         )
         subprocess.run([root_cmd, arg_old])
         subprocess.run(["rm", "int_old.root"])
 
-
         return 0
+        """
+        pass
 
 
 class FilePerkeo:
