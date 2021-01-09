@@ -3,6 +3,7 @@
 import numpy as np
 
 from tests.histogram import do_histtestbasic
+from tests.hist_output import do_histtestout
 from tests.filter import do_histtestfilter
 from tests.basicfit import do_histtestfit
 from tests.background_subtraction import do_backgroundfittest
@@ -13,6 +14,7 @@ def run_all():
 
     tests = [
         do_histtestbasic(),
+        do_histtestout(),
         do_histtestfilter(),
         do_histtestfit(),
         do_backgroundfittest(),
