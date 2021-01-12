@@ -21,14 +21,25 @@ pip3 install -r requirements.txt
 See docstrings and python help() function. For example:
 
 ```python
+#Core data structure
 from panter.core.dataPerkeo import RootPerkeo
 help(RootPerkeo)
+#Data loader
 from panter.core.dataloaderPerkeo import DLPerkeo
 help(DLPerkeo)
+#General Fitter and specific fitting analysis
 from panter.core.evalPerkeo import DoFit, DoFitData
+help(DoFit)
 help(DoFitData)
+#Data reduction and correction class
+from panter.core.corrPerkeo import corrPerkeo
+help(corrPerkeo)
 ```
 etc.
+
+##Unit tests
+
+All unit tests can be found in the _tests_ directory. Run _alltests.py_ for all of them.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
