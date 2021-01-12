@@ -37,7 +37,7 @@ help(corrPerkeo)
 ```
 etc.
 
-##Unit tests
+## Unit tests
 
 All unit tests can be found in the _tests_ directory. Run _alltests.py_ for all of them.
 
