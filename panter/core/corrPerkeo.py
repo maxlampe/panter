@@ -17,6 +17,12 @@ from panter.config.params import k_pmt_fix
 cnf = configparser.ConfigParser()
 cnf.read(f"{conf_path}/evalRaw.ini")
 
+PMT_hist_par = {
+    "bin_count": int(cnf["dataPerkeo"]["ADC_hist_counts"]),
+    "low_lim": int(cnf["dataPerkeo"]["ADC_hist_min"]),
+    "up_lim": int(cnf["dataPerkeo"]["ADC_hist_max"]),
+}
+
 SUM_hist_par = {
     "bin_count": int(cnf["dataPerkeo"]["SUM_hist_counts"]),
     "low_lim": int(cnf["dataPerkeo"]["SUM_hist_min"]),
@@ -42,6 +48,13 @@ class corrPerkeo:
     Parameters
     ----------
     dataloader: DLPerkeo
+    mode: {0, 1, 2}
+        Mode variable to determine calculated spectra.
+        O = total DetSum (only one spectra is returned)
+        1 = only Sum over each detector PMTs (two spectra are returned)
+        2 = all PMTs will be treated individually (no_pmt spectra)
+    bonlynew: bool
+        Only create corrected spectra instead of uncorrected spectra as well.
 
     Attributes
     ----------
@@ -64,14 +77,18 @@ class corrPerkeo:
     >>> corr_class.corr(bstore=True, bwrite=False)
     """
 
-    def __init__(self, dataloader: DLPerkeo):
+    def __init__(self, dataloader: DLPerkeo, mode: int = 0, bonlynew: bool = True):
         self._dataloader = dataloader
+        self._bonlynew = bonlynew
+        self.mode = mode
         self._histpar_sum = SUM_hist_par
+        self._histpar_pmt = PMT_hist_par
         self._beam_mtime = BEAM_MEAS_TIME
         self.corrections = {"Pedestal": True, "RateDepElec": False}
         self.histograms = []
-        # TODO merge dead time into corrections
-        self.corr_deadtime = True
+        # TODO: merge dead time into corrections
+        # TODO: Fix dead time. broken atm
+        self.corr_deadtime = False
         self.addition_filters = []
 
     def _calc_detsum(
@@ -79,12 +96,22 @@ class corrPerkeo:
     ) -> [dP.HistPerkeo, dP.HistPerkeo]:
         """Calculate the DetSum for list of ADC values."""
 
-        detsum0 = np.array(vals[:8]).sum(axis=0)[start_it:]
-        detsum1 = np.array(vals[8:]).sum(axis=0)[start_it:]
-        hist0 = dP.HistPerkeo(detsum0, **self._histpar_sum)
-        hist1 = dP.HistPerkeo(detsum1, **self._histpar_sum)
+        calc_hists = []
+        if self.mode == 0:
+            det_sum_tot = np.array(vals[:]).sum(axis=0)[start_it:]
+            calc_hists.append(dP.HistPerkeo(det_sum_tot, **self._histpar_sum))
+        elif self.mode == 1:
+            det_sum_0 = np.array(vals[:8]).sum(axis=0)[start_it:]
+            det_sum_1 = np.array(vals[8:]).sum(axis=0)[start_it:]
 
-        return [hist0, hist1]
+            calc_hists.append(dP.HistPerkeo(det_sum_0, **self._histpar_sum))
+            calc_hists.append(dP.HistPerkeo(det_sum_1, **self._histpar_sum))
+
+        elif self.mode == 2:
+            for val in vals:
+                calc_hists.append(dP.HistPerkeo(val, **self._histpar_pmt))
+
+        return calc_hists
 
     def _set_corr(self):
         """Activate corrections from list."""
@@ -152,12 +179,17 @@ class corrPerkeo:
                     ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
                 )
 
-        hist_old = self._calc_detsum(data.pmt_data)
+        if self._bonlynew:
+            hist_old = None
+        else:
+            hist_old = self._calc_detsum(data.pmt_data)
         hist_new = self._calc_detsum(ampl_corr)
 
+        # FIXME: Broken
         if self.corr_deadtime:
-            for det in [0, 1]:
-                hist_old[det].scal(data.dt_fac[det])
+            for det in [0, 1, 2]:
+                if not self._bonlynew:
+                    hist_old[det].scal(data.dt_fac[det])
                 hist_new[det].scal(data.dt_fac[det])
 
         return [[hist_old, hist_new], data.cy_valid_no]
@@ -180,12 +212,16 @@ class corrPerkeo:
             / (self._beam_mtime["bg"][1] - self._beam_mtime["bg"][0])
         ] * 2
 
-        for det in [0, 1]:
-            res[0][0][det].addhist(res[1][0][det], -fac[0])
-            res[0][1][det].addhist(res[1][1][det], -fac[1])
+        for hist_no in range(len(res[0][1])):
+            if not self._bonlynew:
+                res[0][0][hist_no].addhist(res[1][0][hist_no], -fac[0])
+            res[0][1][hist_no].addhist(res[1][1][hist_no], -fac[1])
 
-        res_old = [res[0][0][0], res[0][0][1]]
-        res_new = [res[0][1][0], res[0][1][1]]
+        if self._bonlynew:
+            res_old = None
+        else:
+            res_old = [*res[0][0]]
+        res_new = [*res[0][1]]
 
         return [res_old, res_new]
 
@@ -203,12 +239,16 @@ class corrPerkeo:
             res.append(r)
             scal.append(s)
 
-        for det in [0, 1]:
-            res[0][0][det].addhist(res[1][0][det], -scal[0] / scal[1])
-            res[0][1][det].addhist(res[1][1][det], -scal[0] / scal[1])
+        for hist_no in range(len(res[0][1])):
+            if not self._bonlynew:
+                res[0][0][hist_no].addhist(res[1][0][hist_no], -scal[0] / scal[1])
+            res[0][1][hist_no].addhist(res[1][1][hist_no], -scal[0] / scal[1])
 
-        res_old = [res[0][0][0], res[0][0][1]]
-        res_new = [res[0][1][0], res[0][1][1]]
+        if self._bonlynew:
+            res_old = None
+        else:
+            res_old = [*res[0][0]]
+        res_new = [*res[0][1]]
 
         return [res_old, res_new]
 
@@ -259,12 +299,30 @@ class corrPerkeo:
 
             if bwrite:
                 filename = f"{src_name}_{cyc_no}_{corr}.root"
-                det = 0
-                hist_o[det].write2root(f"DetSum{det}", filename)
-                hist_n[det].write2root(f"DetSum{det}", filename, True)
-                det = 1
-                hist_o[det].write2root(f"DetSum{det}", filename, True)
-                hist_n[det].write2root(f"DetSum{det}", filename, True)
+                if self.mode == 0:
+                    hist_n[0].write2root(f"DetSumTot", filename)
+                    if not self._bonlynew:
+                        hist_o[0].write2root(f"DetSumTot", filename, True)
+
+                elif self.mode == 1:
+                    det = 0
+                    hist_n[det].write2root(f"DetSum{det}", filename)
+                    if not self._bonlynew:
+                        hist_o[det].write2root(f"DetSum{det}", filename, True)
+                    det = 1
+                    hist_n[det].write2root(f"DetSum{det}", filename, True)
+                    if not self._bonlynew:
+                        hist_o[det].write2root(f"DetSum{det}", filename, True)
+
+                elif self.mode == 2:
+                    det = 0
+                    hist_n[det].write2root(f"DetSumTot", filename)
+                    if not self._bonlynew:
+                        hist_o[det].write2root(f"DetSumTot", filename, True)
+                    for det in range(1, 16):
+                        hist_n[det].write2root(f"DetSumTot", filename, True)
+                        if not self._bonlynew:
+                            hist_o[det].write2root(f"DetSumTot", filename, True)
 
             if bstore:
                 self.histograms.append(np.asarray([hist_o, hist_n]))

@@ -58,14 +58,14 @@ class BackgroundFitTest(UnitTestRoot):
         """Do panter evaluation part for the unit test."""
 
         fit_range = [self._params[3], self._params[4]]
-        corr_class = corrPerkeo(meas)
+        corr_class = corrPerkeo(dataloader=meas, mode=1, bonlynew=True)
         corr_class.corr_deadtime = False
         corr_class.corrections["Pedestal"] = False
         corr_class.corrections["RateDepElec"] = False
         corr_class.corr(bstore=True, bwrite=False)
 
         panter_fitres = []
-        for hist in corr_class.histograms[0, 0]:
+        for hist in corr_class.histograms[0, 1]:
             fitclass = eP.DoFit(hist.hist)
             # hist.plt([48000, 51500, -40, 40])
             fitclass.setup(eFS.pol0)
@@ -76,7 +76,10 @@ class BackgroundFitTest(UnitTestRoot):
             panter_fitres.append(fitres.params["c0"].stderr)
             panter_fitres.append(fitclass.ret_gof()["rChi2"])
 
-        return np.asarray(panter_fitres)
+        # hot-fix to exclude total sum spectra
+        panter_res = np.asarray(panter_fitres)[0:6]
+
+        return panter_res
 
     def test(self) -> bool:
         """Run this unit test."""
