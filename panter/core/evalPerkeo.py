@@ -436,7 +436,7 @@ class DoFitData:
                 "ADC [ch]",
                 "Counts [ ]",
             ]
-            self._fitsettings.plotrange = [30.0, 4000.0]
+            self._fitsettings.plotrange["x"] = [30.0, 4000.0]
             self.set_stats()
         if (
             self._datatype == self._valid_datatypes[1]
