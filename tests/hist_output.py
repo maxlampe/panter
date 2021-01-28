@@ -68,4 +68,3 @@ def do_histtestout() -> bool:
 
     test = HistTestOut(txtfile=file, params=par)
     return test.test(False)
-

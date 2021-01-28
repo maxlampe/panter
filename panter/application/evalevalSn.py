@@ -53,7 +53,6 @@ for PMT in [int(input())]:
 
     xdat = np.arange(1, len(pmt_data) + 1, 1)
     xdat = x_dates
-
     axs[0].errorbar(xdat, pmt_data, yerr=pmt_dataErr, fmt=".", label=f"PMT{PMT}")
     axs[1].plot(xdat, PMTChi, ".", label=f"PMT{PMT}")
 

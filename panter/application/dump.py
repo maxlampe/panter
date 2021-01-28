@@ -1,19 +1,18 @@
 """Dump"""
 
-import panter.core.dataPerkeo as dP
-from panter.core.dataloaderPerkeo import DLPerkeo
+import numpy as np
+import pandas as pd
 
+df = pd.DataFrame(columns=["x", "y", "z"])
 
-dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-dataloader = DLPerkeo(dir)
-dataloader.auto()
-meas = dataloader[100]
-data = dP.RootPerkeo(meas.file_list[0])
-data.auto()
-data.gen_hist([])
+df = df.append({"x": 0, "y": 0, "z": [0, 3]}, ignore_index=True)
+df = df.append({"x": 1, "y": 3, "z": [4, 4]}, ignore_index=True)
+df = df.append({"x": 2, "y": 5, "z": [2, 2]}, ignore_index=True)
 
-print(data.hist_sums[0].hist)
+print(df)
 
-data.hist_sums[0].write2root("DetSum0", "inter")
-data.hist_sums[1].write2root("DetSum1", "inter", True)
-data.hist_sums[1].plt()
+print(df["x"])
+print(df["z"])
+
+dfs = df["z"].apply(pd.Series)
+print(dfs[0])
