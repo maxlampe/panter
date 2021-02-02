@@ -169,8 +169,6 @@ class DoFit:
         else:
             self._fitdata = self._data
 
-        self._fitdata = dP.filt_zeros(self._fitdata)
-
         # check for label and then do case specific range limitation
         if self._label == "gaus_pdec" or self._label == "gaus_expmod":
             maxpos = np.argmax(self._fitdata["y"])
@@ -185,6 +183,8 @@ class DoFit:
             )
         if self._label == "gaus_gen":
             self.set_recursive("mu", "sig", 2, 1.35)
+
+        self._fitdata = dP.filt_zeros(self._fitdata)
 
         err_weights = calc_weights(self._fitdata["err"])
         self._fitresult = self._fitmodel.fit(
