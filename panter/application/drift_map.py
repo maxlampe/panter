@@ -35,7 +35,7 @@ class PerkeoDriftMap:
 
             print(f"Meas No: {i}")
             time = meas.date_list[0]
-            if time > 1.5788e9:
+            if time > 1.5790e9:
                 continue
 
             corr_class = corrPerkeo(dataloader=meas, mode=2)
@@ -71,8 +71,23 @@ class PerkeoDriftMap:
                 "err_list": mu_err,
                 "gof": gof,
             }
-            print(meas_dict)
             self.map = self.map.append(meas_dict, ignore_index=True)
+
+        rchi2_df = self.map["gof"].apply(pd.Series)
+        peak_df = self.map["peak_list"].apply(pd.Series)
+        err_df = self.map["err_list"].apply(pd.Series)
+
+        rchi2_filter = rchi2_df < 1.5
+
+        peak_df = peak_df[rchi2_filter]
+        err_df = err_df[rchi2_filter]
+        peak_wam = (peak_df / err_df ** 2).sum() / (1.0 / err_df ** 2).sum()
+        print(peak_wam)
+
+
+        # rChi2 = np.array(list(map(lambda x: x["rChi2"], rchi2_df)))
+        # valid_results = np.linspace(0, 15, 16, dtype=int)[(rChi2 < 1.)]
+        # print(valid_results)
 
         outfile = dP.FilePerkeo(self.outfile)
         assert outfile.dump(self.map) == 0, "ERROR: Export of drift map failed."
