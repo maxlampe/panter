@@ -53,7 +53,7 @@ class HistTestFit(UnitTestRoot):
         panter_fitres = [
             fitres.params["c0"].value,
             fitres.params["c0"].stderr,
-            fitclass.ret_gof()["rChi2"],
+            fitclass.ret_gof()[0],
         ]
 
         return np.asarray(panter_fitres)

@@ -74,7 +74,7 @@ class BackgroundFitTest(UnitTestRoot):
 
             panter_fitres.append(fitres.params["c0"].value)
             panter_fitres.append(fitres.params["c0"].stderr)
-            panter_fitres.append(fitclass.ret_gof()["rChi2"])
+            panter_fitres.append(fitclass.ret_gof()[0])
 
         # hot-fix to exclude total sum spectra
         panter_res = np.asarray(panter_fitres)[0:6]

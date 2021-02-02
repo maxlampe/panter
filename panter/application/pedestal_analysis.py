@@ -58,7 +58,7 @@ def pedestal_analysis(dirname: str, params: list):
                     detsum,
                     fitres.params["c0"].value,
                     fitres.params["c0"].stderr,
-                    fitclass.ret_gof()["rChi2"],
+                    fitclass.ret_gof()[0],
                 ]
             )
         )

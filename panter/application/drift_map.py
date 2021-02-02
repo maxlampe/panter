@@ -61,7 +61,7 @@ class PerkeoDriftMap:
 
                 fit_result.append([j, dofitclass.ret_gof(), dofitclass.ret_results()])
 
-            gof = np.array(list(map(lambda x: x[1], fit_result)))
+            gof = np.array(list(map(lambda x: x[1][0], fit_result)))
             mu_val = np.array(list(map(lambda x: x[2].params["mu"].value, fit_result)))
             mu_err = np.array(list(map(lambda x: x[2].params["mu"].stderr, fit_result)))
 

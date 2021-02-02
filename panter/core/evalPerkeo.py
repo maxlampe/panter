@@ -217,7 +217,7 @@ class DoFit:
             )
 
         pval = 1.0 - chi2.cdf(self._fitresult.chisqr, self._fitresult.nfree)
-        self._gof = {"rChi2": self._fitresult.redchi, "pval": pval}
+        self._gof = [self._fitresult.redchi, pval]
 
         if self._booldict["boutput"]:
             self.plotfit()
