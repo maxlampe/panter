@@ -46,17 +46,17 @@ def ret_hist(
     return pd.DataFrame({"x": bincent, "y": hist, "err": np.sqrt(np.abs(hist))})
 
 
-def filt_zeros(histdf: pd.DataFrame) -> pd.DataFrame:
+def filt_zeros(hist_df: pd.DataFrame) -> pd.DataFrame:
     """Taking a pandas data frame and removing all entries where "err" = 0."""
 
-    filt = histdf["err"] != 0.0
-    histdf = histdf[filt]
+    filt = hist_df["err"] != 0.0
+    hist_df = hist_df[filt]
 
-    assert not histdf["x"].isnull().values.any()
-    assert not histdf["y"].isnull().values.any()
-    assert not histdf["err"].isnull().values.any()
+    assert not hist_df["x"].isnull().values.any()
+    assert not hist_df["y"].isnull().values.any()
+    assert not hist_df["err"].isnull().values.any()
 
-    return histdf
+    return hist_df
 
 
 class HistPerkeo:
