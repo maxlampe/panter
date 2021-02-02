@@ -645,10 +645,8 @@ class RootPerkeo:
         """Generate pmt_data according to calc filter arrays."""
 
         data_pmt = self.file["dataTree"].array("PMT")
-        data_pmtfilt = []
-        for i, val in enumerate(data_pmt):
-            if self._ev_valid[i] == 1:
-                data_pmtfilt.append(val)
+        self._ev_valid = np.asarray(self._ev_valid, dtype=bool)
+        data_pmtfilt = data_pmt[self._ev_valid]
 
         data_pmt_tran = np.asarray(data_pmtfilt).transpose()
         no_tadc = len(data_pmt_tran)
