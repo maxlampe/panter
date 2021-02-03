@@ -224,7 +224,7 @@ class FilePerkeo:
 
         return imp_obj
 
-    # FIXME: Append doesn't append? Probsbecause import only expects one object
+    # FIXME: Append doesn't append? Probs because import only expects one object
     def dump(self, obj, bapp: bool = False, btext: bool = False):
         """Dump an python object into the file.
 

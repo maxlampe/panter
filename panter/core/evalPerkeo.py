@@ -207,6 +207,7 @@ class DoFit:
                     f" < x < "
                     f"{self._fitresult.params[key_center].value + delta}"
                 )
+                self._fitdata = dP.filt_zeros(self._fitdata)
 
             err_weights = calc_weights(self._fitdata["err"])
             self._fitresult = self._fitmodel.fit(
