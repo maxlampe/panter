@@ -343,9 +343,9 @@ class RootPerkeo:
     val_rtime : float
         Valid measurement time. After cycles are filtered, measurement time is summed up
         for remaining cycles. None on instantiation.
-    dt_fac : [float, float]
-        Dead time correction factor to correct number of detected events.
-        n_true = n_meas * dt_fac. None on instantiation.
+    dt_fac : float
+        Dead time correction factor to correct number of detected events as a scaling
+        factor. n_true = n_meas * dt_fac. None on instantiation.
     deadtime : float
         Dead time value from measurement. Imported from ini file (evalRaw.ini).
     stats : dict of lists
@@ -412,6 +412,7 @@ class RootPerkeo:
         self.pmt_data = None
         self.dptt = None
         self.val_rtime = None
+        self.chop_freq = None
         self.dt_fac = None
         self.deadtime = float(cnf["dataPerkeo"]["DeadTime"])
         self.stats = None
@@ -626,18 +627,36 @@ class RootPerkeo:
 
         Uses formula for non-paralyzable analysis. Prints corrected total rate."""
 
-        dtime0 = (self.file["cycleTree"].array("DeadTime1") * self._cy_valid).sum()
-        dtime1 = (self.file["cycleTree"].array("DeadTime2") * self._cy_valid).sum()
         self.val_rtime = (
             self.file["cycleTree"].array("RealTime") * self._cy_valid
         ).sum()
 
-        uncorr_rate = self._ev_valid_no / self.val_rtime * 1e8
-        corr_rate = uncorr_rate / (1.0 - uncorr_rate * self.deadtime)
-        print(f"Raw Rate\t{uncorr_rate}\t\tDead time corrected Rate\t{corr_rate}")
-        dt_fac0 = 1.0 / (1.0 - dtime0 / self.val_rtime)
-        dt_fac1 = 1.0 / (1.0 - dtime1 / self.val_rtime)
-        self.dt_fac = [dt_fac0, dt_fac1]
+        n_ev = self._ev_valid_no
+        self.val_rtime = self.val_rtime / 1e8
+
+        # need correction factor for burst rate, not average rate. check filters
+        burst_rate = 1.0
+
+        dt_error = "ERROR: Set filter probably breaks dead time validity."
+        dtt_filter_count = 0
+        for filt_perkeo in self.datafilter:
+            assert filt_perkeo.fkey != "TriggerTime", dt_error
+            assert filt_perkeo.fkey != "ChopperTime", dt_error
+            assert filt_perkeo.fkey != "DeltaCoinTime", dt_error
+
+            if filt_perkeo.fkey == "DeltaTriggerTime":
+                dtt_filter_count += 1
+
+                self.chop_freq = (
+                    self.file["cycleTree"].array("ChopperSpeed") * self._cy_valid
+                ).sum() / self.cy_valid_no
+
+                delta_dtt = (filt_perkeo.up_lim - filt_perkeo.low_lim) / 1e8
+                burst_rate *= delta_dtt * self.chop_freq
+        assert dtt_filter_count <= 1, dt_error
+
+        dead_time = self.deadtime * n_ev
+        self.dt_fac = 1.0 / (1.0 - dead_time / (self.val_rtime * burst_rate))
 
         return 0
 

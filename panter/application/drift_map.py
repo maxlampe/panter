@@ -39,6 +39,7 @@ class PerkeoDriftMap:
                 continue
 
             corr_class = corrPerkeo(dataloader=meas, mode=2)
+            corr_class.corrections["DeadTime"] = True
             corr_class.corrections["Pedestal"] = True
             corr_class.corrections["RateDepElec"] = True
             corr_class.corr(bstore=True, bwrite=False)
@@ -83,7 +84,6 @@ class PerkeoDriftMap:
         err_df = err_df[rchi2_filter]
         peak_wam = (peak_df / err_df ** 2).sum() / (1.0 / err_df ** 2).sum()
         print(peak_wam)
-
 
         # rChi2 = np.array(list(map(lambda x: x["rChi2"], rchi2_df)))
         # valid_results = np.linspace(0, 15, 16, dtype=int)[(rChi2 < 1.)]

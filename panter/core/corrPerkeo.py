@@ -84,11 +84,8 @@ class corrPerkeo:
         self._histpar_sum = SUM_hist_par
         self._histpar_pmt = PMT_hist_par
         self._beam_mtime = BEAM_MEAS_TIME
-        self.corrections = {"Pedestal": True, "RateDepElec": False}
+        self.corrections = {"Pedestal": True, "RateDepElec": False, "DeadTime": True}
         self.histograms = []
-        # TODO: merge dead time into corrections
-        # TODO: Fix dead time. broken atm
-        self.corr_deadtime = False
         self.addition_filters = []
 
     def _calc_detsum(
@@ -185,12 +182,11 @@ class corrPerkeo:
             hist_old = self._calc_detsum(data.pmt_data)
         hist_new = self._calc_detsum(ampl_corr)
 
-        # FIXME: Broken
-        if self.corr_deadtime:
-            for det in [0, 1, 2]:
+        if self.corrections["DeadTime"]:
+            for hist in range(len(hist_new)):
                 if not self._bonlynew:
-                    hist_old[det].scal(data.dt_fac[det])
-                hist_new[det].scal(data.dt_fac[det])
+                    hist_old[hist].scal(data.dt_fac)
+                hist_new[hist].scal(data.dt_fac)
 
         return [[hist_old, hist_new], data.cy_valid_no]
 

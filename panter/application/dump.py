@@ -13,14 +13,17 @@ dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)
 dataloader.auto()
 # filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
-filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
+# filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [0, 3, 67732])
 
-meas = filt_meas[0]
+meas = dataloader[0]
 
 corr_class = corrPerkeo(dataloader=meas, mode=2)
-corr_class.corrections["Pedestal"] = True
-corr_class.corrections["RateDepElec"] = True
+corr_class.corrections["Pedestal"] = False
+corr_class.corrections["RateDepElec"] = False
+corr_class.corrections["DeadTime"] = True
 corr_class.corr(bstore=True, bwrite=False)
+
+exit()
 
 fitsettings = eFS.gaus_expmod
 fitsettings.plot_labels = [
