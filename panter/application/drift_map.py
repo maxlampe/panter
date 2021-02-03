@@ -25,16 +25,16 @@ class PerkeoDriftMap:
         self.peak_wam = None
         if bimp_pmt:
             # try to import pmt factor map
-            # self.pmt_map = ...
-            # assert self.pmt_map.shape[0] > 0
-            pass
+            impfile = dP.FilePerkeo(self._outfile[1])
+            self.pmt_map = impfile.imp()
+            assert self.pmt_map.shape[0] > 0, "ERROR: PMT factor map empty."
         elif bimp_sn:
             # try to import sn peak map
-            # self.sn_map = ...
-            # assert self.sn_map.shape[0] > 0
+            impfile = dP.FilePerkeo(self._outfile[0])
+            self.sn_map = impfile.imp()
+            assert self.sn_map.shape[0] > 0
             self.pmt_map = pd.DataFrame(columns=["time", "pmt_fac"])
             # self._calc_pmt_fac()
-            pass
         else:
             self.sn_map = pd.DataFrame(
                 columns=["time", "peak_list", "err_list", "rchi2"]
@@ -42,7 +42,6 @@ class PerkeoDriftMap:
             self._calc_peak_pos()
             self.pmt_map = pd.DataFrame(columns=["time", "pmt_fac"])
             self._calc_pmt_fac()
-        print(self.pmt_map)
 
     def _calc_peak_pos(self):
         """"""
