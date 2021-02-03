@@ -631,7 +631,6 @@ class RootPerkeo:
             self.file["cycleTree"].array("RealTime") * self._cy_valid
         ).sum()
 
-        n_ev = self._ev_valid_no
         self.val_rtime = self.val_rtime / 1e8
 
         # need correction factor for burst rate, not average rate. check filters
@@ -655,7 +654,7 @@ class RootPerkeo:
                 burst_rate *= delta_dtt * self.chop_freq
         assert dtt_filter_count <= 1, dt_error
 
-        dead_time = self.deadtime * n_ev
+        dead_time = self.deadtime * self._ev_valid_no
         self.dt_fac = 1.0 / (1.0 - dead_time / (self.val_rtime * burst_rate))
 
         return 0
