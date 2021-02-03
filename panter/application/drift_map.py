@@ -19,23 +19,41 @@ filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
 class PerkeoDriftMap:
     """"""
 
-    def __init__(self, fmeas: MeasPerkeo):
-        self.fmeas = fmeas
-        self.outfile = "driftmap"
-        self.map = pd.DataFrame(columns=["time", "peak_list", "err_list", "gof"])
-        if self.map.shape[0] <= 0:
-            self._calc()
+    def __init__(self, fmeas: np.array, bimp_pmt: bool = False, bimp_sn: bool = False):
+        self._fmeas = fmeas
+        self._outfile = ["sn_peak_map", "pmt_fac_map"]
+        self.peak_wam = None
+        if bimp_pmt:
+            # try to import pmt factor map
+            # self.pmt_map = ...
+            # assert self.pmt_map.shape[0] > 0
+            pass
+        elif bimp_sn:
+            # try to import sn peak map
+            # self.sn_map = ...
+            # assert self.sn_map.shape[0] > 0
+            self.pmt_map = pd.DataFrame(columns=["time", "pmt_fac"])
+            # self._calc_pmt_fac()
+            pass
+        else:
+            self.sn_map = pd.DataFrame(
+                columns=["time", "peak_list", "err_list", "rchi2"]
+            )
+            self._calc_peak_pos()
+            self.pmt_map = pd.DataFrame(columns=["time", "pmt_fac"])
+            self._calc_pmt_fac()
+        print(self.pmt_map)
 
-    def _calc(self):
+    def _calc_peak_pos(self):
         """"""
 
-        for i, meas in enumerate(filt_meas):
+        for i, meas in enumerate(self._fmeas):
             if i in [61, 294, 625]:
                 continue
 
             print(f"Meas No: {i}")
             time = meas.date_list[0]
-            if time > 1.5790e9:
+            if time > 2.5787e9:
                 continue
 
             corr_class = corrPerkeo(dataloader=meas, mode=2)
@@ -53,48 +71,61 @@ class PerkeoDriftMap:
             fitsettings.plotrange["x"] = [30.0, 4000.0]
 
             hists = corr_class.histograms[0][1]
-            fit_result = []
+            rchi2 = np.array([])
+            mu_val = np.array([])
+            mu_err = np.array([])
+
             for j in range(len(hists)):
                 dofitclass = eP.DoFit(hists[j].hist)
                 dofitclass.setup(fitsettings)
                 dofitclass.set_bool("boutput", False)
                 dofitclass.fit()
 
-                fit_result.append([j, dofitclass.ret_gof(), dofitclass.ret_results()])
-
-            gof = np.array(list(map(lambda x: x[1][0], fit_result)))
-            mu_val = np.array(list(map(lambda x: x[2].params["mu"].value, fit_result)))
-            mu_err = np.array(list(map(lambda x: x[2].params["mu"].stderr, fit_result)))
+                fit_results = dofitclass.ret_results()
+                rchi2 = np.append(rchi2, dofitclass.ret_gof()[0])
+                mu_val = np.append(mu_val, fit_results.params["mu"].value)
+                mu_err = np.append(mu_err, fit_results.params["mu"].stderr)
 
             meas_dict = {
                 "time": time,
                 "peak_list": mu_val,
                 "err_list": mu_err,
-                "gof": gof,
+                "rchi2": rchi2,
             }
-            self.map = self.map.append(meas_dict, ignore_index=True)
+            self.sn_map = self.sn_map.append(meas_dict, ignore_index=True)
 
-        rchi2_df = self.map["gof"].apply(pd.Series)
-        peak_df = self.map["peak_list"].apply(pd.Series)
-        err_df = self.map["err_list"].apply(pd.Series)
+        rchi2_df = self.sn_map["rchi2"].apply(pd.Series)
+        peak_df = self.sn_map["peak_list"].apply(pd.Series)
+        err_df = self.sn_map["err_list"].apply(pd.Series)
 
         rchi2_filter = rchi2_df < 1.5
-
         peak_df = peak_df[rchi2_filter]
         err_df = err_df[rchi2_filter]
-        peak_wam = (peak_df / err_df ** 2).sum() / (1.0 / err_df ** 2).sum()
-        print(peak_wam)
 
-        # rChi2 = np.array(list(map(lambda x: x["rChi2"], rchi2_df)))
-        # valid_results = np.linspace(0, 15, 16, dtype=int)[(rChi2 < 1.)]
-        # print(valid_results)
+        self.peak_wam = (peak_df / err_df ** 2).sum() / (1.0 / err_df ** 2).sum()
 
-        outfile = dP.FilePerkeo(self.outfile)
-        assert outfile.dump(self.map) == 0, "ERROR: Export of drift map failed."
+        outfile = dP.FilePerkeo(self._outfile[0])
+        assert outfile.dump(self.sn_map) == 0, "ERROR: Export of drift map failed."
 
         return 0
 
-    def plot_map(self):
+    def _calc_pmt_fac(self):
+        """"""
+
+        for index, sn_meas in self.sn_map.iterrows():
+            pmt_dict = {
+                "time": sn_meas["time"],
+                "pmt_fac": (self.peak_wam / sn_meas["peak_list"]).to_numpy(),
+            }
+            print(pmt_dict)
+            self.pmt_map = self.pmt_map.append(pmt_dict, ignore_index=True)
+
+        outfile = dP.FilePerkeo(self._outfile[1])
+        assert outfile.dump(self.pmt_map) == 0, "ERROR: Export of drift map failed."
+
+        return 0
+
+    def plot_sn_map(self):
         """"""
 
         fig, axs = plt.subplots(1, 2, figsize=(15, 8))
@@ -105,20 +136,19 @@ class PerkeoDriftMap:
         axs.flat[0].set(xlabel="Time [s]", ylabel="EMG peak pos [ch]")
         axs.flat[1].set(xlabel="Time [s]", ylabel="EMG peak pos [ch]")
 
-        peak_df = self.map["peak_list"].apply(pd.Series)
-        err_df = self.map["err_list"].apply(pd.Series)
-        rchi2_df = self.map["gof"].apply(pd.Series)
+        peak_df = self.sn_map["peak_list"].apply(pd.Series)
+        err_df = self.sn_map["err_list"].apply(pd.Series)
 
         for PMT in range(8):
             axs[0].errorbar(
-                self.map["time"],
+                self.sn_map["time"],
                 peak_df[PMT],
                 yerr=err_df[PMT],
                 fmt=".",
                 label=f"PMT{PMT}",
             )
             axs[1].errorbar(
-                self.map["time"],
+                self.sn_map["time"],
                 peak_df[PMT + 8],
                 yerr=err_df[PMT + 8],
                 fmt=".",
@@ -128,6 +158,37 @@ class PerkeoDriftMap:
 
         return 0
 
+    def plot_pmt_map(self):
+        """"""
+
+        fig, axs = plt.subplots(1, 2, figsize=(15, 8))
+        fig.suptitle("PMT drift correction factors")
+
+        axs[0].set_title("Factor over time Det 0")
+        axs[1].set_title("Factor over time Det 1")
+        axs.flat[0].set(xlabel="Time [s]", ylabel="Correction factor [ ]")
+        axs.flat[1].set(xlabel="Time [s]", ylabel="Correction factor [ ]")
+
+        pmt_fac = self.pmt_map["pmt_fac"].apply(pd.Series)
+
+        for PMT in range(8):
+            axs[0].plot(
+                self.pmt_map["time"],
+                pmt_fac[PMT],
+                ".",
+                label=f"PMT{PMT}",
+            )
+            axs[1].plot(
+                self.pmt_map["time"],
+                pmt_fac[PMT + 8],
+                ".",
+                label=f"PMT{PMT + 8}",
+            )
+        plt.show()
+
+        return 0
+
 
 pdm = PerkeoDriftMap(filt_meas)
-pdm.plot_map()
+pdm.plot_sn_map()
+pdm.plot_pmt_map()
