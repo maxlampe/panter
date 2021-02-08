@@ -31,10 +31,10 @@ class PerkeoDriftMap:
         elif bimp_sn:
             # try to import sn peak map
             impfile = dP.FilePerkeo(self._outfile[0])
-            self.sn_map = impfile.imp()
+            self.sn_map, self.peak_wam = impfile.imp()
             assert self.sn_map.shape[0] > 0
             self.pmt_map = pd.DataFrame(columns=["time", "pmt_fac"])
-            # self._calc_pmt_fac()
+            self._calc_pmt_fac()
         else:
             self.sn_map = pd.DataFrame(
                 columns=["time", "peak_list", "err_list", "rchi2"]
@@ -104,7 +104,9 @@ class PerkeoDriftMap:
         self.peak_wam = (peak_df / err_df ** 2).sum() / (1.0 / err_df ** 2).sum()
 
         outfile = dP.FilePerkeo(self._outfile[0])
-        assert outfile.dump(self.sn_map) == 0, "ERROR: Export of drift map failed."
+        assert (
+            outfile.dump([self.sn_map, self.peak_wam]) == 0
+        ), "ERROR: Export of drift map failed."
 
         return 0
 
@@ -112,11 +114,17 @@ class PerkeoDriftMap:
         """"""
 
         for index, sn_meas in self.sn_map.iterrows():
+
+            factors = (self.peak_wam / sn_meas["peak_list"]).to_numpy()
+            print(factors)
+            rchi2_filter = sn_meas["rchi2"] > 1.5
+            factors[rchi2_filter] = None
+            print(factors)
             pmt_dict = {
                 "time": sn_meas["time"],
-                "pmt_fac": (self.peak_wam / sn_meas["peak_list"]).to_numpy(),
+                "pmt_fac": factors,
             }
-            print(pmt_dict)
+
             self.pmt_map = self.pmt_map.append(pmt_dict, ignore_index=True)
 
         outfile = dP.FilePerkeo(self._outfile[1])
