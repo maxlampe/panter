@@ -9,36 +9,38 @@ import panter.config.evalFitSettings as eFS
 from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
 from panter.core.corrPerkeo import corrPerkeo
 
+
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)
 dataloader.auto()
-# filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
+filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])
 # filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [0, 3, 67732])
 
-meas = dataloader[0]
+meas = filt_meas[0:50]
 
-corr_class = corrPerkeo(dataloader=meas, mode=2)
-corr_class.corrections["Pedestal"] = False
-corr_class.corrections["RateDepElec"] = False
+corr_class = corrPerkeo(dataloader=meas, mode=0)
+corr_class.corrections["Pedestal"] = True
+corr_class.corrections["RateDepElec"] = True
 corr_class.corrections["DeadTime"] = True
+corr_class.corrections["Drift"] = False
+
+corr_class.addition_filters.append(
+    {
+        "tree": "data",
+        "fkey": "Detector",
+        "active": True,
+        "ftype": "bool",
+        "rightval": 0,
+    }
+)
+
 corr_class.corr(bstore=True, bwrite=False)
 
-exit()
 
-fitsettings = eFS.gaus_expmod
-fitsettings.plot_labels = [
-    "SnSpec fit result",
-    "ADC [ch]",
-    "Counts [ ]",
-]
-fitsettings.plotrange["x"] = [30.0, 4000.0]
+hists = np.array([])
+for entry in corr_class.histograms:
+    hists = np.append(hists, entry[1][0])
 
-hists = corr_class.histograms[0][1]
-i = 0
-
-dofitclass = eP.DoFit(hists[i].hist)
-dofitclass.setup(fitsettings)
-dofitclass.set_bool("boutput", True)
-dofitclass.fit()
-
-print([i, dofitclass.ret_gof(), dofitclass.ret_results()])
+final = dP.average_hists(hists)
+corr_class.histograms[0][1][0].plt()
+final.plt()
