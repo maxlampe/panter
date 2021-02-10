@@ -41,7 +41,7 @@ class MeasPerkeo:
         self.tp = tp
         self.src = src
         self.file_list = file_list
-        self.date_list = self.__getdates()
+        self.date_list = self._getdates()
         self.cyc_no = cyc_no
         self.nomad_no = nomad_no
 
@@ -51,7 +51,7 @@ class MeasPerkeo:
             event.append(entry)
         return event
 
-    def __getdates(self):
+    def _getdates(self):
         """Get list of modification times for entries in file_list."""
 
         dates = []

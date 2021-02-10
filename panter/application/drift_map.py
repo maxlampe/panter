@@ -19,7 +19,12 @@ filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
 class PerkeoDriftMap:
     """"""
 
-    def __init__(self, fmeas: np.array, bimp_pmt: bool = False, bimp_sn: bool = False):
+    def __init__(
+        self,
+        fmeas: np.array = np.asarray([]),
+        bimp_pmt: bool = True,
+        bimp_sn: bool = False,
+    ):
         self._fmeas = fmeas
         self._outfile = ["sn_peak_map", "pmt_fac_map"]
         self.peak_wam = None
@@ -197,5 +202,5 @@ class PerkeoDriftMap:
 
 
 pdm = PerkeoDriftMap(filt_meas)
-pdm.plot_sn_map()
+# pdm.plot_sn_map()
 pdm.plot_pmt_map()
