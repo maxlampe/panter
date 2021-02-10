@@ -62,6 +62,7 @@ class BackgroundFitTest(UnitTestRoot):
         corr_class.corrections["DeadTime"] = False
         corr_class.corrections["Pedestal"] = False
         corr_class.corrections["RateDepElec"] = False
+        corr_class.corrections["Drift"] = False
         corr_class.corr(bstore=True, bwrite=False)
 
         panter_fitres = []
@@ -88,7 +89,7 @@ class BackgroundFitTest(UnitTestRoot):
         for ind, meas in enumerate(self.batch):
             file = meas()[2][0]
             root_res = self._do_root(file)
-            panter_res = self._do_panter(meas)
+            panter_res = self._do_panter(np.asarray([meas]))
             # print(panter_res)
             results.append(super()._check(root_res, panter_res))
 

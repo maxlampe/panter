@@ -2,6 +2,7 @@
 
 import configparser
 import numpy as np
+import pandas as pd
 import subprocess
 import copy
 import uproot
@@ -11,6 +12,7 @@ import panter.core.evalPerkeo as eP
 from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.core import core_path
 from panter.config import conf_path
+from panter.application import appl_path
 from panter.config.params import delt_pmt
 from panter.config.params import k_pmt_fix
 
@@ -70,7 +72,7 @@ class corrPerkeo:
     Can be used to just calculate background subtracted data. If corrections were to be
     set to True, data would be individually corrected and then background subtracted.
 
-    >>> meas = DLPerkeo()
+    >>> meas = DLPerkeo().ret_meas()
     >>> corr_class = corrPerkeo(meas)
     >>> corr_class.corrections["Pedestal"] = False
     >>> corr_class.corrections["RateDepElec"] = False
@@ -84,9 +86,19 @@ class corrPerkeo:
         self._histpar_sum = SUM_hist_par
         self._histpar_pmt = PMT_hist_par
         self._beam_mtime = BEAM_MEAS_TIME
-        self.corrections = {"Pedestal": True, "RateDepElec": False, "DeadTime": True}
+        self.corrections = {
+            "Pedestal": True,
+            "RateDepElec": False,
+            "DeadTime": True,
+            "Drift": True,
+        }
         self.histograms = []
         self.addition_filters = []
+
+        if self.corrections["Drift"]:
+            # TODO: make more automated. File name hard coded!
+            impfile = dP.FilePerkeo(appl_path + "/pmt_fac_map")
+            self.drift_map = impfile.imp()
 
     def _calc_detsum(
         self, vals: list, start_it: int = 0
@@ -156,6 +168,18 @@ class corrPerkeo:
 
         pedestals = [[0]] * data.no_pmts
         ampl_corr = [None] * data.no_pmts
+        drift_factors = [1.0] * data.no_pmts
+
+        if self.corrections["Drift"]:
+            time_stamps = self.drift_map["time"]
+            curr_time = data.filedate
+            diff_time = np.abs(time_stamps - curr_time)
+            nearest_drift = diff_time.idxmin()
+            assert (
+                diff_time[nearest_drift] < 7200.0
+            ), "ERROR: Last drift meas more than 2h away"
+
+            drift_factors = self.drift_map["pmt_fac"][nearest_drift]
 
         if self.corrections["Pedestal"]:
             datacop = copy.copy(data)
@@ -164,7 +188,7 @@ class corrPerkeo:
             # or get fixed values from params.py
 
         for i in range(0, data.no_pmts):
-            ampl_corr[i] = data.pmt_data[i] - pedestals[i][0]
+            ampl_corr[i] = (data.pmt_data[i] - pedestals[i][0]) * drift_factors[i]
 
         if self.corrections["RateDepElec"]:
             # FIXME: Think about this [1:]!
@@ -268,12 +292,7 @@ class corrPerkeo:
                 corr += corr_name
 
         cyc_no = 0
-
-        if type(self._dataloader) != "panter.core.dataloaderPerkeo.DLPerkeo":
-            batches = [self._dataloader]
-        else:
-            batches = self._dataloader
-        for meas in batches:
+        for meas in self._dataloader:
             tp = meas.tp
             src = meas.src
             files = meas.file_list
