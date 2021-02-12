@@ -1,4 +1,4 @@
-"""Pedestal analysis"""
+"""Calculate pedestals for given files"""
 
 import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
