@@ -41,5 +41,3 @@ outfile = dP.FilePerkeo("safety_concat_raw")
 outfile.dump(corr_class.hist_concat)
 
 corr_class.hist_concat.write2root(f"DetSumTot", "concat_test_raw.root")
-
-
