@@ -64,6 +64,7 @@ class PerkeoDriftMap:
             corr_class.corrections["DeadTime"] = True
             corr_class.corrections["Pedestal"] = True
             corr_class.corrections["RateDepElec"] = True
+            corr_class.corrections["Drift"] = False
             corr_class.corr(bstore=True, bwrite=False)
 
             fitsettings = eFS.gaus_expmod
