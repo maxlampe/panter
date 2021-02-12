@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 from ROOT import TFile, TH1F
 import uproot
-
 from panter.config import conf_path
+from panter import output_path
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
@@ -226,6 +226,7 @@ class FilePerkeo:
 
     def __init__(self, filename: str):
         self.filename = filename
+        self.out_dir = ""
 
     def imp(self):
         """Open the file and return content."""
@@ -235,12 +236,13 @@ class FilePerkeo:
         return imp_obj
 
     # FIXME: Append doesn't append? Probs because import only expects one object
-    def dump(self, obj, bapp: bool = False, btext: bool = False):
+    def dump(self, obj, out_dir: str = None, bapp: bool = False, btext: bool = False):
         """Dump an python object into the file.
 
         Parameters
         ----------
         obj
+        out_dir
         bapp : bool
             Append to file instead of writing over it. Doesn't work.
             (default False)
@@ -249,12 +251,15 @@ class FilePerkeo:
             (default False)
         """
 
+        if out_dir is None:
+            out_dir = output_path
+
         opt = "a" if bapp else "w"
         if not btext:
-            with open(self.filename, opt + "b") as file:
+            with open(f"{out_dir}/{self.filename}", opt + "b") as file:
                 pickle.dump(obj, file)
         else:
-            with open(self.filename, opt) as file:
+            with open(f"{out_dir}/{self.filename}", opt) as file:
                 file.write(obj)
 
         return 0

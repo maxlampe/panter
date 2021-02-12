@@ -581,7 +581,7 @@ class DoFitData:
 
         del cnf_int
         file = dP.FilePerkeo(logfilename)
-        print("Write to log file", file.dump(str(settings), True, True))
+        print("Write to log file", file.dump(obj=str(settings), bapp=True, btext=True))
 
         return 0
 
