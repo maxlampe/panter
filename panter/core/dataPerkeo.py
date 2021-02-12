@@ -66,7 +66,7 @@ class HistPerkeo:
     basic helper functions.
 
     Parameters
-    ---------
+    ----------
     data : array of float
     bin_count, low_lim, up_lim: int
         Histogram parameters: Bin count, upper and lower limit
@@ -183,33 +183,6 @@ class HistPerkeo:
 
         return 0
 
-    def avhist(self, hist_p: HistPerkeo):
-        """weighted arithmetic mean with another histogram."""
-
-        hist_par = [self.bin_count, self.low_lim, self.up_lim]
-        hist_par_2add = [hist_p.bin_count, hist_p.low_lim, hist_p.up_lim]
-        assert hist_par == hist_par_2add, "ERROR: Binning does not match."
-
-        newhist = pd.DataFrame(
-            {
-                "x": self.hist["x"],
-                "y": (
-                    (self.hist["y"]) / (self.hist["err"] ** 2)
-                    + (hist_p.hist["y"])
-                    / (hist_p.hist["err"] ** 2)
-                    / (1.0 / (self.hist["err"] ** 2) + 1.0 / (hist_p.hist["err"] ** 2))
-                ),
-                "err": np.sqrt(
-                    (1.0 / (self.hist["err"] ** 2) + 1.0 / (hist_p.hist["err"] ** 2))
-                ),
-            }
-        )
-
-        # Changes input ret_hist like in Root
-        self.hist = newhist
-
-        return 0
-
     def ret_asnumpyhist(self):
         """Return histogram in np.histogram format from current histogram.
 
@@ -238,12 +211,12 @@ class HistPerkeo:
         return 0
 
 
-def average_hists(hist_array: np.array) -> HistPerkeo:
-    """"""
+def concat_hists(hist_array: np.array) -> HistPerkeo:
+    """Concatenate multiple histograms in an array by adding them up with error prop."""
 
     hist_final = hist_array[0]
     for hist in hist_array[1:]:
-        hist_final.avhist(hist)
+        hist_final.addhist(hist)
 
     return hist_final
 
