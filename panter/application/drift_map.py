@@ -8,6 +8,7 @@ import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
 from panter.core.corrPerkeo import corrPerkeo
+from panter.config import conf_path
 
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)
@@ -111,7 +112,7 @@ class PerkeoDriftMap:
 
         outfile = dP.FilePerkeo(self._outfile[0])
         assert (
-            outfile.dump([self.sn_map, self.peak_wam]) == 0
+            outfile.dump([self.sn_map, self.peak_wam], conf_path) == 0
         ), "ERROR: Export of drift map failed."
 
         return 0
@@ -134,7 +135,9 @@ class PerkeoDriftMap:
             self.pmt_map = self.pmt_map.append(pmt_dict, ignore_index=True)
 
         outfile = dP.FilePerkeo(self._outfile[1])
-        assert outfile.dump(self.pmt_map) == 0, "ERROR: Export of drift map failed."
+        assert (
+            outfile.dump(self.pmt_map, conf_path) == 0
+        ), "ERROR: Export of drift map failed."
 
         return 0
 
