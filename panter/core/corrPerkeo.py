@@ -93,6 +93,7 @@ class corrPerkeo:
             "Drift": True,
         }
         self.histograms = []
+        self.hist_concat = None
         self.addition_filters = []
 
         if self.corrections["Drift"]:
@@ -169,15 +170,17 @@ class corrPerkeo:
         pedestals = [[0]] * data.no_pmts
         ampl_corr = [None] * data.no_pmts
         drift_factors = [1.0] * data.no_pmts
+        binvalid = False
 
         if self.corrections["Drift"]:
             time_stamps = self.drift_map["time"]
             curr_time = data.filedate
             diff_time = np.abs(time_stamps - curr_time)
             nearest_drift = diff_time.idxmin()
-            assert (
-                diff_time[nearest_drift] < 7200.0
-            ), "ERROR: Last drift meas more than 2h away"
+
+            if diff_time[nearest_drift] < 7200.0:
+                print("ERROR: Last drift meas more than 2h away")
+                binvalid = True
 
             drift_factors = self.drift_map["pmt_fac"][nearest_drift]
 
@@ -212,7 +215,7 @@ class corrPerkeo:
                     hist_old[hist].scal(data.dt_fac)
                 hist_new[hist].scal(data.dt_fac)
 
-        return [[hist_old, hist_new], data.cy_valid_no]
+        return [[hist_old, hist_new], data.cy_valid_no, binvalid]
 
     def _corr_beam(self, ev_file: list):
         """Correct beam-like data (i.e. background in same file)."""
@@ -224,7 +227,9 @@ class corrPerkeo:
 
         for (key, data) in data_dict.items():
             self._filt_data(data, bbeam=True, key=key)
-            r, s = self._calc_corr(data)
+            r, s, i = self._calc_corr(data)
+            if i:
+                return [None, None]
             res.append(r)
 
         fac = [
@@ -255,7 +260,9 @@ class corrPerkeo:
             data = dP.RootPerkeo(file_name)
             self._filt_data(data)
 
-            r, s = self._calc_corr(data)
+            r, s, i = self._calc_corr(data)
+            if i:
+                return [None, None]
             res.append(r)
             scal.append(s)
 
@@ -272,7 +279,7 @@ class corrPerkeo:
 
         return [res_old, res_new]
 
-    def corr(self, bstore: bool = False, bwrite: bool = True):
+    def corr(self, bstore: bool = False, bwrite: bool = True, bconcat: bool = False):
         """Correcting data according to chosen settings.
 
         Parameters
@@ -339,8 +346,19 @@ class corrPerkeo:
                         if not self._bonlynew:
                             hist_o[det].write2root(f"DetSumTot", filename, True)
 
+            if bconcat:
+                # TODO: Implement concatenation for all modes
+                if self.mode == 0:
+                    if self.hist_concat is None:
+                        if hist_n is not None:
+                            self.hist_concat = hist_n[0]
+                    if self.hist_concat is not None:
+                        if hist_n is not None:
+                            self.hist_concat.addhist(hist_n[0])
+
             if bstore:
                 self.histograms.append(np.asarray([hist_o, hist_n]))
+
         self.histograms = np.asarray(self.histograms)
 
         return 0
