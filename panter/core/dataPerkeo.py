@@ -111,8 +111,7 @@ class HistPerkeo:
         plt.ylabel(ylabel)
         plt.xlabel(xlabel)
         plt.annotate(
-            f"Mean = {self.mean:0.2f}\n"
-            f"StDv = {self.stdv:0.2f}",
+            f"Mean = {self.mean:0.2f}\n" f"StDv = {self.stdv:0.2f}",
             xy=(0.05, 0.95),
             xycoords="axes fraction",
             ha="left",
@@ -139,7 +138,7 @@ class HistPerkeo:
         )
         # Changes input ret_hist like in Root
         self.hist = newhist
-        self.mean = (self.mean + fac * hist_p.mean ) / ( 1. + fac)
+        self.mean = (self.mean + fac * hist_p.mean) / (1.0 + fac)
         self.stdv = None
 
         return 0
@@ -169,7 +168,7 @@ class HistPerkeo:
 
         # Changes input ret_hist like in Root
         self.hist = newhist
-        self.mean = (self.mean / hist_p.mean)
+        self.mean = self.mean / hist_p.mean
         self.stdv = None
 
         return 0
