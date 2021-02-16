@@ -1,12 +1,10 @@
-"""This module should manage filelists and setup further evaluations.
-"""
+"""This module should manage filelists and setup further evaluations. """
 
 import datetime
 import sys
 import numpy as np
 
 import panter.core.dataPerkeo as dP
-import panter.config.filesDrift as fDr
 import panter.config.filesElecTest as fET
 
 
@@ -95,110 +93,6 @@ def sort_files(curr_dir: str):
     # measlist = np.array(measlist)
 
     return measlist
-
-
-def setupeval_driftmeas(
-    mtype: str = "Drift", fit_mode: int = 5, bfitall: bool = False, bpair: bool = False
-):
-    """Setting up drift evaluation settings.
-
-    Function for setting up drift evaluation settings like output
-    filename, getting file lists etc.
-
-    Parameters
-    ----------
-    mtype : str
-        String argument to indicate which data will be analysed after
-        the setup. (default 'Drift')
-    fit_mode : {5, 4}
-        Int parameter for function/model to be fitted.
-        4 = gaus_pdec
-        5 = gaus_expmod
-        in evalFitSettings.py. (default 5)
-    bfitall : bool
-        If True, all 16 PMT specs are fitted. Only 'active' ones
-        otherwise. (default False)
-    bpar : bool
-        Bool to enable auto pairing of source and background
-        measurements. (default False)
-
-    Returns
-    -------
-    filelist : list of str
-    results : list of None
-        Empty list of len(filelist) to be filled with results later.
-    fit_mode : int
-        Is equal to input parameter fit_mode.
-    expfile : str
-        File name for evaluation results to be written into.
-    blist : list of bools
-    """
-
-    blist = [bfitall, bpair]
-
-    fit_mode = int(fit_mode)
-    if (np.array([4, 5]) == fit_mode).sum() <= 0:
-        print("ERROR: Wrong fit_module input!")
-        sys.exit(1)
-
-    if fit_mode == 4:
-        str_type = "Sn_GausDec_"
-    if fit_mode == 5:
-        str_type = "Sn_EMG_"
-
-    if mtype == "Drift":
-        curr_dir = dP.DirPerkeo(fDr.DRIFT_SN)
-        if bpair:
-            list_all_rootfiles = list(
-                map(lambda x: x[len(curr_dir.dirname) : -5], curr_dir.get_all())
-            )
-            list_all_backfiles = list(
-                filter(lambda x: x[-2:] == "bg", list_all_rootfiles)
-            )
-            # list_all_beamfiles = list(
-            #    filter(lambda x: x[-4:] == "beam", list_all_rootfiles)
-            # )
-            list_all_sorcfiles = list(
-                filter(
-                    lambda x: is_integer(x[-1]) and int(x[-1]) == 3, list_all_rootfiles
-                )
-            )
-
-            filelist = []
-            for i in list_all_sorcfiles:
-                currnomad_it = 0
-                if is_integer(i[-7:-2]):
-                    currnomad_it = int(i[-7:-2])
-                if currnomad_it > 1:
-                    # check for non negative values from scans or tests
-                    for j in list_all_backfiles:
-                        if is_integer(j[-8:-3]) and int(j[-8:-3]) == currnomad_it:
-                            name_of_pair = [
-                                curr_dir.dirname + i + ".root",
-                                curr_dir.dirname + j + ".root",
-                            ]
-                            filelist.append(name_of_pair)
-            filelist = np.array(filelist)
-        else:
-            if True:
-                # do this as quick test setup
-                filelist = curr_dir.get_subset(fDr.test)
-            else:
-                # list not implemented yet
-                filelist = curr_dir.get_all()
-        results = [None] * len(filelist)
-
-    else:
-        if mtype == "Scan":
-            print("Scan preparation not implemented yet. Doing nothing.")
-        else:
-            print("ERROR: Unavailable Test setup! \t", mtype)
-            sys.exit(1)
-
-    cdir = datetime.date.today()
-    expfile = mtype + "_" + str_type + str(cdir) + ".p"
-
-    return filelist, results, fit_mode, expfile, blist
 
 
 def setupeval_electest(

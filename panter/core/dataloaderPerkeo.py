@@ -67,6 +67,7 @@ class DLPerkeo:
     Stores events either by adding them manually to the loader or by automatically
     getting all from a directory. Beam time measurements are automatically sorted
     and calibration/drift measurements paired with their background measurement.
+    Works on every directory with Perkeo III 19/20 automatic measurement files.
 
     Parameters
     ----------
