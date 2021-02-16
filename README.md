@@ -11,6 +11,8 @@ Currently, core features are still implemented and can be subject to change.
 
 Get the package from gitlab: https://gitlab.lrz.de/ge39dat/panter
 
+Python version 3.8 or above required.
+
 ```bash
 git clone https://gitlab.lrz.de/ge39dat/panter.git
 pip3 install -r requirements.txt
