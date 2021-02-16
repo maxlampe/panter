@@ -87,6 +87,8 @@ class HistPerkeo:
         up_lim: int = 52000,
     ):
         self.data = data
+        self.mean = np.array(self.data).mean()
+        self.stdv = np.array(self.data).std()
         self.bin_count = bin_count
         self.up_lim = up_lim
         self.low_lim = low_lim
@@ -109,8 +111,8 @@ class HistPerkeo:
         plt.ylabel(ylabel)
         plt.xlabel(xlabel)
         plt.annotate(
-            f"Mean = {np.array(self.data).mean():0.2f}\n"
-            f"StDv = {np.array(self.data).std():0.2f}",
+            f"Mean = {self.mean:0.2f}\n"
+            f"StDv = {self.stdv:0.2f}",
             xy=(0.05, 0.95),
             xycoords="axes fraction",
             ha="left",
@@ -137,6 +139,8 @@ class HistPerkeo:
         )
         # Changes input ret_hist like in Root
         self.hist = newhist
+        self.mean = (self.mean + fac * hist_p.mean ) / ( 1. + fac)
+        self.stdv = None
 
         return 0
 
@@ -165,6 +169,8 @@ class HistPerkeo:
 
         # Changes input ret_hist like in Root
         self.hist = newhist
+        self.mean = (self.mean / hist_p.mean)
+        self.stdv = None
 
         return 0
 
