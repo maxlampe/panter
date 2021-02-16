@@ -98,7 +98,7 @@ class corrPerkeo:
 
         if self.corrections["Drift"]:
             # TODO: make more automated. File name hard coded!
-            impfile = dP.FilePerkeo(appl_path + "/pmt_fac_map")
+            impfile = dP.FilePerkeo(conf_path + "/pmt_fac_map.p")
             self.drift_map = impfile.imp()
 
     def _calc_detsum(
@@ -330,29 +330,43 @@ class corrPerkeo:
             if bwrite:
                 filename = f"{src_name}_{cyc_no}_{corr}.root"
                 if self.mode == 0:
-                    hist_n[0].write2root(f"DetSumTot", filename)
+                    hist_n[0].write2root(histname=f"DetSumTot", filename=filename)
                     if not self._bonlynew:
-                        hist_o[0].write2root(f"DetSumTot", filename, True)
+                        hist_o[0].write2root(
+                            histname=f"DetSumTot", filename=filename, bupdate=True
+                        )
 
                 elif self.mode == 1:
                     det = 0
-                    hist_n[det].write2root(f"DetSum{det}", filename)
+                    hist_n[det].write2root(histname=f"DetSum{det}", filename=filename)
                     if not self._bonlynew:
-                        hist_o[det].write2root(f"DetSum{det}", filename, True)
+                        hist_o[det].write2root(
+                            histname=f"DetSum{det}", filename=filename, bupdate=True
+                        )
                     det = 1
-                    hist_n[det].write2root(f"DetSum{det}", filename, True)
+                    hist_n[det].write2root(
+                        histname=f"DetSum{det}", filename=filename, bupdate=True
+                    )
                     if not self._bonlynew:
-                        hist_o[det].write2root(f"DetSum{det}", filename, True)
+                        hist_o[det].write2root(
+                            histname=f"DetSum{det}", filename=filename, bupdate=True
+                        )
 
                 elif self.mode == 2:
                     det = 0
-                    hist_n[det].write2root(f"DetSumTot", filename)
+                    hist_n[det].write2root(histname=f"DetSumTot", filename=filename)
                     if not self._bonlynew:
-                        hist_o[det].write2root(f"DetSumTot", filename, True)
+                        hist_o[det].write2root(
+                            histname=f"DetSumTot", filename=filename, bupdate=True
+                        )
                     for det in range(1, 16):
-                        hist_n[det].write2root(f"DetSumTot", filename, True)
+                        hist_n[det].write2root(
+                            histname=f"DetSumTot", filename=filename, bupdate=True
+                        )
                         if not self._bonlynew:
-                            hist_o[det].write2root(f"DetSumTot", filename, True)
+                            hist_o[det].write2root(
+                                histname=f"DetSumTot", filename=filename, bupdate=True
+                            )
 
             if bconcat:
                 # TODO: Implement concatenation for all modes

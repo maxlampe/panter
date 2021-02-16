@@ -194,11 +194,16 @@ class HistPerkeo:
 
         return self.hist["y"].values, binedge
 
-    def write2root(self, histname: str, filename: str, bupdate: bool = False):
+    def write2root(
+        self, histname: str, filename: str, out_dir: str = None, bupdate: bool = False
+    ):
         """Write the histogram into a root file."""
 
+        if out_dir is None:
+            out_dir = output_path
+
         opt = "UPDATE" if bupdate else "RECREATE"
-        hfile = TFile(f"{filename}.root", opt, "Panter Output")
+        hfile = TFile(f"{out_dir}/{filename}.root", opt, "Panter Output")
         rhist = TH1F(
             f"{histname}", f"{histname}", self.bin_count, self.low_lim, self.up_lim
         )
@@ -226,7 +231,6 @@ class FilePerkeo:
 
     def __init__(self, filename: str):
         self.filename = filename
-        self.out_dir = ""
 
     def imp(self):
         """Open the file and return content."""

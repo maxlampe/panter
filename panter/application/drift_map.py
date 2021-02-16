@@ -27,16 +27,16 @@ class PerkeoDriftMap:
         bimp_sn: bool = False,
     ):
         self._fmeas = fmeas
-        self._outfile = ["sn_peak_map", "pmt_fac_map"]
+        self._outfile = ["sn_peak_map.p", "pmt_fac_map.p"]
         self.peak_wam = None
         if bimp_pmt:
             # try to import pmt factor map
-            impfile = dP.FilePerkeo(self._outfile[1])
+            impfile = dP.FilePerkeo(f"{conf_path}/{self._outfile[1]}")
             self.pmt_map = impfile.imp()
             assert self.pmt_map.shape[0] > 0, "ERROR: PMT factor map empty."
         elif bimp_sn:
             # try to import sn peak map
-            impfile = dP.FilePerkeo(self._outfile[0])
+            impfile = dP.FilePerkeo(f"{conf_path}/{self._outfile[0]}")
             self.sn_map, self.peak_wam = impfile.imp()
             assert self.sn_map.shape[0] > 0
             self.pmt_map = pd.DataFrame(columns=["time", "pmt_fac"])
@@ -62,10 +62,11 @@ class PerkeoDriftMap:
                 continue
 
             corr_class = corrPerkeo(dataloader=meas, mode=2)
+            corr_class.set_all_corr(bactive=False)
             corr_class.corrections["DeadTime"] = True
             corr_class.corrections["Pedestal"] = True
             corr_class.corrections["RateDepElec"] = True
-            corr_class.corrections["Drift"] = False
+
             corr_class.corr(bstore=True, bwrite=False)
 
             fitsettings = eFS.gaus_expmod

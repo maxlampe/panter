@@ -5,6 +5,7 @@ import uproot
 import subprocess
 import panter.core.dataPerkeo as dP
 from tests.unittestroot import UnitTestRoot
+from tests import tests_path
 
 
 class HistTestOut(UnitTestRoot):
@@ -42,8 +43,8 @@ class HistTestOut(UnitTestRoot):
         hpanter2 = dP.HistPerkeo(*[np.array(data_raw) + 2, *self._params])
         hpanter1.addhist(hpanter2, -0.5)
         # export
-        hpanter1.write2root("hpanter", "inter")
-        # re-simport for comparisson
+        hpanter1.write2root(histname="hpanter", filename="inter", out_dir=tests_path)
+        # re-import for comparisson
         himport = uproot.open("inter.root")
         hpanter_imp = himport["hpanter"]
         bincent = []
