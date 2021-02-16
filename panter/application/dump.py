@@ -1,20 +1,27 @@
-"""Dump"""
+"""Dump - For testing and staging"""
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import panter.core.dataPerkeo as dP
-import panter.core.evalPerkeo as eP
-import panter.config.evalFitSettings as eFS
-from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
+from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.core.corrPerkeo import corrPerkeo
 
-from panter import output_path
+# General import parameters
+file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+filename = "data119754-67502_beam.root"
 
-print(output_path)
+# Direct access to raw root file
+data = dP.RootPerkeo(file_dir + filename)
+data.info()
+data.auto()
+data.gen_hist(data.ret_actpmt())
+data.hists[2].plt()
 
-exit()
+# Using the data loader and the corrPerkeo class to generate a fully corrected spectra
+dataloader = DLPerkeo(file_dir)
+dataloader.auto()
+filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [0, 5, 67502])
 
-test = [1, 2, 3]
-file = dP.FilePerkeo("test.p")
-file.dump(test)
+corr_class = corrPerkeo(dataloader=filt_meas, mode=0)
+corr_class.set_all_corr(bactive=True)
+corr_class.corr(bstore=True, bwrite=False)
+
+corr_class.histograms[0][1][0].plt()
