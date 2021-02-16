@@ -56,7 +56,7 @@ class HistTestOut(UnitTestRoot):
             result.append(hpanter_imp.values[i])
             result.append(np.sqrt(hpanter_imp.variances)[i])
 
-        subprocess.run(["rm", "inter.root"])
+        subprocess.run(["rm", f"{tests_path}/inter.root"])
 
         return np.asarray(result)
 
