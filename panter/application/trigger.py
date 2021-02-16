@@ -76,6 +76,7 @@ def trigger_corr(meas: MeasPerkeo, det_main: int):
 
     det_bac = 1 - det_main
     corr_class = corrPerkeo(dataloader=meas, mode=1)
+    corr_class.set_all_corr(bactive=False)
     corr_class.corrections["Pedestal"] = True
     corr_class.corrections["RateDepElec"] = True
     corr_class.addition_filters.append(

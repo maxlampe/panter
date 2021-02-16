@@ -9,10 +9,7 @@ dataloader.auto()
 filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])
 
 corr_class = corrPerkeo(dataloader=filt_meas, mode=0)
-corr_class.corrections["Pedestal"] = True
-corr_class.corrections["RateDepElec"] = True
-corr_class.corrections["DeadTime"] = True
-corr_class.corrections["Drift"] = True
+corr_class.set_all_corr(bactive=True)
 
 corr_class.addition_filters.append(
     {

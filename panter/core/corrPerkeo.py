@@ -127,6 +127,14 @@ class corrPerkeo:
         """Activate corrections from list."""
         pass
 
+    def set_all_corr(self, bactive: bool):
+        """Switch all corrections to active or inactive"""
+
+        for corr in self.corrections:
+            self.corrections[corr] = bactive
+
+        return 0
+
     def clear(self):
         """Clear relevant attributes enabling re-usability without new instantiation."""
 
