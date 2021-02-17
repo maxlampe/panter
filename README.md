@@ -22,11 +22,13 @@ pip3 install -r requirements.txt
 
 ## Usage
 
-See docstrings and python help() function. For example:
+See docstrings and python help() function for manuals and examples. Main classes are listed below.
+In _panter/applications/panter_example.py_ additional, but shorter examples can be found as well.
 
 ```python
 #Core data structure
-from panter.core.dataPerkeo import RootPerkeo
+from panter.core.dataPerkeo import HistPerkeo, RootPerkeo
+help(HistPerkeo)
 help(RootPerkeo)
 #Data loader
 from panter.core.dataloaderPerkeo import DLPerkeo
@@ -39,7 +41,6 @@ help(DoFitData)
 from panter.core.corrPerkeo import corrPerkeo
 help(corrPerkeo)
 ```
-etc.
 
 ## Unit tests
 
