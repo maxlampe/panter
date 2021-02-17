@@ -67,7 +67,7 @@ class HistPerkeo:
 
     Parameters
     ----------
-    data : array of float
+    data : np.array
     bin_count, low_lim, up_lim: int
         Histogram parameters: Bin count, upper and lower limit
 
