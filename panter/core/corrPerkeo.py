@@ -60,9 +60,17 @@ class corrPerkeo:
 
     Attributes
     ----------
-    corrections : {"Pedestal": True, "RateDepElec": False}
+    corrections : {
+        "Pedestal": True,
+        "RateDepElec": False,
+        "DeadTime": True,
+        "Drift": True
+    }
     histograms : []
         List to store created histograms to, if bstore=True in self.corr()
+    hist_concat : HistPerkeo
+        Concatenated histogram of all generated histograms, if bconcat is set to True
+        in corr() method. Only works with mode=0 at the moment.
     addition_filters: []
         List of individual entries to be used as filters with data
         RootPerkeo.set_filt() in _filt_data().
@@ -71,18 +79,20 @@ class corrPerkeo:
     --------
     Can be used to just calculate background subtracted data. If corrections were to be
     set to True, data would be individually corrected and then background subtracted.
+    Correctiosn can be all turned off or on with the shown class method.
 
     >>> meas = DLPerkeo().ret_meas()
     >>> corr_class = corrPerkeo(meas)
-    >>> corr_class.corrections["Pedestal"] = False
-    >>> corr_class.corrections["RateDepElec"] = False
+    >>> corr_class.set_all_corr(bactive=False)
+    >>> corr_class.corrections["Pedestal"] = True
+    >>> corr_class.corrections["Drift"] = True
     >>> corr_class.corr(bstore=True, bwrite=False)
     """
 
     def __init__(self, dataloader: DLPerkeo, mode: int = 0, bonlynew: bool = True):
         self._dataloader = dataloader
         self._bonlynew = bonlynew
-        self.mode = mode
+        self._mode = mode
         self._histpar_sum = SUM_hist_par
         self._histpar_pmt = PMT_hist_par
         self._beam_mtime = BEAM_MEAS_TIME
@@ -99,7 +109,7 @@ class corrPerkeo:
         if self.corrections["Drift"]:
             # TODO: make more automated. File name hard coded!
             impfile = dP.FilePerkeo(conf_path + "/pmt_fac_map.p")
-            self.drift_map = impfile.imp()
+            self._drift_map = impfile.imp()
 
     def _calc_detsum(
         self, vals: list, start_it: int = 0
@@ -107,17 +117,17 @@ class corrPerkeo:
         """Calculate the DetSum for list of ADC values."""
 
         calc_hists = []
-        if self.mode == 0:
+        if self._mode == 0:
             det_sum_tot = np.array(vals[:]).sum(axis=0)[start_it:]
             calc_hists.append(dP.HistPerkeo(det_sum_tot, **self._histpar_sum))
-        elif self.mode == 1:
+        elif self._mode == 1:
             det_sum_0 = np.array(vals[:8]).sum(axis=0)[start_it:]
             det_sum_1 = np.array(vals[8:]).sum(axis=0)[start_it:]
 
             calc_hists.append(dP.HistPerkeo(det_sum_0, **self._histpar_sum))
             calc_hists.append(dP.HistPerkeo(det_sum_1, **self._histpar_sum))
 
-        elif self.mode == 2:
+        elif self._mode == 2:
             for val in vals:
                 calc_hists.append(dP.HistPerkeo(val, **self._histpar_pmt))
 
@@ -181,7 +191,7 @@ class corrPerkeo:
         binvalid = False
 
         if self.corrections["Drift"]:
-            time_stamps = self.drift_map["time"]
+            time_stamps = self._drift_map["time"]
             curr_time = data.filedate
             diff_time = np.abs(time_stamps - curr_time)
             nearest_drift = diff_time.idxmin()
@@ -190,7 +200,7 @@ class corrPerkeo:
                 print("ERROR: Last drift meas more than 2h away")
                 binvalid = True
 
-            drift_factors = self.drift_map["pmt_fac"][nearest_drift]
+            drift_factors = self._drift_map["pmt_fac"][nearest_drift]
 
         if self.corrections["Pedestal"]:
             datacop = copy.copy(data)
@@ -329,14 +339,14 @@ class corrPerkeo:
 
             if bwrite:
                 filename = f"{src_name}_{cyc_no}_{corr}.root"
-                if self.mode == 0:
+                if self._mode == 0:
                     hist_n[0].write2root(histname=f"DetSumTot", filename=filename)
                     if not self._bonlynew:
                         hist_o[0].write2root(
                             histname=f"DetSumTot", filename=filename, bupdate=True
                         )
 
-                elif self.mode == 1:
+                elif self._mode == 1:
                     det = 0
                     hist_n[det].write2root(histname=f"DetSum{det}", filename=filename)
                     if not self._bonlynew:
@@ -352,7 +362,7 @@ class corrPerkeo:
                             histname=f"DetSum{det}", filename=filename, bupdate=True
                         )
 
-                elif self.mode == 2:
+                elif self._mode == 2:
                     det = 0
                     hist_n[det].write2root(histname=f"DetSumTot", filename=filename)
                     if not self._bonlynew:
@@ -370,7 +380,7 @@ class corrPerkeo:
 
             if bconcat:
                 # TODO: Implement concatenation for all modes
-                if self.mode == 0:
+                if self._mode == 0:
                     if self.hist_concat is None:
                         if hist_n is not None:
                             self.hist_concat = hist_n[0]

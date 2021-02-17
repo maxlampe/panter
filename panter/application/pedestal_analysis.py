@@ -19,7 +19,7 @@ ped_hist_par = {
 
 
 def pedestal_analysis(dirname: str, params: list):
-    """"""
+    """Conduct pedestal calculations with different cuts and parameter changes."""
 
     dataloader = DLPerkeo(dirname)
     dataloader.auto()

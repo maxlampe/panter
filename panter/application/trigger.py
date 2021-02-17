@@ -13,7 +13,7 @@ hist_trigger = [None] * 2
 
 
 def trigger_raw(meas: MeasPerkeo, det_main: int):
-    """"""
+    """Calculate trigger function for one detector from raw data."""
 
     det_bac = 1 - det_main
     data = dP.RootPerkeo(meas.file_list[0])
@@ -72,7 +72,7 @@ def trigger_raw(meas: MeasPerkeo, det_main: int):
 
 
 def trigger_corr(meas: MeasPerkeo, det_main: int):
-    """"""
+    """Calculate trigger function for one detector from corrected data."""
 
     det_bac = 1 - det_main
     corr_class = corrPerkeo(dataloader=meas, mode=1)

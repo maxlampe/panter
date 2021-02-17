@@ -108,7 +108,7 @@ class HistPerkeo:
         if rng is not None:
             plt.axis([rng[0], rng[1], rng[2], rng[3]])
         if self.stdv is None:
-            self.stdv = 0.
+            self.stdv = 0.0
 
         plt.title(title)
         plt.ylabel(ylabel)
