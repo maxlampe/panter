@@ -73,10 +73,18 @@ class HistPerkeo:
 
     Attributes
     ----------
-    data, bin_count, low_lim, up_lim
+    bin_count, low_lim, up_lim
         see above section
     hist : pd.DataFrame
         Returned histogram from function ret_hist()
+
+    Examples
+    --------
+
+    Create a histogram with any np.array of data and plot the result:
+
+    >>> histogram = dP.HistPerkeo(data=data_array, bin_count=10, low_lim=-10, up_lim=10)
+    >>> histogram.plt()
     """
 
     def __init__(
@@ -86,13 +94,13 @@ class HistPerkeo:
         low_lim: int = 0,
         up_lim: int = 52000,
     ):
-        self.data = data
-        self.mean = np.array(self.data).mean()
-        self.stdv = np.array(self.data).std()
+        self._data = data
+        self.mean = np.array(self._data).mean()
+        self.stdv = np.array(self._data).std()
         self.bin_count = bin_count
         self.up_lim = up_lim
         self.low_lim = low_lim
-        self.hist = ret_hist(self.data, self.bin_count, self.low_lim, self.up_lim)
+        self.hist = ret_hist(self._data, self.bin_count, self.low_lim, self.up_lim)
 
     def plt(
         self,
