@@ -3,8 +3,9 @@
 It is recommended to check docstrings for additional information and examples."""
 
 import numpy as np
-import panter.core.dataPerkeo as dP
+from panter.core.dataPerkeo import HistPerkeo, RootPerkeo
 from panter.core.dataloaderPerkeo import DLPerkeo
+from panter.core.evalPerkeo import DoFit, DoFitData
 from panter.core.corrPerkeo import corrPerkeo
 
 # General import parameters
@@ -13,12 +14,16 @@ file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 #
 # Base histogram class HistPerkeo
 #
-if True:
-    hist1 = dP.HistPerkeo(
+
+print("Run HistPerkeo example? Type 'y'")
+if input() == 'y':
+    help(HistPerkeo)
+
+    hist1 = HistPerkeo(
         data=np.array([0, 0, 1, 2, 3, 4, 5]), bin_count=10, low_lim=-10, up_lim=10
     )
-    hist2 = dP.HistPerkeo(
-        data=np.array([0, 0, -1, 0, -3, 2, -1]), bin_count=10, low_lim=-10, up_lim=10
+    hist2 = HistPerkeo(
+        data=np.array([0, 0, -1, -3, 2, -1]), bin_count=10, low_lim=-10, up_lim=10
     )
     hist1.plt()
     hist2.plt()
@@ -29,21 +34,28 @@ if True:
 # Perkero root file core management class RootPerkeo for raw access
 #
 
-if True:
+print("Run RootPerkeo example? Type 'y'")
+if input() == 'y':
+    help(RootPerkeo)
     filename = "data119754-67502_beam.root"
 
-    data = dP.RootPerkeo(file_dir + filename)
+    data = RootPerkeo(file_dir + filename)
     data.info()
     data.auto()
     data.gen_hist(data.ret_actpmt())
     data.hists[2].plt()
 
-#
-# Data loader for automated file fetching and loading if needed
-#
 
-if True:
-    # Using the data loader and corrPerkeo class to generate a fully corrected spectra
+
+print("Run DLPerkeo and corrPerkeo example? Type 'y'")
+if input() == 'y':
+    help(DLPerkeo)
+    help(corrPerkeo)
+
+    #
+    # Data loader for automated file fetching and loading if needed
+    #
+
     dataloader = DLPerkeo(file_dir)
     dataloader.auto()
     filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [0, 5, 67502])
@@ -57,3 +69,12 @@ if True:
     corr_class.corr(bstore=True, bwrite=False)
 
     corr_class.histograms[0][1][0].plt()
+
+#
+# Fit class DoFit for general fitting purposes or DoFitData for pre-defined analysis
+#
+
+print("Run DoFit and DoFitData example? Type 'y'")
+if input() == 'y':
+    help(DoFit)
+    help(DoFitData)
