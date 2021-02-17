@@ -1,3 +1,5 @@
+![image](panter_logo.png)
+
 # panter
 
 panter (Perkeo ANalysis Tool for Evaluation and Reduction) is a Python package for reducing, evaluating and analyzing PERKEO III data.
