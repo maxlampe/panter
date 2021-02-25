@@ -6,7 +6,7 @@ import numpy as np
 from panter.core.dataPerkeo import HistPerkeo, RootPerkeo
 from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.core.evalPerkeo import DoFit, DoFitData
-from panter.core.corrPerkeo import corrPerkeo
+from panter.core.corrPerkeo import CorrPerkeo
 
 # General import parameters
 file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
@@ -16,7 +16,7 @@ file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 #
 
 print("Run HistPerkeo example? Type 'y'")
-if input() == 'y':
+if input() == "y":
     help(HistPerkeo)
 
     hist1 = HistPerkeo(
@@ -35,7 +35,7 @@ if input() == 'y':
 #
 
 print("Run RootPerkeo example? Type 'y'")
-if input() == 'y':
+if input() == "y":
     help(RootPerkeo)
     filename = "data119754-67502_beam.root"
 
@@ -46,11 +46,10 @@ if input() == 'y':
     data.hists[2].plt()
 
 
-
 print("Run DLPerkeo and corrPerkeo example? Type 'y'")
-if input() == 'y':
+if input() == "y":
     help(DLPerkeo)
-    help(corrPerkeo)
+    help(CorrPerkeo)
 
     #
     # Data loader for automated file fetching and loading if needed
@@ -64,7 +63,7 @@ if input() == 'y':
     # Core data reduction and correction class corrPerkeo
     #
 
-    corr_class = corrPerkeo(dataloader=filt_meas, mode=0)
+    corr_class = CorrPerkeo(dataloader=filt_meas, mode=0)
     corr_class.set_all_corr(bactive=True)
     corr_class.corr(bstore=True, bwrite=False)
 
@@ -75,6 +74,6 @@ if input() == 'y':
 #
 
 print("Run DoFit and DoFitData example? Type 'y'")
-if input() == 'y':
+if input() == "y":
     help(DoFit)
     help(DoFitData)

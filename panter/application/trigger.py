@@ -4,7 +4,7 @@ import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
-from panter.core.corrPerkeo import corrPerkeo
+from panter.core.corrPerkeo import CorrPerkeo
 
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)
@@ -75,7 +75,7 @@ def trigger_corr(meas: MeasPerkeo, det_main: int):
     """Calculate trigger function for one detector from corrected data."""
 
     det_bac = 1 - det_main
-    corr_class = corrPerkeo(dataloader=meas, mode=1)
+    corr_class = CorrPerkeo(dataloader=meas, mode=1)
     corr_class.set_all_corr(bactive=False)
     corr_class.corrections["Pedestal"] = True
     corr_class.corrections["RateDepElec"] = True

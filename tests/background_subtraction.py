@@ -4,7 +4,7 @@ import configparser
 import numpy as np
 from panter.config import conf_path
 from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
-from panter.core.corrPerkeo import corrPerkeo
+from panter.core.corrPerkeo import CorrPerkeo
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 from tests.unittestroot import UnitTestRoot
@@ -58,7 +58,7 @@ class BackgroundFitTest(UnitTestRoot):
         """Do panter evaluation part for the unit test."""
 
         fit_range = [self._params[3], self._params[4]]
-        corr_class = corrPerkeo(dataloader=meas, mode=1, bonlynew=True)
+        corr_class = CorrPerkeo(dataloader=meas, mode=1, bonlynew=True)
         corr_class.set_all_corr(bactive=False)
         corr_class.corr(bstore=True, bwrite=False)
 

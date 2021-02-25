@@ -7,7 +7,7 @@ import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
-from panter.core.corrPerkeo import corrPerkeo
+from panter.core.corrPerkeo import CorrPerkeo
 from panter.config import conf_path
 
 file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
@@ -17,7 +17,7 @@ filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
 # filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
 
 
-class PerkeoDriftMap:
+class DriftMapPerkeo:
     """Class for creating and handling of drift correction factors.
 
     Can either create from scratch a map of Sn drift measurement fits to single PMT
@@ -50,7 +50,7 @@ class PerkeoDriftMap:
     --------
     Importing existing map and plotting result:
 
-    >>> pdm = PerkeoDriftMap()
+    >>> pdm = DriftMapPerkeo()
     >>> pdm.plot_pmt_map()
 
     Starting from scratch:
@@ -59,7 +59,7 @@ class PerkeoDriftMap:
     >>> dataloader = DLPerkeo(file_dir)
     >>> dataloader.auto()
     >>> filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
-    >>> pdm = PerkeoDriftMap(fmeas=filt_meas, bimp_pmt=False, bimp_sn=False)
+    >>> pdm = DriftMapPerkeo(fmeas=filt_meas, bimp_pmt=False, bimp_sn=False)
     >>> pdm.plot_sn_map()
     >>> pdm.plot_pmt_map()
     """
@@ -106,7 +106,7 @@ class PerkeoDriftMap:
             if time > 2.5787e9:
                 continue
 
-            corr_class = corrPerkeo(dataloader=meas, mode=2)
+            corr_class = CorrPerkeo(dataloader=meas, mode=2)
             corr_class.set_all_corr(bactive=False)
             corr_class.corrections["DeadTime"] = True
             corr_class.corrections["Pedestal"] = True
@@ -251,6 +251,6 @@ class PerkeoDriftMap:
         return 0
 
 
-pdm = PerkeoDriftMap(filt_meas)
+pdm = DriftMapPerkeo(filt_meas)
 # pdm.plot_sn_map()
 pdm.plot_pmt_map()

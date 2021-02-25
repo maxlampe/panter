@@ -42,7 +42,7 @@ BEAM_MEAS_TIME = {
 }
 
 
-class corrPerkeo:
+class CorrPerkeo:
     """Class for doing correction on PERKEO data.
 
     Takes a data loader and corrects all entries in it.
@@ -82,7 +82,7 @@ class corrPerkeo:
     Correctiosn can be all turned off or on with the shown class method.
 
     >>> meas = DLPerkeo().ret_meas()
-    >>> corr_class = corrPerkeo(meas)
+    >>> corr_class = CorrPerkeo(meas)
     >>> corr_class.set_all_corr(bactive=False)
     >>> corr_class.corrections["Pedestal"] = True
     >>> corr_class.corrections["Drift"] = True
