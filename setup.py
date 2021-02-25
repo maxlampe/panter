@@ -5,18 +5,18 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="panter",
-    version="0.0.1",
+    version="0.0.2",
     author="Max Lamparth",
     author_email="max.lamparth@tum.de",
     description="panter - Perkeo ANalysis Tool for Evaluation and Reduction",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://gitlab.lrz.de/ge39dat/panter",
+    url="https://gitlab.lrz.de/perkeo/panter",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
 )
