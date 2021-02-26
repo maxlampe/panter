@@ -245,7 +245,7 @@ class DoFit:
 
         print("\n--- Printing fit info\n")
         print(self._fitresult.fit_report())
-        print("p value = \t", self._gof["pval"])
+        print("p value = \t", self._gof[1])
 
         return 0
 
@@ -312,8 +312,8 @@ class DoFit:
         axs[0].grid(True)
         axs[0].annotate(
             f"{self._fitmodel.name} \n"
-            f'rCh2 = {self._gof["rChi2"]:.3f}\n'
-            f'p = {self._gof["pval"]:.3f}',
+            f'rCh2 = {self._gof[0]:.3f}\n'
+            f'p = {self._gof[1]:.3f}',
             xy=(0.05, 0.95),
             xycoords="axes fraction",
             ha="left",
