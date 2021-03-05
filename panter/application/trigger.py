@@ -171,7 +171,7 @@ for primary_detector in [0, 1]:
 for hist in hist_trigger:
     fitclass = eP.DoFit(hist.hist)
     fitclass.setup(eFS.trigger_func)
-    fitclass.limitrange([500, 15e3])
+    fitclass.limit_range([500, 15e3])
     fitclass.set_fitparam(namekey="a", valpar=0.003)
     fitclass.set_fitparam(namekey="p", valpar=0.655)
     fitclass.set_bool("boutput", True)

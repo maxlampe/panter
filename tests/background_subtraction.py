@@ -67,7 +67,7 @@ class BackgroundFitTest(UnitTestRoot):
             fitclass = eP.DoFit(hist.hist)
             # hist.plt([48000, 51500, -40, 40])
             fitclass.setup(eFS.pol0)
-            fitclass.limitrange([fit_range[0], fit_range[1]])
+            fitclass.limit_range([fit_range[0], fit_range[1]])
             fitres = fitclass.fit()
 
             panter_fitres.append(fitres.params["c0"].value)

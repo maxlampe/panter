@@ -50,9 +50,13 @@ class DoFit:
 
     Attributes
     ----------
-    self.plotrange : [float, float]
-    self.plot_labels : [str]*3
+    plotrange : [float, float]
+    plot_labels : [str]*3
         (default ['Fit result', 'xLabel [ ]', 'yLabel [ ]'])
+    blogscale : False
+        Plot fitresults with y-axis log scaled.
+    bfit_residuals : False
+        Fit gaussian to fit residuals in DoFit.plot_fit()
 
     Examples
     --------
@@ -74,6 +78,9 @@ class DoFit:
         self._booldict = None
         self._fitrange = None
         self.plotrange = {"x": None, "y": None}
+        self.plot_labels = ["Fit result", "xLabel [ ]", "yLabel [ ]"]
+        self.blogscale = False
+        self.bfit_residuals = False
         self._initvals = None
         self._fitfunc = None
         self._fitmodel = None
@@ -81,7 +88,6 @@ class DoFit:
         self._fitresult = None
         self._brecparams = None
         self._gof = None
-        self.plot_labels = ["Fit result", "xLabel [ ]", "yLabel [ ]"]
 
     def setup(self, fitsettings: eFS.FitSetting = eFS.gaus_simp):
         """Set attributes with FitSetting obj from evalFitSettings."""
@@ -109,8 +115,8 @@ class DoFit:
 
         return 0
 
-    def limitrange(self, fitrange: [float, float]):
-        """Activate and set fitrange limit."""
+    def limit_range(self, fitrange: [float, float]):
+        """Activate and set fit range limit."""
 
         self._fitrange = fitrange
         self._booldict["blimfit"] = True
@@ -221,7 +227,7 @@ class DoFit:
         self._gof = [self._fitresult.redchi, pval]
 
         if self._booldict["boutput"]:
-            self.plotfit()
+            self.plot_fit()
 
         return self._fitresult
 
@@ -263,7 +269,7 @@ class DoFit:
             print('WARNING: No fit results yet set. Returning "None".')
         return self._gof
 
-    def plotfit(self):
+    def plot_fit(self):
         """Plot data, fitresult and residuals of current fit."""
 
         self.print_fitinfo()
@@ -277,12 +283,13 @@ class DoFit:
             residuals_data.max() * 1.1,
         )
 
-        fitclass = DoFit(residual_hist.hist)
-        fitclass.setup(eFS.gaus_simp)
-        fitclass.set_fitparam("mu", valpar=0.0)
-        fitclass.set_fitparam("sig", valpar=3.0)
-        fitclass.set_fitparam("norm", valpar=20.0)
-        residual_gausfit = fitclass.fit()
+        if self.bfit_residuals:
+            fitclass = DoFit(residual_hist.hist)
+            fitclass.setup(eFS.gaus_simp)
+            fitclass.set_fitparam("mu", valpar=0.0)
+            fitclass.set_fitparam("sig", valpar=3.0)
+            fitclass.set_fitparam("norm", valpar=20.0)
+            residual_gausfit = fitclass.fit()
 
         fig, axs = plt.subplots(
             2,
@@ -299,6 +306,8 @@ class DoFit:
             axs[0].set_xlim(self.plotrange["x"])
         if self.plotrange["y"] is not None:
             axs[0].set_ylim(self.plotrange["y"])
+        if self.blogscale:
+            axs[0].set_yscale("log")
 
         axs[0].errorbar(self._data["x"], self._data["y"], self._data["err"], fmt=".")
 
@@ -312,8 +321,8 @@ class DoFit:
         axs[0].grid(True)
         axs[0].annotate(
             f"{self._fitmodel.name} \n"
-            f'rCh2 = {self._gof[0]:.3f}\n'
-            f'p = {self._gof[1]:.3f}',
+            f"rCh2 = {self._gof[0]:.3f}\n"
+            f"p = {self._gof[1]:.3f}",
             xy=(0.05, 0.95),
             xycoords="axes fraction",
             ha="left",
@@ -332,21 +341,22 @@ class DoFit:
             fmt=".",
         )
         axs[1].grid(True)
-        try:
-            axs[1].annotate(
-                f'Res gaus Fit: mu = {residual_gausfit.params["mu"].value:.2f} +- '
-                f'{residual_gausfit.params["mu"].stderr:.2f}  '
-                f'sig = {residual_gausfit.params["sig"].value:.2f}'
-                f'+- {residual_gausfit.params["sig"].stderr:.2f}   '
-                f"rChi = {residual_gausfit.redchi:.2f} ",
-                xy=(0.03, 0.97),
-                xycoords="axes fraction",
-                ha="left",
-                va="top",
-                bbox=dict(boxstyle="round", fc="1"),
-            )
-        except TypeError:
-            print("WARNING: Residual Gaussian fit failed.")
+        if self.bfit_residuals:
+            try:
+                axs[1].annotate(
+                    f'Res gaus Fit: mu = {residual_gausfit.params["mu"].value:.2f} +- '
+                    f'{residual_gausfit.params["mu"].stderr:.2f}  '
+                    f'sig = {residual_gausfit.params["sig"].value:.2f}'
+                    f'+- {residual_gausfit.params["sig"].stderr:.2f}   '
+                    f"rChi = {residual_gausfit.redchi:.2f} ",
+                    xy=(0.03, 0.97),
+                    xycoords="axes fraction",
+                    ha="left",
+                    va="top",
+                    bbox=dict(boxstyle="round", fc="1"),
+                )
+            except TypeError:
+                print("WARNING: Residual Gaussian fit failed.")
         plt.show()
 
         return 0

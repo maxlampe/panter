@@ -46,7 +46,7 @@ class HistTestFit(UnitTestRoot):
 
         fitclass = eP.DoFit(hpanter1.hist)
         fitclass.setup(eFS.pol0)
-        fitclass.limitrange(self.fit_par)
+        fitclass.limit_range(self.fit_par)
 
         fitres = fitclass.fit()
 
