@@ -649,6 +649,12 @@ class PedPerkeo:
     Parameters
     ----------
     dataclass : dP.RootPerkeo
+    bplot_res, bplot_fit, bplot_log: False, False, False
+        Activate plotting the pedestal results, plotting each fit result and plotting
+        each fit result with a log scaled y-axis.
+    bfilt_detsum : False
+        Filter DetSum for specific range range_detsum
+    range_detsum
 
     Examples
     --------
@@ -658,8 +664,21 @@ class PedPerkeo:
     >>> print(pedtest.ret_pedestals())
     """
 
-    def __init__(self, dataclass: dP.RootPerkeo):
+    def __init__(
+        self,
+        dataclass: dP.RootPerkeo,
+        bplot_res: bool = False,
+        bplot_fit: bool = False,
+        bplot_log: bool = False,
+        bfilt_detsum: bool = False,
+        range_detsum: list = [0.0, 100e3],
+    ):
         self._dataclass = dataclass
+        self._bplot_fit = bplot_fit
+        self._bplot_log = bplot_log
+        self._bfilt_detsum = bfilt_detsum
+        self._range_detsum = range_detsum
+
         if self._dataclass.no_pmts is None:
             self._dataclass.auto()
         self._ped_hist_par = {
@@ -669,6 +688,8 @@ class PedPerkeo:
         }
         self._pedvalues = np.asarray(self.calc_ped())
         self.ped_hists = None
+        if bplot_res:
+            self.plot_pedestals()
 
     def calc_ped(self):
         """Calculating pedestals"""
@@ -681,6 +702,16 @@ class PedPerkeo:
             self._dataclass.set_filt(
                 "data", fkey="Detector", active=True, ftype="bool", rightval=1 - DET
             )
+
+            if self._bfilt_detsum:
+                self._dataclass.set_filt(
+                    "data",
+                    fkey="DetSum",
+                    active=True,
+                    ftype="num",
+                    low_lim=self._range_detsum[0],
+                    up_lim=self._range_detsum[1],
+                )
             self._dataclass.auto(1)
             if DET == 0:
                 for i in range(0, 8):
@@ -694,20 +725,49 @@ class PedPerkeo:
                         self._dataclass.pmt_data[i], **self._ped_hist_par
                     )
 
-            for ind_hist, hist in enumerate(ped_hists):
-                if hist is not None:
-                    histogram = hist.hist
+        for ind_hist, hist in enumerate(ped_hists):
+            if hist is not None:
+                histogram = hist.hist
+
+                for i in [0, 1]:
                     fitclass = DoFit(histogram)
-                    fitclass.setup(eFS.gaus_gen)
-                    fitclass.set_fitparam(namekey="mu", valpar=0.0)
-                    # fitclass.set_bool("boutput", True)
-                    fitclass.fit()
-                    ped_list[ind_hist] = [
-                        fitclass.ret_results().params["mu"].value,
-                        fitclass.ret_results().params["mu"].stderr,
-                        np.abs(fitclass.ret_results().params["sig"].value),
-                        fitclass.ret_results().params["sig"].stderr,
-                    ]
+                    fitclass.setup(eFS.gaus_simp)
+                    # FIXME: Why is this necessary?
+                    # FIXME: Why does it change eFS.gaus_simp instead of fitclass att?
+                    fitclass.set_bool("blimfit", False)
+                    fitclass.set_bool("boutput", False)
+
+                    if i == 0:
+                        fitclass.set_fitparam(namekey="mu", valpar=0.0)
+                        fitclass.fit()
+
+                        mu_start = fitclass.ret_results().params["mu"].value
+                        sig_start = np.abs(fitclass.ret_results().params["sig"].value)
+                        fit_range = [
+                            mu_start - 1.1 * sig_start,
+                            mu_start + 0.5 * sig_start,
+                        ]
+
+                    else:
+                        fitclass.set_fitparam(namekey="mu", valpar=mu_start)
+                        fitclass.set_fitparam(namekey="sig", valpar=sig_start)
+                        fitclass.limit_range(fit_range)
+                        if self._bplot_fit:
+                            if self._bplot_log:
+                                fitclass.blogscale = self._bplot_log
+                                plot_r = [0.1, histogram["y"].max() * 10.0]
+                                fitclass.plotrange["y"] = plot_r
+                            fitclass.set_bool("boutput", True)
+                        fitclass.fit()
+
+                ped_list[ind_hist] = [
+                    fitclass.ret_results().params["mu"].value,
+                    fitclass.ret_results().params["mu"].stderr,
+                    np.abs(fitclass.ret_results().params["sig"].value),
+                    fitclass.ret_results().params["sig"].stderr,
+                    fitclass.ret_gof()[0],
+                    fitclass.ret_gof()[1],
+                ]
 
         self.ped_hists = ped_hists
         self._dataclass.clear_filt()

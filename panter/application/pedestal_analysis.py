@@ -29,24 +29,30 @@ def pedestal_analysis(dirname: str, params: list):
     data.info()
 
     results = []
-    for detsum in range(1000, 20000, 50):
+    for detsum in range(1000, 40000, 20000):
         data.set_filtdef()
-        data.datafilter["Detector"].active = True
-        data.datafilter["Detector"].rightval = 1
-        data.datafilter["DetSum"].active = True
-        data.datafilter["DetSum"].upperlimit = detsum
-        data.datafilter["DetSum"].lowerlimit = 0.0
+        data.set_filt("data", fkey="Detector", active=True, ftype="bool", rightval=1)
+        data.set_filt(
+            "data",
+            fkey="DetSum",
+            active=True,
+            ftype="num",
+            low_lim=detsum,
+            up_lim=100e3,
+        )
         data.auto(1)
 
-        pedhist = dP.HistPerkeo(data.pmt_data[0], **ped_hist_par)
+        pedhist = dP.HistPerkeo(data.pmt_data[params[2]], **ped_hist_par)
 
-        pedhist.hist["y"] = np.log(pedhist.hist["y"])
-        pedhist.hist["err"] = 1.0 / pedhist.hist["err"]
+        pedloghist = pedhist
+
+        pedloghist.hist["y"] = np.log(pedloghist.hist["y"])
+        pedloghist.hist["err"] = 1.0 / pedloghist.hist["err"]
 
         fit_range = [params[0], params[1]]
-        fitclass = eP.DoFit(pedhist.hist)
+        fitclass = eP.DoFit(pedloghist.hist)
         fitclass.setup(eFS.pol2)
-        fitclass.limitrange([fit_range[0], fit_range[1]])
+        fitclass.limit_range([fit_range[0], fit_range[1]])
         # fitclass.set_bool("boutput", True)
         fitclass.plotrange["x"] = [-150, 350]
         fitclass.plotrange["y"] = [-0.5, 10.5]
@@ -59,6 +65,7 @@ def pedestal_analysis(dirname: str, params: list):
                     fitres.params["c0"].value,
                     fitres.params["c0"].stderr,
                     fitclass.ret_gof()[0],
+                    fitclass.ret_gof()[1],
                 ]
             )
         )
@@ -66,13 +73,12 @@ def pedestal_analysis(dirname: str, params: list):
 
 
 dirname = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-results = pedestal_analysis(dirname=dirname, params=[-70, 40])
 
-print(results)
+res = []
+for pmt in [8]:
+    results = pedestal_analysis(dirname=dirname, params=[-70, 40, pmt])
 
-plt.plot(results.T[0], results.T[1])
-plt.show()
-plt.plot(results.T[0], results.T[2])
-plt.show()
-plt.plot(results.T[0], results.T[3])
-plt.show()
+    i_max = np.argmin(results.T[3])
+    res.append([pmt, results.T[0, i_max], results.T[3, i_max], results.T[4, i_max]])
+
+print(res)
