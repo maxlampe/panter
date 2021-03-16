@@ -22,36 +22,34 @@ file = dir + filename6
 data = dP.RootPerkeo(file)
 
 results = []
-detsum_range = range(4000, 40000, 500)
+detsum_range = range(2000, 45000, 1000)
 for detsum in detsum_range:
     pedtest = eP.PedPerkeo(
         dataclass=data,
         bplot_res=False,
-        bplot_fit=True,
+        bplot_fit=False,
         bplot_log=True,
-        bfilt_detsum=False,
-        range_detsum=[0., detsum],
+        bfilt_detsum=True,
+        range_detsum=[0, detsum],
     )
-    print(pedtest.ret_pedestals())
-    results.append(pedtest.ret_pedestals().T[0])
+    results.append(pedtest.ret_pedestals().T)
 
 results = np.asarray(results).T
 
-fig, axs = plt.subplots(4, 4, sharex=True, figsize=(8, 8))
-fig.suptitle("Pedestal position for different DetSum cuts")
+fig, axs = plt.subplots(4, 4, figsize=(14, 14))
+fig.suptitle("Pedestal position for different DetSum max cuts")
 fig.subplots_adjust(hspace=0.6)
 fig.subplots_adjust(wspace=0.6)
 
-best_filter = []
-for pmd_ind, pmt in enumerate(results):
-    i_min = np.argmin(pmt)
-    best_filter.append(detsum_range[i_min])
-    axs.flat[pmd_ind].plot(detsum_range, pmt)
+for pmd_ind, pmt_val in enumerate(results):
+    axs.flat[pmd_ind].errorbar(detsum_range, pmt_val[0], yerr=pmt_val[1], fmt=".")
     axs.flat[pmd_ind].set_title(f"PMT{pmd_ind}")
-    axs.flat[pmd_ind].set(xlabel="DetSum lowlim [ch]", ylabel="Ped [ch]")
+    axs.flat[pmd_ind].set(xlabel="DetSum cut [ch]", ylabel="Ped [ch]")
+
+plt.tight_layout()
+plt.savefig("../output/pedestal_detsum_maxcuts.png")
 plt.show()
 
-print(best_filter)
 
 """
 Do this
