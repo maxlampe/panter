@@ -80,7 +80,6 @@ class HistPerkeo:
 
     Examples
     --------
-
     Create a histogram with any np.array of data and plot the result:
 
     >>> histogram = dP.HistPerkeo(data=data_array, bin_count=10, low_lim=-10, up_lim=10)
@@ -707,7 +706,7 @@ class RootPerkeo:
         self.no_pmts = len(data_pmt_tran[0])
         # also set list length for self.hists
         self.hists = [None] * self.no_pmts
-        self.hist_sums = [None] * 2
+        self.hist_sums = [None] * 3
 
         # check for mode
         assert no_tadc != 0, "ERROR: TADC format is wrong."
@@ -826,7 +825,7 @@ class RootPerkeo:
         return liste
 
     def gen_hist(
-        self, lpmt: list(int), cust_hist_par: list = None, cust_histsum_par: list = None
+        self, lpmt: list(int), cust_hist_par: dict = None, cust_histsum_par: dict = None
     ):
         """Generate histograms from pmt_data. Last function to call.
 
@@ -834,16 +833,23 @@ class RootPerkeo:
         ----------
         lpmt : list of int
             List of PMT index values. Could be ret_actpmt() return.
+        cust_hist_par
+            Custom histogram parameters for PMT spectra
+        cust_histsum_par
+            Custom histogram parameters for DetSum (only over one detector) spectra
         """
 
         detsum0 = (self.pmt_data[:8]).sum(axis=0)
         detsum1 = (self.pmt_data[8:]).sum(axis=0)
+        detsum_all = self.pmt_data.sum(axis=0)
         if cust_histsum_par is None:
             self.hist_sums[0] = HistPerkeo(detsum0, **self._histsum_par)
             self.hist_sums[1] = HistPerkeo(detsum1, **self._histsum_par)
+            self.hist_sums[2] = HistPerkeo(detsum_all, **self._histsum_par)
         else:
             self.hist_sums[0] = HistPerkeo(detsum0, **cust_histsum_par)
             self.hist_sums[1] = HistPerkeo(detsum1, **cust_histsum_par)
+            self.hist_sums[2] = HistPerkeo(detsum_all, **cust_histsum_par)
 
         for i in lpmt:
             if cust_hist_par is None:
