@@ -601,7 +601,13 @@ class RootPerkeo:
                         "Filter cannot be applied.",
                     )
                     sys.exit(1)
-                self._ev_valid = last_valevents * self._ev_valid
+                # TODO: why is this necessary?
+                try:
+                    self._ev_valid = last_valevents * self._ev_valid
+                except MemoryError:
+                    for ind, entry in enumerate(last_valevents):
+                        self._ev_valid[ind] = float(self._ev_valid[ind] * entry)
+                    self._ev_valid = self._ev_valid.flatten()
 
         end_time = time.time()
         print(f"Time taken for data Filt: {end_time - start_time:0.5f} s")
