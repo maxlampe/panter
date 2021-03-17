@@ -1,84 +1,115 @@
-""""""
+"""Studying effect of pedestal fit range and individual PMT cuts"""
 
-import numpy as np
-import matplotlib.pyplot as plt
-import configparser
 import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
-import panter.config.evalFitSettings as eFS
-from panter.config import conf_path
-from panter.core.dataloaderPerkeo import DLPerkeo
 
-cnf = configparser.ConfigParser()
-cnf.read(f"{conf_path}/evalRaw.ini")
-ped_hist_par = {
-    "bin_count": int(cnf["dataPerkeo"]["PED_hist_counts"]),
-    "low_lim": int(cnf["dataPerkeo"]["PED_hist_min"]),
-    "up_lim": int(cnf["dataPerkeo"]["PED_hist_max"]),
-}
+dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+filename2 = "data119886-67506_bg.root"
+filename3 = "data119874-67506_2.root"
+filename4 = "data120576-67534_bg.root"
+filename5 = "data120564-67534_3.root"
+filename6 = "data119754-67502_beam.root"
 
+dir2 = (
+    "/mnt/sda/PerkeoDaten1920/ElecTest_20200309/Test5_Using_double_sweep_mode_diff_Ampl"
+)
+filename7 = "data249733.root"
+filename8 = "data244813.root"
 
-def pedestal_analysis(dirname: str, params: list):
-    """Conduct pedestal calculations with different cuts and parameter changes."""
+file = dir + filename6
+data = dP.RootPerkeo(file)
 
-    dataloader = DLPerkeo(dirname)
-    dataloader.auto()
-    batch = dataloader.ret_filt_meas(["src"], [5])[0]
+pedtest = eP.PedPerkeo(
+    dataclass=data,
+    bplot_res=False,
+    bplot_fit=False,
+    bplot_log=True,
+)
+ped = pedtest.ret_pedestals().T[0]
+sig = pedtest.ret_pedestals().T[2]
 
-    data = dP.RootPerkeo(batch.file_list[0])
-    data.info()
+#
+# Get all events
+#
 
-    results = []
-    for detsum in range(1000, 40000, 20000):
-        data.set_filtdef()
-        data.set_filt("data", fkey="Detector", active=True, ftype="bool", rightval=1)
-        data.set_filt(
-            "data",
-            fkey="DetSum",
-            active=True,
-            ftype="num",
-            low_lim=detsum,
-            up_lim=100e3,
-        )
-        data.auto(1)
+data.set_filtdef()
+data.set_filt("data", fkey="Detector", active=True, ftype="bool", rightval=1)
+data.auto(1)
+data.gen_hist(
+    lpmt=range(0, data.no_pmts),
+    cust_histsum_par={"bin_count": 500, "low_lim": -500, "up_lim": 5000},
+)
 
-        pedhist = dP.HistPerkeo(data.pmt_data[params[2]], **ped_hist_par)
+hist_all = data.hist_sums[0]
 
-        pedloghist = pedhist
+#
+# Get only back scattered events + half of pedestal
+#
 
-        pedloghist.hist["y"] = np.log(pedloghist.hist["y"])
-        pedloghist.hist["err"] = 1.0 / pedloghist.hist["err"]
+data.set_filtdef()
+data.set_filt("data", fkey="Detector", active=True, ftype="bool", rightval=1)
+coll_cut = 0
+for no_pmt, pmt_ped in enumerate(ped):
+    if no_pmt > 7:
+        continue
+    data.set_filt(
+        "data",
+        fkey="PMT",
+        active=True,
+        ftype="num",
+        low_lim=pmt_ped,
+        up_lim=80e3,
+        index=no_pmt,
+    )
+print(f"Collected cut: {coll_cut}")
+data.auto(1)
+data.gen_hist(
+    lpmt=range(0, data.no_pmts),
+    cust_histsum_par={"bin_count": 500, "low_lim": -500, "up_lim": 5000},
+)
+hist_pedback = data.hist_sums[0]
 
-        fit_range = [params[0], params[1]]
-        fitclass = eP.DoFit(pedloghist.hist)
-        fitclass.setup(eFS.pol2)
-        fitclass.limit_range([fit_range[0], fit_range[1]])
-        # fitclass.set_bool("boutput", True)
-        fitclass.plotrange["x"] = [-150, 350]
-        fitclass.plotrange["y"] = [-0.5, 10.5]
-        fitres = fitclass.fit()
+#
+# Get only back scattered events
+#
 
-        results.append(
-            np.asarray(
-                [
-                    detsum,
-                    fitres.params["c0"].value,
-                    fitres.params["c0"].stderr,
-                    fitclass.ret_gof()[0],
-                    fitclass.ret_gof()[1],
-                ]
-            )
-        )
-    return np.asarray(results)
+data.set_filtdef()
+data.set_filt("data", fkey="Detector", active=True, ftype="bool", rightval=1)
+coll_cut = 0
+for no_pmt, pmt_ped in enumerate(ped):
+    if no_pmt > 7:
+        continue
+    coll_cut += pmt_ped + 1.177 * sig[no_pmt]
+    data.set_filt(
+        "data",
+        fkey="PMT",
+        active=True,
+        ftype="num",
+        low_lim=pmt_ped + 1.177 * sig[no_pmt],
+        up_lim=80e3,
+        index=no_pmt,
+    )
+print(f"Collected cut: {coll_cut}")
+data.auto(1)
+data.gen_hist(
+    lpmt=range(0, data.no_pmts),
+    cust_histsum_par={"bin_count": 500, "low_lim": -500, "up_lim": 5000},
+)
+hist_onlyback = data.hist_sums[0]
 
-
-dirname = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-
-res = []
-for pmt in [8]:
-    results = pedestal_analysis(dirname=dirname, params=[-70, 40, pmt])
-
-    i_max = np.argmin(results.T[3])
-    res.append([pmt, results.T[0, i_max], results.T[3, i_max], results.T[4, i_max]])
-
-print(res)
+hist_onlyback.divbyhist(hist_all)
+hist_pedback.divbyhist(hist_all)
+hist_onlyback.plt(
+    title="Backscat / All (PMT0-7)",
+    xlabel="ADC [ch]",
+    ylabel="Ratio [ ]",
+    bsavefig=True,
+    filename="Pedestal_BackscatOverAll",
+)
+hist_pedback.plt(
+    title="(Backscat + Ped) / All (PMT0-7)",
+    xlabel="ADC [ch]",
+    ylabel="Ratio [ ]",
+    bsavefig=True,
+    filename="Pedestal_PedAndBackscatOverAll",
+)

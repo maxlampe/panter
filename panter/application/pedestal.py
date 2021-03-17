@@ -49,20 +49,3 @@ for pmd_ind, pmt_val in enumerate(results):
 plt.tight_layout()
 plt.savefig("../output/pedestal_detsum_maxcuts.png")
 plt.show()
-
-
-"""
-Do this
-
-Find pedestal postions p
-
-For Pedestals on det 0
-Create two spectras:
-DetSum
-    a) Detector == 1 and PMT[i] >= (p_i + psig * 1.177) for i range(0, 8)
-    b) Detector == 1 and PMT[i] < (p_i + psig * 1.177) for i range(0, 8)
-    
-h_b / (h_a + h_b)
-
-Should yield ideal range for DetSum cut
-"""
