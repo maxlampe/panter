@@ -107,6 +107,8 @@ class HistPerkeo:
         title: str = "",
         xlabel: str = "",
         ylabel: str = "",
+        bsavefig: bool = False,
+        filename: str = "",
     ):
         """Plot histogram."""
 
@@ -128,6 +130,11 @@ class HistPerkeo:
             va="top",
             bbox=dict(boxstyle="round", fc="1"),
         )
+
+        if bsavefig:
+            if filename == "":
+                filename = "histperkeo"
+            plt.savefig(f"{output_path}/{filename}.png", dpi=300)
         plt.show()
 
         return 0
