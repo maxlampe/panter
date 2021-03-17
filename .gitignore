@@ -8,4 +8,5 @@
 *.pyc
 *.dat
 /venv/
+*.pdf
 
