@@ -19,11 +19,13 @@ filename8 = "data244813.root"
 file = dir + filename6
 data = dP.RootPerkeo(file)
 
+PED_CUT = 0.4
+
 pedtest = eP.PedPerkeo(
     dataclass=data,
     bplot_res=False,
-    bplot_fit=False,
-    bplot_log=True,
+    bplot_fit=True,
+    bplot_log=False,
 )
 ped = pedtest.ret_pedestals().T[0]
 sig = pedtest.ret_pedestals().T[2]
@@ -79,13 +81,13 @@ coll_cut = 0
 for no_pmt, pmt_ped in enumerate(ped):
     if no_pmt > 7:
         continue
-    coll_cut += pmt_ped + 1.177 * sig[no_pmt]
+    coll_cut += pmt_ped + PED_CUT * sig[no_pmt]
     data.set_filt(
         "data",
         fkey="PMT",
         active=True,
         ftype="num",
-        low_lim=pmt_ped + 1.177 * sig[no_pmt],
+        low_lim=pmt_ped + PED_CUT * sig[no_pmt],
         up_lim=80e3,
         index=no_pmt,
     )
@@ -104,12 +106,12 @@ hist_onlyback.plt(
     xlabel="ADC [ch]",
     ylabel="Ratio [ ]",
     bsavefig=True,
-    filename="Pedestal_BackscatOverAll",
+    filename=f"Pedestal_BackscatOverAll_PED_CUT{PED_CUT}",
 )
 hist_pedback.plt(
     title="(Backscat + Ped) / All (PMT0-7)",
     xlabel="ADC [ch]",
     ylabel="Ratio [ ]",
     bsavefig=True,
-    filename="Pedestal_PedAndBackscatOverAll",
+    filename=f"Pedestal_PedAndBackscatOverAll_PED_CUT{PED_CUT}",
 )
