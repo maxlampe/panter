@@ -767,9 +767,14 @@ class PedPerkeo:
                         if self._bplot_fit:
                             if self._bplot_log:
                                 fitclass.blogscale = self._bplot_log
-                                plot_r = [0.1, histogram["y"].max() * 10.0]
-                                fitclass.plotrange["y"] = plot_r
+                                plot_yr = [0.1, histogram["y"].max() * 10.0]
+                                fitclass.plotrange["y"] = plot_yr
                             fitclass.set_bool("boutput", True)
+                            plot_xr = [
+                                mu_start - 7.0 * sig_start,
+                                mu_start + 7.0 * sig_start,
+                            ]
+                            fitclass.plotrange["x"] = plot_xr
                         fitclass.fit()
 
                 ped_list[ind_hist] = [
