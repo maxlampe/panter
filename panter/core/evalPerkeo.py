@@ -276,6 +276,10 @@ class DoFit:
         residuals_data = self._fitdata["y"] - self._fitmodel.eval(
             **self._fitresult.params, x=self._fitdata["x"]
         )
+        all_residuals = self._data["y"] - self._fitmodel.eval(
+            **self._fitresult.params, x=self._data["x"]
+        )
+
         residual_hist = dP.HistPerkeo(
             residuals_data,
             int(len(residuals_data) * 0.5),
@@ -332,14 +336,22 @@ class DoFit:
 
         axs.flat[1].set(xlabel=self.plot_labels[1], ylabel="Residuals [x]")
         axs[1].errorbar(
-            self._fitdata["x"],
-            (
-                self._fitdata["y"]
-                - self._fitmodel.eval(**self._fitresult.params, x=self._fitdata["x"])
-            ),
-            self._fitdata["err"],
+            self._data["x"],
+            all_residuals,
+            self._data["err"],
             fmt=".",
         )
+        axs[1].errorbar(
+            self._fitdata["x"],
+            residuals_data,
+            self._fitdata["err"],
+            fmt=".",
+            color="r",
+            label="fit range"
+        )
+        axs[1].legend()
+
+
         axs[1].grid(True)
         if self.bfit_residuals:
             try:
