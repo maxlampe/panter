@@ -53,7 +53,7 @@ class MapPerkeo:
         return 0
 
     def _write_map2file(self, map_ind: int = 0, fname: str = "map.p"):
-        """"""
+        """Write given map and cache into file in conf directory"""
 
         outfile = dP.FilePerkeo(fname)
         return outfile.dump([self.maps[map_ind], self.cache], conf_path)

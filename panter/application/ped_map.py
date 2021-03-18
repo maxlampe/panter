@@ -18,7 +18,49 @@ filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])
 
 
 class PedMapPerkeo(MapPerkeo):
-    """"""
+    """Class for creating and handling of drift correction factors.
+
+    Based on core master class MapPerkeo. Can either create from scratch or import a map
+    of pedestal results for each pmt over time.
+
+    Parameters
+    ----------
+    fmeas: np.array(MeasPerkeo)
+        Array of data loader output (DLPerkeo).
+    bimp_ped: bool
+        To import existing map for final pedestal results.
+    outfile_flag: str
+        Flag which will be added to output file name. Should be chosen according to
+        filter in data loader, i.e. fmeas input.
+
+    Attributes
+    ----------
+    cache: np.array
+        Used for storing relevant outputs, besides resulting maps.
+        In this case, it is not used.
+    map: list of pd.DataFrame
+        map[0]: pedestal map
+        Pandas DataFrame with pedestal position and sigma, fit error and rCh2 for each
+        PMT with a time stamp. Needs to be imported or calculated.
+
+    Examples
+    --------
+    Importing existing map with beam flag and plotting result:
+
+    >>> ppm = PedMapPerkeo(filt_meas, bimp_ped=True, outfile_flag="beam")
+    >>> ppm()
+    >>> ppm.plot_ped_map()
+
+    Starting from scratch:
+
+    >>> file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+    >>> dataloader = DLPerkeo(file_dir)
+    >>> dataloader.auto()
+    >>> filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])
+    >>> ppm = PedMapPerkeo(filt_meas, bimp_ped=False, outfile_flag="beam")
+    >>> ppm()
+    >>> ppm.plot_ped_map()
+    """
 
     def __init__(
         self,
@@ -31,10 +73,9 @@ class PedMapPerkeo(MapPerkeo):
             self._outfile = f"ped_map.p"
         else:
             self._outfile = f"ped_map_{outfile_flag}.p"
-        self._rch2_limit = 1.5
 
     def _get_level(self, level: int = 0, bimp: bool = True) -> bool:
-        """"""
+        """Try to import and/or calculate given level. Return True/False"""
 
         if level == 0 and bimp:
             # try to import pedestal map
