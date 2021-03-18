@@ -109,7 +109,7 @@ class CorrPerkeo:
         if self.corrections["Drift"]:
             # TODO: make more automated. File name hard coded!
             impfile = dP.FilePerkeo(conf_path + "/pmt_fac_map.p")
-            self._drift_map = impfile.imp()
+            self._drift_map, _ = impfile.imp()
 
     def _calc_detsum(
         self, vals: list, start_it: int = 0

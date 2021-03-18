@@ -5,8 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
-import panter.config.evalFitSettings as eFS
-from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
+from panter.core.mapPerkeo import MapPerkeo
+from panter.config.evalFitSettings import gaus_expmod
+from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.core.corrPerkeo import CorrPerkeo
 from panter.config import conf_path
 
@@ -17,14 +18,15 @@ filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
 # filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
 
 
-class DriftMapPerkeo:
+class DriftMapPerkeo(MapPerkeo):
     """Class for creating and handling of drift correction factors.
 
-    Can either create from scratch a map of Sn drift measurement fits to single PMT
-    spectra or use the latter and create a drift correction factor map for each PMT.
-    The maps can either be imported or created anew. For the drift correction factors,
-    the relative deviation to the weighted arithmetic mean of the individual PMT Sn peak
-    position is used. Sn fits with a redChi2 above 1.5 are ignored.
+    Based on core master class MapPerkeo. Can either create from scratch a map of Sn
+    drift measurement fits to single PMT spectra or use the latter and create a drift
+    correction factor map for each PMT. The maps can either be imported or created anew.
+    For the drift correction factors, the relative deviation to the weighted arithmetic
+    mean of the individual PMT Sn peak position is used. Sn fits with a redChi2 above
+    1.5 are ignored.
 
     Parameters
     ----------
@@ -36,13 +38,15 @@ class DriftMapPerkeo:
 
     Attributes
     ----------
-    peak_wam: np.array
-        Array of weighted arithmetic means of Sn peak positions for each PMT channel.
+    cache: np.array
+        Used for storing relevant outputs, besides resulting maps. In this case, an
+        array of weighted arithmetic means of Sn peak positions for each PMT channel.
         Needs to be imported or calculated with Sn map (sn_map).
-    pmt_map: pd.DataFrame
+    map: list of pd.DataFrame
+        map[0]: pmt factor map
         Pandas DataFrame with drift correction factors for each PMT with a time stamp.
         Needs to be imported or calculated from Sn map (sn_map).
-    sn_map: pd.DataFrame
+        map[1]: sn peak pos map
         Pandas DataFrame with drift Sn peak positions for each PMT with a time stamp.
         Needs to be imported or calculated from data loader files.
 
@@ -51,6 +55,7 @@ class DriftMapPerkeo:
     Importing existing map and plotting result:
 
     >>> pdm = DriftMapPerkeo()
+    >>> pdm()
     >>> pdm.plot_pmt_map()
 
     Starting from scratch:
@@ -60,6 +65,7 @@ class DriftMapPerkeo:
     >>> dataloader.auto()
     >>> filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
     >>> pdm = DriftMapPerkeo(fmeas=filt_meas, bimp_pmt=False, bimp_sn=False)
+    >>> pdm()
     >>> pdm.plot_sn_map()
     >>> pdm.plot_pmt_map()
     """
@@ -70,29 +76,44 @@ class DriftMapPerkeo:
         bimp_pmt: bool = True,
         bimp_sn: bool = False,
     ):
-        self._fmeas = fmeas
+        super().__init__(fmeas=fmeas, level=2, bimport=[bimp_pmt, bimp_sn])
         self._outfile = ["sn_peak_map.p", "pmt_fac_map.p"]
-        self.peak_wam = None
         self._rch2_limit = 1.5
-        if bimp_pmt:
+
+    def _get_level(self, level: int = 0, bimp: bool = True) -> bool:
+        """Try to import and/or calculate given level. Return True/False"""
+
+        if level == 0 and bimp:
             # try to import pmt factor map
             impfile = dP.FilePerkeo(f"{conf_path}/{self._outfile[1]}")
-            self.pmt_map = impfile.imp()
-            assert self.pmt_map.shape[0] > 0, "ERROR: PMT factor map empty."
-        elif bimp_sn:
+            self.maps[level], self.cache = impfile.imp()
+            assert self.maps[level].shape[0] > 0, "ERROR: PMT factor map empty."
+
+            return True
+
+        elif level == 1 and bimp:
             # try to import sn peak map
             impfile = dP.FilePerkeo(f"{conf_path}/{self._outfile[0]}")
-            self.sn_map, self.peak_wam = impfile.imp()
-            assert self.sn_map.shape[0] > 0
-            self.pmt_map = pd.DataFrame(columns=["time", "pmt_fac"])
+            self.maps[level], self.cache = impfile.imp()
+            assert self.maps[1].shape[0] > 0
+
+            self.maps[level - 1] = pd.DataFrame(columns=["time", "pmt_fac"])
             self._calc_pmt_fac()
-        else:
-            self.sn_map = pd.DataFrame(
+
+            return True
+
+        elif level == 1 and not bimp:
+            self.maps[level] = pd.DataFrame(
                 columns=["time", "peak_list", "err_list", "rchi2"]
             )
             self._calc_peak_pos()
-            self.pmt_map = pd.DataFrame(columns=["time", "pmt_fac"])
+            self.maps[level - 1] = pd.DataFrame(columns=["time", "pmt_fac"])
             self._calc_pmt_fac()
+
+            return True
+
+        else:
+            return False
 
     def _calc_peak_pos(self):
         """Calculate peak position from Sn drift measurements"""
@@ -102,6 +123,9 @@ class DriftMapPerkeo:
                 continue
 
             print(f"Meas No: {i}")
+            if i % 100 == 0 and i > 0:
+                self._write_map2file(map_ind=1, fname=self._outfile[0])
+
             time = meas.date_list[0]
             if time > 2.5787e9:
                 continue
@@ -114,7 +138,7 @@ class DriftMapPerkeo:
 
             corr_class.corr(bstore=True, bwrite=False)
 
-            fitsettings = eFS.gaus_expmod
+            fitsettings = gaus_expmod
             fitsettings.plot_labels = [
                 "SnSpec fit result",
                 "ADC [ch]",
@@ -144,21 +168,20 @@ class DriftMapPerkeo:
                 "err_list": mu_err,
                 "rchi2": rchi2,
             }
-            self.sn_map = self.sn_map.append(meas_dict, ignore_index=True)
+            self.maps[1] = self.maps[1].append(meas_dict, ignore_index=True)
 
-        rchi2_df = self.sn_map["rchi2"].apply(pd.Series)
-        peak_df = self.sn_map["peak_list"].apply(pd.Series)
-        err_df = self.sn_map["err_list"].apply(pd.Series)
+        rchi2_df = self.maps[1]["rchi2"].apply(pd.Series)
+        peak_df = self.maps[1]["peak_list"].apply(pd.Series)
+        err_df = self.maps[1]["err_list"].apply(pd.Series)
 
         rchi2_filter = rchi2_df < self._rch2_limit
         peak_df = peak_df[rchi2_filter]
         err_df = err_df[rchi2_filter]
 
-        self.peak_wam = (peak_df / err_df ** 2).sum() / (1.0 / err_df ** 2).sum()
+        self.cache = (peak_df / err_df ** 2).sum() / (1.0 / err_df ** 2).sum()
 
-        outfile = dP.FilePerkeo(self._outfile[0])
         assert (
-            outfile.dump([self.sn_map, self.peak_wam], conf_path) == 0
+            self._write_map2file(map_ind=1, fname=self._outfile[0]) == 0
         ), "ERROR: Export of drift map failed."
 
         return 0
@@ -166,9 +189,9 @@ class DriftMapPerkeo:
     def _calc_pmt_fac(self):
         """Calculate drift correction factors for each PMT from sn map"""
 
-        for index, sn_meas in self.sn_map.iterrows():
+        for index, sn_meas in self.maps[1].iterrows():
 
-            factors = (self.peak_wam / sn_meas["peak_list"]).to_numpy()
+            factors = (self.cache / sn_meas["peak_list"]).to_numpy()
             print(factors)
             rchi2_filter = sn_meas["rchi2"] > self._rch2_limit
             factors[rchi2_filter] = None
@@ -178,16 +201,15 @@ class DriftMapPerkeo:
                 "pmt_fac": factors,
             }
 
-            self.pmt_map = self.pmt_map.append(pmt_dict, ignore_index=True)
+            self.maps[0] = self.maps[0].append(pmt_dict, ignore_index=True)
 
-        outfile = dP.FilePerkeo(self._outfile[1])
         assert (
-            outfile.dump(self.pmt_map, conf_path) == 0
+            self._write_map2file(map_ind=0, fname=self._outfile[1]) == 0
         ), "ERROR: Export of drift map failed."
 
         return 0
 
-    def plot_sn_map(self):
+    def plot_sn_map(self, bsave: bool = False):
         """Plot Sn drift map for all PMTs"""
 
         fig, axs = plt.subplots(1, 2, figsize=(15, 8))
@@ -198,29 +220,31 @@ class DriftMapPerkeo:
         axs.flat[0].set(xlabel="Time [s]", ylabel="EMG peak pos [ch]")
         axs.flat[1].set(xlabel="Time [s]", ylabel="EMG peak pos [ch]")
 
-        peak_df = self.sn_map["peak_list"].apply(pd.Series)
-        err_df = self.sn_map["err_list"].apply(pd.Series)
+        peak_df = self.maps[1]["peak_list"].apply(pd.Series)
+        err_df = self.maps[1]["err_list"].apply(pd.Series)
 
         for PMT in range(8):
             axs[0].errorbar(
-                self.sn_map["time"],
+                self.maps[1]["time"],
                 peak_df[PMT],
                 yerr=err_df[PMT],
                 fmt=".",
                 label=f"PMT{PMT}",
             )
             axs[1].errorbar(
-                self.sn_map["time"],
+                self.maps[1]["time"],
                 peak_df[PMT + 8],
                 yerr=err_df[PMT + 8],
                 fmt=".",
                 label=f"PMT{PMT + 8}",
             )
+        if bsave:
+            plt.savefig(self._outfile[0][:-1] + "png", dpi=300)
         plt.show()
 
         return 0
 
-    def plot_pmt_map(self):
+    def plot_pmt_map(self, bsave: bool = False):
         """Plot drift correction factor map for all PMTs"""
 
         fig, axs = plt.subplots(1, 2, figsize=(15, 8))
@@ -231,26 +255,29 @@ class DriftMapPerkeo:
         axs.flat[0].set(xlabel="Time [s]", ylabel="Correction factor [ ]")
         axs.flat[1].set(xlabel="Time [s]", ylabel="Correction factor [ ]")
 
-        pmt_fac = self.pmt_map["pmt_fac"].apply(pd.Series)
+        pmt_fac = self.maps[0]["pmt_fac"].apply(pd.Series)
 
         for PMT in range(8):
             axs[0].plot(
-                self.pmt_map["time"],
+                self.maps[0]["time"],
                 pmt_fac[PMT],
                 ".",
                 label=f"PMT{PMT}",
             )
             axs[1].plot(
-                self.pmt_map["time"],
+                self.maps[0]["time"],
                 pmt_fac[PMT + 8],
                 ".",
                 label=f"PMT{PMT + 8}",
             )
+        if bsave:
+            plt.savefig(self._outfile[1][:-1] + "png", dpi=300)
         plt.show()
 
         return 0
 
 
 pdm = DriftMapPerkeo(filt_meas)
+pdm()
 # pdm.plot_sn_map()
 pdm.plot_pmt_map()
