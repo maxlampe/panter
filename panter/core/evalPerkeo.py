@@ -347,10 +347,9 @@ class DoFit:
             self._fitdata["err"],
             fmt=".",
             color="r",
-            label="fit range"
+            label="fit range",
         )
         axs[1].legend()
-
 
         axs[1].grid(True)
         if self.bfit_residuals:
