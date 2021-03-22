@@ -173,6 +173,8 @@ class PedMapPerkeo(MapPerkeo):
                 fmt=".",
                 label=f"PMT{PMT + 8}",
             )
+        axs[0].legend()
+        axs[1].legend()
         if bsave:
             plt.savefig(output_path + "/" + self._outfile[:-1] + "png", dpi=300)
         plt.show()
