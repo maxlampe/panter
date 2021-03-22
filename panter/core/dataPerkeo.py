@@ -12,10 +12,16 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
-from ROOT import TFile, TH1F
 import uproot
 from panter.config import conf_path
 from panter import output_path
+
+bfound_root = True
+try:
+    from ROOT import TFile, TH1F
+except ModuleNotFoundError:
+    bfound_root = False
+
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
@@ -220,6 +226,8 @@ class HistPerkeo:
         self, histname: str, filename: str, out_dir: str = None, bupdate: bool = False
     ):
         """Write the histogram into a root file."""
+
+        assert bfound_root, "ERROR: Could not find ROOT package."
 
         if out_dir is None:
             out_dir = output_path
