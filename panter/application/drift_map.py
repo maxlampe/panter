@@ -280,7 +280,7 @@ dataloader.auto()
 filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
 # filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
 
-pdm = DriftMapPerkeo(filt_meas)
+pdm = DriftMapPerkeo(filt_meas, bimp_pmt=False, bimp_sn=False)
 pdm()
 # pdm.plot_sn_map()
 pdm.plot_pmt_map()

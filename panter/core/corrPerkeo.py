@@ -106,10 +106,7 @@ class CorrPerkeo:
         self.hist_concat = None
         self.addition_filters = []
 
-        if self.corrections["Drift"]:
-            # TODO: make more automated. File name hard coded!
-            impfile = dP.FilePerkeo(conf_path + "/pmt_fac_map.p")
-            self._drift_map, _ = impfile.imp()
+        self._drift_map = None
 
     def _calc_detsum(
         self, vals: list, start_it: int = 0
@@ -191,6 +188,9 @@ class CorrPerkeo:
         binvalid = False
 
         if self.corrections["Drift"]:
+            impfile = dP.FilePerkeo(conf_path + "/pmt_fac_map.p")
+            self._drift_map, _ = impfile.imp()
+
             time_stamps = self._drift_map["time"]
             curr_time = data.filedate
             diff_time = np.abs(time_stamps - curr_time)

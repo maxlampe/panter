@@ -11,12 +11,6 @@ from panter.config import conf_path
 from panter import output_path
 
 
-file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-dataloader = DLPerkeo(file_dir)
-dataloader.auto()
-filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 4])
-# filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
-
 
 class PedMapPerkeo(MapPerkeo):
     """Class for creating and handling of drift correction factors.
@@ -39,7 +33,7 @@ class PedMapPerkeo(MapPerkeo):
     cache: np.array
         Used for storing relevant outputs, besides resulting maps.
         In this case, it is not used.
-    map: list of pd.DataFrame
+    maps: list of pd.DataFrame
         map[0]: pedestal map
         Pandas DataFrame with pedestal position and sigma, fit error and rCh2 for each
         PMT with a time stamp. Needs to be imported or calculated.
@@ -182,6 +176,13 @@ class PedMapPerkeo(MapPerkeo):
         return 0
 
 
+"""
+file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+dataloader = DLPerkeo(file_dir)
+dataloader.auto()
+filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 4])
+filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
 ppm = PedMapPerkeo(filt_meas, bimp_ped=False, outfile_flag="cs")
 ppm()
 ppm.plot_ped_map(bsave=True)
+"""
