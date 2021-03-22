@@ -12,12 +12,6 @@ from panter.core.corrPerkeo import CorrPerkeo
 from panter.config import conf_path
 from panter import output_path
 
-file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-dataloader = DLPerkeo(file_dir)
-dataloader.auto()
-filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
-# filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
-
 
 class DriftMapPerkeo(MapPerkeo):
     """Class for creating and handling of drift correction factors.
@@ -279,6 +273,12 @@ class DriftMapPerkeo(MapPerkeo):
 
         return 0
 
+
+file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+dataloader = DLPerkeo(file_dir)
+dataloader.auto()
+filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
+# filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
 
 pdm = DriftMapPerkeo(filt_meas)
 pdm()
