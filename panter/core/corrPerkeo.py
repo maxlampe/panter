@@ -317,6 +317,13 @@ class CorrPerkeo:
                 corr += corr_name
 
         cyc_no = 0
+
+        # Catch single MeasPerkeo inputs
+        try:
+            self._dataloader.shape
+        except AttributeError:
+            self._dataloader = [self._dataloader]
+
         for meas in self._dataloader:
             tp = meas.tp
             src = meas.src
