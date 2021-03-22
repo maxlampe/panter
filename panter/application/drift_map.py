@@ -10,6 +10,7 @@ from panter.config.evalFitSettings import gaus_expmod
 from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.core.corrPerkeo import CorrPerkeo
 from panter.config import conf_path
+from panter import output_path
 
 file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(file_dir)
@@ -119,7 +120,7 @@ class DriftMapPerkeo(MapPerkeo):
         """Calculate peak position from Sn drift measurements"""
 
         for i, meas in enumerate(self._fmeas):
-            if i in [61, 294, 625]:
+            if i in [61, 109, 294, 411, 625]:
                 continue
 
             print(f"Meas No: {i}")
@@ -127,8 +128,8 @@ class DriftMapPerkeo(MapPerkeo):
                 self._write_map2file(map_ind=1, fname=self._outfile[0])
 
             time = meas.date_list[0]
-            if time > 2.5787e9:
-                continue
+            # if time > 2.5787e9:
+            #    continue
 
             corr_class = CorrPerkeo(dataloader=meas, mode=2)
             corr_class.set_all_corr(bactive=False)
@@ -239,7 +240,7 @@ class DriftMapPerkeo(MapPerkeo):
                 label=f"PMT{PMT + 8}",
             )
         if bsave:
-            plt.savefig(self._outfile[0][:-1] + "png", dpi=300)
+            plt.savefig(output_path + "/" + self._outfile[0][:-1] + "png", dpi=300)
         plt.show()
 
         return 0
@@ -271,7 +272,7 @@ class DriftMapPerkeo(MapPerkeo):
                 label=f"PMT{PMT + 8}",
             )
         if bsave:
-            plt.savefig(self._outfile[1][:-1] + "png", dpi=300)
+            plt.savefig(output_path + "/" + self._outfile[1][:-1] + "png", dpi=300)
         plt.show()
 
         return 0

@@ -8,12 +8,13 @@ import panter.core.evalPerkeo as eP
 from panter.core.mapPerkeo import MapPerkeo
 from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.config import conf_path
+from panter import output_path
 
 
 file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(file_dir)
 dataloader.auto()
-filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])
+filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 4])
 # filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
 
 
@@ -173,12 +174,12 @@ class PedMapPerkeo(MapPerkeo):
                 label=f"PMT{PMT + 8}",
             )
         if bsave:
-            plt.savefig(self._outfile[:-1] + "png", dpi=300)
+            plt.savefig(output_path + "/" + self._outfile[:-1] + "png", dpi=300)
         plt.show()
 
         return 0
 
 
-ppm = PedMapPerkeo(filt_meas, bimp_ped=False, outfile_flag="beam")
+ppm = PedMapPerkeo(filt_meas, bimp_ped=False, outfile_flag="cs")
 ppm()
-ppm.plot_ped_map()
+ppm.plot_ped_map(bsave=True)
