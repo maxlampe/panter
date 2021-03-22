@@ -30,13 +30,13 @@ cnf.read(f"{conf_path}/evalRaw.ini")
 
 def ret_hist(
     data: np.array(float),
-    bincount: int = 1024,
-    range_lowlim: int = 0,
-    range_uplim: int = 52000,
+    bin_count: int = 1024,
+    low_lim: int = 0,
+    up_lim: int = 52000,
 ):
     """Create a histogram as pd.DataFrame from an input array."""
 
-    raw_bins = np.linspace(range_lowlim, range_uplim, bincount + 1)
+    raw_bins = np.linspace(low_lim, up_lim, bin_count + 1)
     use_bins = [np.array([-np.inf]), raw_bins, np.array([np.inf])]
     use_bins = np.concatenate(use_bins)
 
@@ -79,7 +79,8 @@ class HistPerkeo:
 
     Attributes
     ----------
-    bin_count, low_lim, up_lim
+    stats
+    parameters
         see above section
     hist : pd.DataFrame
         Returned histogram from function ret_hist()
@@ -89,7 +90,7 @@ class HistPerkeo:
     Create a histogram with any np.array of data and plot the result:
 
     >>> histogram = dP.HistPerkeo(data=data_array, bin_count=10, low_lim=-10, up_lim=10)
-    >>> histogram.plt()
+    >>> histogram.plot_hist()
     """
 
     def __init__(
@@ -99,15 +100,29 @@ class HistPerkeo:
         low_lim: int = 0,
         up_lim: int = 52000,
     ):
-        self._data = data
-        self.mean = np.array(self._data).mean()
-        self.stdv = np.array(self._data).std()
+        self._data = np.asarray(data)
+        self.stats = {
+            "mean": self._data.mean(),
+            "std": self._data.std(),
+            "noevents": self._data.shape[0],
+        }
+        self.parameters = {"bin_count": bin_count, "low_lim": low_lim, "up_lim": up_lim}
         self.bin_count = bin_count
         self.up_lim = up_lim
         self.low_lim = low_lim
-        self.hist = ret_hist(self._data, self.bin_count, self.low_lim, self.up_lim)
+        self.hist = ret_hist(self._data, **self.parameters)
 
-    def plt(
+    def _calc_stats(self):
+        """Calculate mean and biased variance of histogram based on bin content."""
+
+        self.n_events = self.hist["y"].sum()
+        self.mean = (self.hist["x"] * self.hist["y"]).sum() / self.n_events
+        var = ((self.hist["x"] - self.mean) ** 2 * self.hist["y"]).sum() / self.n_events
+        self.stdv = np.sqrt(var)
+
+        return 0
+
+    def plot_hist(
         self,
         rng: list = None,
         title: str = "",
@@ -122,14 +137,14 @@ class HistPerkeo:
         plt.errorbar(self.hist["x"], self.hist["y"], self.hist["err"], fmt=".")
         if rng is not None:
             plt.axis([rng[0], rng[1], rng[2], rng[3]])
-        if self.stdv is None:
-            self.stdv = 0.0
+        if self.stats["std"] is None:
+            self.stats["std"] = 0.0
 
         plt.title(title)
         plt.ylabel(ylabel)
         plt.xlabel(xlabel)
         plt.annotate(
-            f"Mean = {self.mean:0.2f}\n" f"StDv = {self.stdv:0.2f}",
+            f"Mean = {self.stats['mean']:0.2f}\n" f"StDv = {self.stats['std']:0.2f}",
             xy=(0.05, 0.95),
             xycoords="axes fraction",
             ha="left",
@@ -148,9 +163,7 @@ class HistPerkeo:
     def addhist(self, hist_p: HistPerkeo, fac: float = 1.0):
         """Add another histogram to existing one with multiplicand."""
 
-        hist_par = [self.bin_count, self.low_lim, self.up_lim]
-        hist_par_2add = [hist_p.bin_count, hist_p.low_lim, hist_p.up_lim]
-        assert hist_par == hist_par_2add, "ERROR: Binning does not match."
+        assert self.parameters == hist_p.parameters, "ERROR: Binning does not match."
 
         newhist = pd.DataFrame(
             {
@@ -161,17 +174,14 @@ class HistPerkeo:
         )
         # Changes input ret_hist like in Root
         self.hist = newhist
-        self.mean = (self.mean + fac * hist_p.mean) / (1.0 + fac)
-        self.stdv = None
+        self._calc_stats()
 
         return 0
 
     def divbyhist(self, hist_p: HistPerkeo):
         """Divide by another histogram."""
 
-        hist_par = [self.bin_count, self.low_lim, self.up_lim]
-        hist_par_2add = [hist_p.bin_count, hist_p.low_lim, hist_p.up_lim]
-        assert hist_par == hist_par_2add, "ERROR: Binning does not match."
+        assert self.parameters == hist_p.parameters, "ERROR: Binning does not match."
 
         filt = hist_p.hist["y"] != 0.0
         hist_p.hist = hist_p.hist[filt]
@@ -191,8 +201,7 @@ class HistPerkeo:
 
         # Changes input ret_hist like in Root
         self.hist = newhist
-        self.mean = self.mean / hist_p.mean
-        self.stdv = None
+        self._calc_stats()
 
         return 0
 
@@ -208,6 +217,7 @@ class HistPerkeo:
         )
         # Changes input ret_hist like in Root
         self.hist = newhist
+        self._calc_stats()
 
         return 0
 
@@ -235,7 +245,11 @@ class HistPerkeo:
         opt = "UPDATE" if bupdate else "RECREATE"
         hfile = TFile(f"{out_dir}/{filename}.root", opt, "Panter Output")
         rhist = TH1F(
-            f"{histname}", f"{histname}", self.bin_count, self.low_lim, self.up_lim
+            f"{histname}",
+            f"{histname}",
+            self.parameters["bin_count"],
+            self.parameters["low_lim"],
+            self.parameters["up_lim"],
         )
         for i in range(1, rhist.GetNbinsX()):
             rhist.SetBinContent(i, self.hist["y"][i - 1])

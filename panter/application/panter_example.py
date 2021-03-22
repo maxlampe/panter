@@ -25,10 +25,10 @@ if input() == "y":
     hist2 = HistPerkeo(
         data=np.array([0, 0, -1, -3, 2, -1]), bin_count=10, low_lim=-10, up_lim=10
     )
-    hist1.plt()
-    hist2.plt()
+    hist1.plot_hist()
+    hist2.plot_hist()
     hist1.addhist(hist2)
-    hist1.plt()
+    hist1.plot_hist()
 
 #
 # Perkero root file core management class RootPerkeo for raw access
@@ -43,7 +43,7 @@ if input() == "y":
     data.info()
     data.auto()
     data.gen_hist(data.ret_actpmt())
-    data.hists[2].plt()
+    data.hists[2].plot_hist()
 
 
 print("Run DLPerkeo and corrPerkeo example? Type 'y'")
@@ -67,7 +67,7 @@ if input() == "y":
     corr_class.set_all_corr(bactive=True)
     corr_class.corr(bstore=True, bwrite=False)
 
-    corr_class.histograms[0][1][0].plt()
+    corr_class.histograms[0][1][0].plot_hist()
 
 #
 # Fit class DoFit for general fitting purposes or DoFitData for pre-defined analysis

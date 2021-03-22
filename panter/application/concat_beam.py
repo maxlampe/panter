@@ -23,5 +23,5 @@ corr_class.addition_filters.append(
 
 corr_class.corr(bstore=True, bwrite=False, bconcat=True)
 
-corr_class.hist_concat.plt()
+corr_class.hist_concat.plot_hist()
 corr_class.hist_concat.write2root(histname=f"DetSumTot", filename="concat_test_raw")

@@ -101,14 +101,14 @@ hist_onlyback = data.hist_sums[0]
 
 hist_onlyback.divbyhist(hist_all)
 hist_pedback.divbyhist(hist_all)
-hist_onlyback.plt(
+hist_onlyback.plot_hist(
     title="Backscat / All (PMT0-7)",
     xlabel="ADC [ch]",
     ylabel="Ratio [ ]",
     bsavefig=True,
     filename=f"Pedestal_BackscatOverAll_PED_CUT{PED_CUT}",
 )
-hist_pedback.plt(
+hist_pedback.plot_hist(
     title="(Backscat + Ped) / All (PMT0-7)",
     xlabel="ADC [ch]",
     ylabel="Ratio [ ]",
