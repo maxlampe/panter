@@ -176,13 +176,12 @@ class PedMapPerkeo(MapPerkeo):
         return 0
 
 
-"""
-file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-dataloader = DLPerkeo(file_dir)
-dataloader.auto()
-filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 4])
-filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
-ppm = PedMapPerkeo(filt_meas, bimp_ped=False, outfile_flag="cs")
-ppm()
-ppm.plot_ped_map(bsave=True)
-"""
+if False:
+    # file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+    # dataloader = DLPerkeo(file_dir)
+    # dataloader.auto()
+    # filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 4])
+    # filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
+    ppm = PedMapPerkeo([], bimp_ped=True, outfile_flag="beam")
+    ppm()
+    ppm.plot_ped_map(bsave=False)
