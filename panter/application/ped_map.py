@@ -3,13 +3,14 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.dates as md
+import datetime
 import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
 from panter.core.mapPerkeo import MapPerkeo
 from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.config import conf_path
 from panter import output_path
-
 
 
 class PedMapPerkeo(MapPerkeo):
@@ -64,6 +65,7 @@ class PedMapPerkeo(MapPerkeo):
         outfile_flag: str = None,
     ):
         super().__init__(fmeas=fmeas, level=1, bimport=[bimp_ped])
+        self.outfile_flag = outfile_flag
         if outfile_flag is None:
             self._outfile = f"ped_map.p"
         else:
@@ -141,27 +143,33 @@ class PedMapPerkeo(MapPerkeo):
     def plot_ped_map(self, bsave: bool = False):
         """Plot Pedestal map for all PMTs"""
 
-        fig, axs = plt.subplots(1, 2, figsize=(15, 8))
-        fig.suptitle("Pedestal Map")
+        fig, axs = plt.subplots(1, 2, figsize=(20, 12))
+        fig.suptitle(f"Pedestal Map {self.outfile_flag}")
 
         axs[0].set_title("Pedestals over time Det 0")
         axs[1].set_title("Peak pos over time Det 1")
-        axs.flat[0].set(xlabel="Time [s]", ylabel="Ped pos [ch]")
-        axs.flat[1].set(xlabel="Time [s]", ylabel="Ped pos [ch]")
+        axs.flat[0].set(xlabel="Time [D - M ]", ylabel="Ped pos [ch]")
+        axs.flat[1].set(xlabel="Time [ ]", ylabel="Ped pos [ch]")
+
+        xfmt = md.DateFormatter("%m-%d\n%H:%M")
+        axs[0].xaxis.set_major_formatter(xfmt)
+        axs[1].xaxis.set_major_formatter(xfmt)
 
         ped_df = self.maps[0]["ped_list"].apply(pd.Series)
         ped_err_df = self.maps[0]["ped_err_list"].apply(pd.Series)
 
+        dates_plot = [datetime.datetime.fromtimestamp(t) for t in self.maps[0]["time"]]
+
         for PMT in range(8):
             axs[0].errorbar(
-                self.maps[0]["time"],
+                dates_plot,
                 ped_df[PMT],
                 yerr=ped_err_df[PMT],
                 fmt=".",
                 label=f"PMT{PMT}",
             )
             axs[1].errorbar(
-                self.maps[0]["time"],
+                dates_plot,
                 ped_df[PMT + 8],
                 yerr=ped_err_df[PMT + 8],
                 fmt=".",
@@ -182,6 +190,21 @@ if False:
     # dataloader.auto()
     # filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 4])
     # filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
-    ppm = PedMapPerkeo([], bimp_ped=True, outfile_flag="beam")
+    sources = np.asarray(["beam", "ce", "cd", "cs", "bi", "sn"])
+    for src in sources:
+        ppm = PedMapPerkeo([], bimp_ped=True, outfile_flag=src)
+        ppm()
+        ppm.plot_ped_map(bsave=True)
+
+
+if False:
+    ind = 1
+    file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+    dataloader = DLPerkeo(file_dir)
+    dataloader.auto()
+    filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, ind])
+    sources = np.asarray(["cd", "ce", "bi", "sn", "cs", "beam"])
+    src = sources[ind]
+    ppm = PedMapPerkeo(filt_meas, bimp_ped=False, outfile_flag=src)
     ppm()
-    ppm.plot_ped_map(bsave=False)
+    ppm.plot_ped_map(bsave=True)
