@@ -22,21 +22,22 @@ filenames_delta = ["data201948.root", "data201952.root"]
 filenames_all = ["data201964-70606_bg.root", "data201980-70606_3.root"]
 
 
-file = dir3 + filenames_both[1]
+file = dir + filename6
 data = dP.RootPerkeo(file)
 pedtest = eP.PedPerkeo(
-            dataclass=data,
-            bplot_res=False,
-            bplot_fit=False,
-            bplot_log=True,
-            bfilt_detsum=False,
-        )
+    dataclass=data,
+    bplot_res=False,
+    bplot_fit=False,
+    bplot_log=True,
+    bfilt_detsum=False,
+)
 print(pedtest.ret_pedestals().T[0].sum())
 print(np.sqrt((pedtest.ret_pedestals().T[1] ** 2).sum()))
 
-if False:
+if True:
+    step_size = 1000
     results = []
-    detsum_range = range(2000, 45000, 1000)
+    detsum_range = range(1000, 45000, step_size)
     for detsum in detsum_range:
         pedtest = eP.PedPerkeo(
             dataclass=data,
@@ -44,22 +45,23 @@ if False:
             bplot_fit=False,
             bplot_log=True,
             bfilt_detsum=True,
-            range_detsum=[0, detsum],
+            range_detsum=[detsum, detsum + step_size],
         )
         results.append(pedtest.ret_pedestals().T)
 
     results = np.asarray(results).T
 
     fig, axs = plt.subplots(4, 4, figsize=(14, 14))
-    fig.suptitle("Pedestal position for different DetSum max cuts")
+    fig.suptitle("Pedestal position for different DetSum interval cuts")
     fig.subplots_adjust(hspace=0.6)
     fig.subplots_adjust(wspace=0.6)
 
     for pmd_ind, pmt_val in enumerate(results):
         axs.flat[pmd_ind].errorbar(detsum_range, pmt_val[0], yerr=pmt_val[1], fmt=".")
         axs.flat[pmd_ind].set_title(f"PMT{pmd_ind}")
-        axs.flat[pmd_ind].set(xlabel="DetSum cut [ch]", ylabel="Ped [ch]")
+        axs.flat[pmd_ind].set(xlabel="DetSum interval center [ch]", ylabel="Ped [ch]")
+        axs.flat[pmd_ind].set_ylim([pmt_val[0][0] - 15, pmt_val[0][0] + 15])
 
     plt.tight_layout()
-    plt.savefig("../output/pedestal_detsum_maxcuts.png")
+    plt.savefig("../output/pedestal_detsum_intcuts.png")
     plt.show()
