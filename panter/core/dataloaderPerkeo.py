@@ -12,12 +12,12 @@ class MeasPerkeo:
     Parameters
     ----------
     tp : int
-        States whether beam-like (0) or source-like data(1), for background subtraction.
+        States whether beam-like (0), source-like data(1) or without background(2), for background subtraction.
     src : int
         Measurment type. Convention: 0-4 calibration sources,
         5 beam, 6-7 background w/wo B field and 8 would be electronic tests.
     file_list : list
-        List of file(s) for single measurement. One file f0r tp = 0, two for tp = 1.
+        List of file(s) for single measurement. One file for tp = 0 and 2, two for tp = 1.
     cyc_no, nomad_no : int
         Optional.
 
