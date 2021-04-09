@@ -79,7 +79,7 @@ class CorrPerkeo:
     --------
     Can be used to just calculate background subtracted data. If corrections were to be
     set to True, data would be individually corrected and then background subtracted.
-    Correctiosn can be all turned off or on with the shown class method.
+    Corrections can be all turned off or on with the shown class method.
 
     >>> meas = DLPerkeo().ret_meas()
     >>> corr_class = CorrPerkeo(meas)
@@ -235,6 +235,26 @@ class CorrPerkeo:
 
         return [[hist_old, hist_new], data.cy_valid_no, binvalid]
 
+    def _corr_nobg(self, ev_file: list):
+        """Correct measurement without background subtraction"""
+
+        res = []
+        data_sg = dP.RootPerkeo(ev_file[0])
+
+        self._filt_data(data_sg)
+        r, s, i = self._calc_corr(data_sg)
+        if i:
+            return [None, None]
+        res.append(r)
+
+        if self._bonlynew:
+            res_old = None
+        else:
+            res_old = [*res[0][0]]
+        res_new = [*res[0][1]]
+
+        return [res_old, res_new]
+
     def _corr_beam(self, ev_file: list):
         """Correct beam-like data (i.e. background in same file)."""
 
@@ -343,6 +363,8 @@ class CorrPerkeo:
                 [hist_o, hist_n] = self._corr_beam(files)
             elif tp == 1:
                 [hist_o, hist_n] = self._corr_src(files)
+            elif tp == 2:
+                [hist_o, hist_n] = self._corr_nobg(files)
 
             if bwrite:
                 filename = f"{src_name}_{cyc_no}_{corr}.root"
