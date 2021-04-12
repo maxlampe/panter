@@ -217,7 +217,7 @@ class CorrPerkeo:
             for i in range(0, data.no_pmts):
                 ampl_0 = ampl_corr[i][1:]
                 ampl_1 = ampl_corr[i][:-1]
-                ampl_corr[i] = eF.calc_Acorr_ratedep(
+                ampl_corr[i] = eF.calc_acorr_ratedep(
                     ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
                 )
 

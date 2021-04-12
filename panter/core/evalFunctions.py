@@ -115,7 +115,7 @@ def calc_z(x, mu, sig, tau):
     return 2 ** (-0.5) * (sig / tau - (x - mu) / sig)
 
 
-def calc_Acorr_ratedep(
+def calc_acorr_ratedep(
     A_meas: float, A_1: float, t_1: float, delta: float = 0.0033, k: float = 100.0
 ) -> float:
     """Calculate true ADC value by correcting for rate dependency"""
