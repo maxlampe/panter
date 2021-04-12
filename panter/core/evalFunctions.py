@@ -2,6 +2,7 @@
 
 import numpy as np
 from scipy.special import erfc
+from math import factorial
 
 
 def gaussian(x, mu, sig, norm: float = 1.):
@@ -106,6 +107,60 @@ def exmodgaus(x, h, mu, sig, tau):
     err_func = erfc(calc_z(x, mu, sig, tau))
 
     return exp_func_k * exp_func * err_func
+
+
+def charge_spec(
+        x: float,
+        a: float,
+        w: float,
+        lam: float,
+        q0: float,
+        sig0: float,
+        c0: float,
+        sig: float,
+        mu: float,
+        norm: float = 1.,
+        k_max: int = 100
+):
+    """Advanced model for charge spectrum of PMT for absolute calibration
+
+    based on archived paper M. Diwan @ Brookhaven National Labs
+
+    Parameters
+    ----------
+    x: float
+        Charge
+    a: float
+        ADC to charge
+    w: float
+        Probability of dark pulse (e.g. thermal electron emission)
+    lam: float
+        Mean number of photo-electrons at cathode
+    q0, sig0: float, float
+        Mean and standard deviation of baseline current (raw PMT Pedestal)
+    c0: float
+        Exponential coefficient for dark pulse component (dark rate parameter)
+    mu, sig: float, float
+        Mean and standard deviation of gain
+    norm: float
+        Probability to spectra
+    k_max: 10000
+        Limit for summation for number of photo-electrons k
+    """
+
+    x = a * np.array(x, dtype=float)
+
+    sum = 0.
+    for k in range(k_max):
+        mu_k = k * mu + q0
+        sig_k = np.sqrt(k * sig ** 2 + sig0 ** 2)
+        pois_term = lam ** k * np.exp(-lam) / factorial(k)
+        gauss_term = (1 - w) * gaussian(x, mu=mu_k, sig=sig_k)
+        emg_term = w * exmodgaus(x, h=(np.sqrt(2./np.pi)/sig_k), mu=mu_k, sig=sig_k, tau=c0)
+
+        sum += pois_term * gauss_term * emg_term
+
+    return norm * sum
 
 
 def calc_z(x, mu, sig, tau):
