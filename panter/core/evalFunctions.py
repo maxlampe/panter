@@ -4,7 +4,7 @@ import numpy as np
 from scipy.special import erfc
 
 
-def gaussian(x, mu, sig, norm):
+def gaussian(x, mu, sig, norm: float = 1.):
     """Standard gaussian distribution."""
     x = np.array(x, dtype=float)
     return (
@@ -96,6 +96,7 @@ def appr_erfc(x):
     return np.sign(x) * np.sqrt(1 - exp_comp)
 
 
+# TODO: set h (norm?) to default 1. and change in project acc.
 def exmodgaus(x, h, mu, sig, tau):
     """Exponentially modified gaussian distribution."""
 
