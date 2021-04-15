@@ -5,7 +5,7 @@ from scipy.special import erfc
 from math import factorial
 
 
-def gaussian(x, mu, sig, norm: float = 1.):
+def gaussian(x, mu, sig, norm: float = 1.0):
     """Standard gaussian distribution."""
     x = np.array(x, dtype=float)
     return (
@@ -110,17 +110,17 @@ def exmodgaus(x, h, mu, sig, tau):
 
 
 def charge_spec(
-        x: float,
-        a: float,
-        w: float,
-        lam: float,
-        q0: float,
-        sig0: float,
-        c0: float,
-        sig: float,
-        mu: float,
-        norm: float = 1.,
-        k_max: int = 100
+    x: float,
+    a: float,
+    w: float,
+    lam: float,
+    q0: float,
+    sig0: float,
+    c0: float,
+    sig: float,
+    mu: float,
+    norm: float = 1.0,
+    k_max: int = 100,
 ):
     """Advanced model for charge spectrum of PMT for absolute calibration
 
@@ -150,13 +150,15 @@ def charge_spec(
 
     x = a * np.array(x, dtype=float)
 
-    sum = 0.
+    sum = 0.0
     for k in range(k_max):
         mu_k = k * mu + q0
         sig_k = np.sqrt(k * sig ** 2 + sig0 ** 2)
         pois_term = lam ** k * np.exp(-lam) / factorial(k)
         gauss_term = (1 - w) * gaussian(x, mu=mu_k, sig=sig_k)
-        emg_term = w * exmodgaus(x, h=(np.sqrt(2./np.pi)/sig_k), mu=mu_k, sig=sig_k, tau=c0)
+        emg_term = w * exmodgaus(
+            x, h=(np.sqrt(2.0 / np.pi) / sig_k), mu=mu_k, sig=sig_k, tau=c0
+        )
 
         sum += pois_term * gauss_term * emg_term
 
