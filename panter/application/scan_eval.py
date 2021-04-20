@@ -27,6 +27,9 @@ positions = [
     [160, 6070],
     [160, 6470],
     [175, 5349],
+    [180, 5770],
+    [180, 6070],
+    [180, 5470],
 ]
 
 tar_dir = "/mnt/sda/PerkeoDaten1920/cycle201/Det200121"
@@ -61,12 +64,10 @@ events = [
     [1, 3, list([f"{tar_dir}/data189690.root", f"{tar_dir}/data189680.root"]), 189690],
     [1, 3, list([f"{tar_dir}/data189696.root", f"{tar_dir}/data189702.root"]), 189696],
     [1, 3, list([f"{tar_dir}/data189706.root", f"{tar_dir}/data189702.root"]), 189706],
+    [1, 3, list([f"{tar_dir}/data189712.root", f"{tar_dir}/data189702.root"]), 189712],
+    [1, 3, list([f"{tar_dir}/data189718.root", f"{tar_dir}/data189702.root"]), 189718],
+    [1, 3, list([f"{tar_dir}/data189724.root", f"{tar_dir}/data189730.root"]), 189724],
 ]
-# These files were in the directory as well, but have no position assignments on the
-# hand written log book.
-# [1, 3, list([f"{tar_dir}/data189712.root", f"{tar_dir}/data189702.root"]), 189712],
-# [1, 3, list([f"{tar_dir}/data189718.root", f"{tar_dir}/data189702.root"]), 189718],
-# [1, 3, list([f"{tar_dir}/data189724.root", f"{tar_dir}/data189730.root"]), 189724],
 
 dataloader.fill(events)
 
