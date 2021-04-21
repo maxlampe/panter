@@ -49,16 +49,17 @@ for lis in filelist:
             data.info()
             # do once with all fit params free for a lim. range for high DPTT
             for i in range(1, 2):
-                data.set_filtdef()
-                data.datafilter["Cycle"].active = True
-                data.datafilter["DeltaPrevTriggerTime"].active = True
-                data.datafilter["DeltaPrevTriggerTime"].upperlimit = (
-                    delt * maxIterFilter + delt * 0.5
-                )
-                data.datafilter["DeltaPrevTriggerTime"].lowerlimit = (
-                    delt * (maxIterFilter - IterforSigmaMean) - delt * 0.5
+                data.clear_filt()
+                data.set_filt(
+                    "data",
+                    fkey="DeltaPrevTriggerTime",
+                    active=True,
+                    ftype="num",
+                    low_lim=delt * (maxIterFilter - IterforSigmaMean) - delt * 0.5,
+                    up_lim=delt * maxIterFilter + delt * 0.5,
                 )
                 data.auto(1)
+
                 print("Active PMTs:\t", data.ret_actpmt())
                 data.gen_hist(data.ret_actpmt())
 
@@ -100,10 +101,14 @@ for lis in filelist:
             )
 
             data.set_filtdef()
-            data.datafilter["Cycle"].active = True
-            data.datafilter["DeltaPrevTriggerTime"].active = True
-            data.datafilter["DeltaPrevTriggerTime"].upperlimit = delt * i + delt * 0.5
-            data.datafilter["DeltaPrevTriggerTime"].lowerlimit = delt * i - delt * 0.5
+            data.set_filt(
+                "data",
+                fkey="DeltaPrevTriggerTime",
+                active=True,
+                ftype="num",
+                low_lim=delt * i - delt * 0.5,
+                up_lim=delt * i + delt * 0.5,
+            )
             data.auto(1)
 
             print("Active PMTs:\t", data.ret_actpmt())
