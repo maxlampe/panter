@@ -193,13 +193,16 @@ class DoFit:
         self._fitdata = dP.filt_zeros(self._fitdata)
 
         err_weights = calc_weights(self._fitdata["err"])
-        self._fitresult = self._fitmodel.fit(
-            self._fitdata["y"],
-            self._fitparams,
-            x=self._fitdata["x"],
-            weights=err_weights,
-            scale_covar=False,
-        )
+        if self._fitdata["y"].shape[0] > 0:
+            self._fitresult = self._fitmodel.fit(
+                self._fitdata["y"],
+                self._fitparams,
+                x=self._fitdata["x"],
+                weights=err_weights,
+                scale_covar=False,
+            )
+        else:
+            self._fitresult = None
 
         if self._booldict["brecfit"]:
             key_center = self._brecparams["par_key_cen"]
@@ -216,15 +219,21 @@ class DoFit:
                 self._fitdata = dP.filt_zeros(self._fitdata)
 
             err_weights = calc_weights(self._fitdata["err"])
-            self._fitresult = self._fitmodel.fit(
-                self._fitdata["y"],
-                self._fitparams,
-                x=self._fitdata["x"],
-                weights=err_weights,
-            )
+            if self._fitdata["y"].shape[0] > 0:
+                self._fitresult = self._fitmodel.fit(
+                    self._fitdata["y"],
+                    self._fitparams,
+                    x=self._fitdata["x"],
+                    weights=err_weights,
+                )
+            else:
+                self._fitresult = None
 
-        pval = 1.0 - chi2.cdf(self._fitresult.chisqr, self._fitresult.nfree)
-        self._gof = [self._fitresult.redchi, pval]
+        if self._fitresult is not None:
+            pval = 1.0 - chi2.cdf(self._fitresult.chisqr, self._fitresult.nfree)
+            self._gof = [self._fitresult.redchi, pval]
+        else:
+            self._gof = [None, None]
 
         if self._booldict["boutput"]:
             self.plot_fit()
@@ -752,12 +761,17 @@ class PedPerkeo:
                         fitclass.set_fitparam(namekey="mu", valpar=0.0)
                         fitclass.fit()
 
-                        mu_start = fitclass.ret_results().params["mu"].value
-                        sig_start = np.abs(fitclass.ret_results().params["sig"].value)
-                        fit_range = [
-                            mu_start - 1.1 * sig_start,
-                            mu_start + 0.5 * sig_start,
-                        ]
+                        if fitclass.ret_results() is not None:
+                            mu_start = fitclass.ret_results().params["mu"].value
+                            sig_start = np.abs(
+                                fitclass.ret_results().params["sig"].value
+                            )
+                            fit_range = [
+                                mu_start - 1.1 * sig_start,
+                                mu_start + 0.5 * sig_start,
+                            ]
+                        else:
+                            break
 
                     else:
                         fitclass.set_fitparam(namekey="mu", valpar=mu_start)
@@ -776,14 +790,15 @@ class PedPerkeo:
                             fitclass.plotrange["x"] = plot_xr
                         fitclass.fit()
 
-                ped_list[ind_hist] = [
-                    fitclass.ret_results().params["mu"].value,
-                    fitclass.ret_results().params["mu"].stderr,
-                    np.abs(fitclass.ret_results().params["sig"].value),
-                    fitclass.ret_results().params["sig"].stderr,
-                    fitclass.ret_gof()[0],
-                    fitclass.ret_gof()[1],
-                ]
+                if fitclass.ret_results() is not None:
+                    ped_list[ind_hist] = [
+                        fitclass.ret_results().params["mu"].value,
+                        fitclass.ret_results().params["mu"].stderr,
+                        np.abs(fitclass.ret_results().params["sig"].value),
+                        fitclass.ret_results().params["sig"].stderr,
+                        fitclass.ret_gof()[0],
+                        fitclass.ret_gof()[1],
+                    ]
 
         self.ped_hists = ped_hists
         self._dataclass.clear_filt()

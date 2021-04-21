@@ -209,7 +209,10 @@ class CorrPerkeo:
             # or get fixed values from params.py
 
         for i in range(0, data.no_pmts):
-            ampl_corr[i] = (data.pmt_data[i] - pedestals[i][0]) * drift_factors[i]
+            if pedestals[i] is not None:
+                ampl_corr[i] = (data.pmt_data[i] - pedestals[i][0]) * drift_factors[i]
+            else:
+                ampl_corr[i] = None
 
         if self.corrections["RateDepElec"]:
             # FIXME: Think about this [1:]!

@@ -101,16 +101,20 @@ class HistPerkeo:
         up_lim: int = 52000,
     ):
         self._data = np.asarray(data)
-        self.stats = {
-            "mean": self._data.mean(),
-            "std": self._data.std(),
-            "noevents": self._data.shape[0],
-        }
+        if self._data.shape != ():
+            self.stats = {
+                "mean": self._data.mean(),
+                "std": self._data.std(),
+                "noevents": self._data.shape[0],
+            }
         self.parameters = {"bin_count": bin_count, "low_lim": low_lim, "up_lim": up_lim}
         self.bin_count = bin_count
         self.up_lim = up_lim
         self.low_lim = low_lim
-        self.hist = ret_hist(self._data, **self.parameters)
+        if self._data.shape != ():
+            self.hist = ret_hist(self._data, **self.parameters)
+        else:
+            self.hist = None
 
     def _calc_stats(self):
         """Calculate mean and biased variance of histogram based on bin content."""
@@ -648,7 +652,8 @@ class RootPerkeo:
             self._ev_no,
         )
 
-        assert self._ev_valid_no > 0, "ERROR: No events left. This wouldn't leave data."
+        # FIXME!
+        # assert self._ev_valid_no > 0, "ERROR: No events left. This wouldn't leave data."
 
         return 0
 
@@ -794,13 +799,14 @@ class RootPerkeo:
         n_pmt = np.zeros(self.no_pmts)
 
         for i in range(0, self.no_pmts):
-            n_mean[i] = self.pmt_data[i].mean()
-            n_sig[i] = self.pmt_data[i].std()
-            n_sig2d[i][0] = self.pmt_data[i].std()
-            n_norm[i] = self.pmt_data[i].max()
-            n_norm2d[i][0] = self.pmt_data[i].max()
-            if n_mean[i] > self._pmt_thres:
-                n_pmt[i] = 1
+            if self.pmt_data[i].shape[0] != 0:
+                n_mean[i] = self.pmt_data[i].mean()
+                n_sig[i] = self.pmt_data[i].std()
+                n_sig2d[i][0] = self.pmt_data[i].std()
+                n_norm[i] = self.pmt_data[i].max()
+                n_norm2d[i][0] = self.pmt_data[i].max()
+                if n_mean[i] > self._pmt_thres:
+                    n_pmt[i] = 1
 
         self.stats = {
             "mean": n_mean,
