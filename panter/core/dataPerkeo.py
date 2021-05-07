@@ -52,11 +52,13 @@ def ret_hist(
     return pd.DataFrame({"x": bincent, "y": hist, "err": np.sqrt(np.abs(hist))})
 
 
-def filt_zeros(hist_df: pd.DataFrame) -> pd.DataFrame:
+def filt_zeros(hist_df: pd.DataFrame, bdrop_nan: bool = True) -> pd.DataFrame:
     """Taking a pandas data frame and removing all entries where "err" = 0."""
 
     filt = hist_df["err"] != 0.0
     hist_df = hist_df[filt]
+    if bdrop_nan:
+        hist_df = hist_df.dropna()
 
     assert not hist_df["x"].isnull().values.any()
     assert not hist_df["y"].isnull().values.any()
