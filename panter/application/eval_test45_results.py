@@ -10,14 +10,16 @@ import panter.core.dataPerkeo as dP
 import panter.core.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 from panter.config import conf_path
+from panter import output_path
 from lmfit import Model
 from lmfit.model import ModelResult
+
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
 cnf.read(f"{conf_path}/evalRaw.ini")
 
-outputFileDir = cnf["DEFAULT"]["expDir"]
+outputFileDir = output_path + "/"
 
 cnf2 = configparser.ConfigParser()
 cnf2.read(f"{conf_path}/evalElec.ini")
@@ -42,13 +44,24 @@ def get_allparam(evalres: list, name: str) -> dict:
     """Get all of one parameter and its error over mult. Files from fit results."""
 
     values = [
-        [file[dptt]["ModelRes"][ADC_IND].params[name].value for dptt in dptt_values]
+        [
+            file[dptt]["ModelRes"][ADC_IND].params[name].value
+            if file[dptt]["ModelRes"][ADC_IND] is not None
+            else None
+            for dptt in dptt_values
+        ]
         for file in evalres
     ]
     errors = [
-        [file[dptt]["ModelRes"][ADC_IND].params[name].stderr for dptt in dptt_values]
+        [
+            file[dptt]["ModelRes"][ADC_IND].params[name].stderr
+            if file[dptt]["ModelRes"][ADC_IND] is not None
+            else None
+            for dptt in dptt_values
+        ]
         for file in evalres
     ]
+
     return {"val": values, "err": errors}
 
 
@@ -84,8 +97,9 @@ def combine_fitres(para: dict) -> list:
         sum_val = 0
         sum_err = 0
         for j in range(0, len_files):
-            sum_val += para["val"][j][i] / para["err"][j][i] ** 2
-            sum_err += 1 / para["err"][j][i] ** 2
+            if para["err"][j][i] is not None:
+                sum_val += para["val"][j][i] / para["err"][j][i] ** 2
+                sum_err += 1 / para["err"][j][i] ** 2
         vals[i, 0] = sum_val / sum_err
         vals[i, 1] = np.sqrt(1 / sum_err)
     return np.array(vals).T
@@ -179,17 +193,17 @@ EVAL_KEY = {
 }
 
 TEST4_FILES = {
-    "Fan0": "Test4_0003_SG_bfixsig_2020-10-13.p",
-    "Fan1": "Test4_0407_SG_bfixsig_2020-10-13.p",
-    "Fan2": "Test4_0811_SG_bfixsig_2020-10-13.p",
-    "Fan3": "Test4_1215_SG_bfixsig_2020-10-13.p",
+    "Fan0": "Test4_0003_SG_bfixsig_2021-05-02.p",
+    "Fan1": "Test4_0407_SG_bfixsig_2021-05-02.p",
+    "Fan2": "Test4_0811_SG_bfixsig_2021-05-02.p",
+    "Fan3": "Test4_1215_SG_bfixsig_2021-05-02.p",
 }
 
 TEST5_FILES = {
-    "Fan0": "Test5_0003_SG_bfixsig_2020-10-13.p",
-    "Fan1": "Test5_0407_SG_bfixsig_2020-10-13.p",
-    "Fan2": "Test5_0811_SG_bfixsig_2020-10-13.p",
-    "Fan3": "Test5_1215_SG_bfixsig_2020-10-13.p",
+    "Fan0": "Test5_0003_SG_bfixsig_2021-05-03.p",
+    "Fan1": "Test5_0407_SG_bfixsig_2021-05-03.p",
+    "Fan2": "Test5_0811_SG_bfixsig_2021-05-03.p",
+    "Fan3": "Test5_1215_SG_bfixsig_2021-05-03.p",
 }
 
 # ["050v300", "200v200", "200v500", "300v050", "300v300", "500v200", "500v500"]
@@ -317,8 +331,15 @@ for pmt in EVAL_RESULTS:
     y_values = np.array(EVAL_RESULTS[pmt]).T[0]
     yerr_values = np.array(EVAL_RESULTS[pmt]).T[1]
 
+    df = pd.DataFrame({"x": x_values, "y": y_values, "err": yerr_values})
+    df = dP.filt_zeros(df)
+
     fitres = gmodel.fit(
-        y_values, params, x=x_values, weights=eP.calc_weights(yerr_values)
+        df["y"],
+        params,
+        x=df["x"],
+        weights=eP.calc_weights(df["err"]),
+        scale_covar=False,
     )
 
     plt.errorbar(
