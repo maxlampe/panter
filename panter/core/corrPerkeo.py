@@ -57,6 +57,8 @@ class CorrPerkeo:
         2 = all PMTs will be treated individually (no_pmt spectra)
     bonlynew: bool
         Only create corrected spectra instead of uncorrected spectra as well.
+    ped_arr: np.array
+        Array of pedestal values to be used instead of calculated from data file.
 
     Attributes
     ----------
@@ -89,9 +91,12 @@ class CorrPerkeo:
     >>> corr_class.corr(bstore=True, bwrite=False)
     """
 
-    def __init__(self, dataloader: DLPerkeo, mode: int = 0, bonlynew: bool = True):
+    def __init__(
+        self, dataloader: DLPerkeo, mode: int = 0, bonlynew: bool = True, ped_arr=None
+    ):
         self._dataloader = dataloader
         self._bonlynew = bonlynew
+        self._ped_arr = ped_arr
         self._mode = mode
         self._histpar_sum = SUM_hist_par
         self._histpar_pmt = PMT_hist_par
@@ -203,10 +208,13 @@ class CorrPerkeo:
             drift_factors = self._drift_map["pmt_fac"][nearest_drift]
 
         if self.corrections["Pedestal"]:
-            datacop = copy.copy(data)
-            datacop.set_filtdef()
-            pedestals = eP.PedPerkeo(datacop).ret_pedestals()
-            # or get fixed values from params.py
+            if self._ped_arr is None:
+                datacop = copy.copy(data)
+                datacop.set_filtdef()
+                pedestals = eP.PedPerkeo(datacop).ret_pedestals()
+            else:
+                print("Warning: Using passed pedestals.")
+                pedestals = self._ped_arr
 
         for i in range(0, data.no_pmts):
             if pedestals[i] is not None:
