@@ -325,10 +325,12 @@ class CorrPerkeo:
 
         Parameters
         ----------
-         bstore: False
+        bstore: False
             Bool whether to append created histograms in self.histograms
-         bwrite: True
+        bwrite: True
             Bool whether to write created histograms to a ROOT file.
+        bconcat
+            Bool to concatenate spectra.
         """
 
         if not bwrite and not bstore:
