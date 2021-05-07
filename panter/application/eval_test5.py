@@ -303,4 +303,4 @@ for fan in [0, 1, 2, 3]:
     file = dP.FilePerkeo(EXPFILE)
     print("Write to file", file.dump(results))
 
-print("\n \t\tDing Dong Done. \n")
+print("\n \t\tMau Mau Mau. <3 \n")
