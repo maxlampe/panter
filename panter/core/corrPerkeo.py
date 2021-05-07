@@ -59,6 +59,8 @@ class CorrPerkeo:
         Only create corrected spectra instead of uncorrected spectra as well.
     ped_arr: np.array
         Array of pedestal values to be used instead of calculated from data file.
+    weight_arr: np.array
+        Array of individual PMT weights to multiply each event for each PMT.
 
     Attributes
     ----------
@@ -92,11 +94,17 @@ class CorrPerkeo:
     """
 
     def __init__(
-        self, dataloader: DLPerkeo, mode: int = 0, bonlynew: bool = True, ped_arr=None
+        self,
+        dataloader: DLPerkeo,
+        mode: int = 0,
+        bonlynew: bool = True,
+        ped_arr=None,
+        weight_arr=None,
     ):
         self._dataloader = dataloader
         self._bonlynew = bonlynew
         self._ped_arr = ped_arr
+        self._weight_arr = weight_arr
         self._mode = mode
         self._histpar_sum = SUM_hist_par
         self._histpar_pmt = PMT_hist_par
@@ -216,9 +224,16 @@ class CorrPerkeo:
                 print("Warning: Using passed pedestals.")
                 pedestals = self._ped_arr
 
+        if self._weight_arr is None:
+            self._weight_arr = np.ones(data.no_pmts)
+
         for i in range(0, data.no_pmts):
             if pedestals[i] is not None:
-                ampl_corr[i] = (data.pmt_data[i] - pedestals[i][0]) * drift_factors[i]
+                ampl_corr[i] = (
+                    (data.pmt_data[i] - pedestals[i][0])
+                    * drift_factors[i]
+                    * self._weight_arr[i]
+                )
             else:
                 ampl_corr[i] = None
 
