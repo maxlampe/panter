@@ -191,9 +191,9 @@ class DoFit:
             self.set_recursive("mu", "sig", 2, 1.35)
 
         self._fitdata = dP.filt_zeros(self._fitdata)
-
         err_weights = calc_weights(self._fitdata["err"])
-        if self._fitdata["y"].shape[0] > 0:
+
+        if len(self._fitparams) <= self._fitdata["y"].shape[0]:
             self._fitresult = self._fitmodel.fit(
                 self._fitdata["y"],
                 self._fitparams,
@@ -219,7 +219,7 @@ class DoFit:
                 self._fitdata = dP.filt_zeros(self._fitdata)
 
             err_weights = calc_weights(self._fitdata["err"])
-            if self._fitdata["y"].shape[0] > 0:
+            if len(self._fitparams) <= self._fitdata["y"].shape[0]:
                 self._fitresult = self._fitmodel.fit(
                     self._fitdata["y"],
                     self._fitparams,
