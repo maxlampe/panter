@@ -26,4 +26,5 @@ def run_all():
     print("GREAT SUCCESS. \nAll unit tests passed. \nVERY NICE. ")
 
 
-run_all()
+if __name__ == "__main__":
+    run_all()
