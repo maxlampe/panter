@@ -166,7 +166,6 @@ class CorrPerkeo:
     def _filt_data(self, data: dP.RootPerkeo, bbeam=False, key=""):
         """Filter data set."""
 
-        data.info()
         if bbeam:
             data.set_filtdef()
             data.set_filt(

@@ -383,6 +383,8 @@ class RootPerkeo:
     Parameters
     ----------
     filename : str
+    bverbose : False
+        En-/Disables general outputs when handling data with RootPerkeo.
 
     Attributes
     ----------
@@ -460,8 +462,10 @@ class RootPerkeo:
     >>> dtt = 0.01 * data.ret_array_by_key("DeltaTriggerTime") # [mus]
     """
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, bverbose: bool = False):
         self.filename = filename
+        self.bverbose = bverbose
+
         self.filedate = os.path.getmtime(filename)
         self.file = uproot.open(self.filename)
         self.mode = None
@@ -548,7 +552,8 @@ class RootPerkeo:
     def calc_cyclefilt(self):
         """Given current filter settings, calc _cy_valid array."""
 
-        print("---\t Applying cycleTree filters: \t ---")
+        if self.bverbose:
+            print("---\t Applying cycleTree filters: \t ---")
         start_time = time.time()
         for filt in self.cyclefilter:
             if filt.active:
@@ -566,19 +571,22 @@ class RootPerkeo:
                     sys.exit(1)
                 self._cy_valid = last_valcycles * self._cy_valid
         end_time = time.time()
-        print(f"Time taken for cycle Filt: {end_time - start_time:0.5f} s")
+        if self.bverbose:
+            print(f"Time taken for cycle Filt: {end_time - start_time:0.5f} s")
 
         self.cy_valid_no = int(self._cy_valid.sum())
-        print(
-            "Remaining cycles:     ",
-            self.cy_valid_no,
-            "     from a total of:     ",
-            self._cy_no,
-        )
+        if self.bverbose:
+            print(
+                "Remaining cycles:     ",
+                self.cy_valid_no,
+                "     from a total of:     ",
+                self._cy_no,
+            )
         assert self.cy_valid_no > 0, "ERROR: No cycles left. This would leave no data."
 
         if self.cy_valid_no == self._cy_no:
-            print("All cycles valid. Deactivate data cycle filter")
+            if self.bverbose:
+                print("All cycles valid. Deactivate data cycle filter")
             for filt in self.datafilter:
                 if filt.fkey == "Cycle":
                     filt.active = False
@@ -588,20 +596,23 @@ class RootPerkeo:
     def calc_datafilt(self):
         """Given current filter settings, calc _ev_valid array."""
 
-        print("---\t Applying dataTree filters: \t ---")
+        if self.bverbose:
+            print("---\t Applying dataTree filters: \t ---")
 
         start_time = time.time()
         for filt in self.datafilter:
             if filt.active:
                 last_valevents = self._ev_valid
                 if filt.fkey == "DeltaPrevTriggerTime" and not self._bDPTT:
-                    print("Doing DeltaPrevTriggerTime filter manually.")
+                    if self.bverbose:
+                        print("Doing DeltaPrevTriggerTime filter manually.")
                     arr = self.dptt
                 else:
                     arr = self.file["dataTree"].array(filt.fkey)
 
                 if filt.ftype == "cyc":
-                    print("Applying cycle filter in dataTree")
+                    if self.bverbose:
+                        print("Applying cycle filter in dataTree")
 
                     cycarr = self.file["cycleTree"].array("Cycle")
                     res = True
@@ -616,16 +627,18 @@ class RootPerkeo:
                     self._ev_valid = res
 
                 elif filt.ftype == "bool":
-                    print(
-                        "Applying bool filter for:\t",
-                        filt.fkey,
-                        "\t desired value:\t",
-                        filt.rightval,
-                    )
+                    if self.bverbose:
+                        print(
+                            "Applying bool filter for:\t",
+                            filt.fkey,
+                            "\t desired value:\t",
+                            filt.rightval,
+                        )
                     self._ev_valid = arr == filt.rightval
 
                 elif filt.ftype == "num":
-                    print("Applying number filter for:\t", filt.fkey)
+                    if self.bverbose:
+                        print("Applying number filter for:\t", filt.fkey)
                     if filt.index is not None:
                         arr = arr[:, filt.index]
                     self._ev_valid = (arr >= filt.low_lim) == (arr < filt.up_lim)
@@ -645,14 +658,16 @@ class RootPerkeo:
                     self._ev_valid = self._ev_valid.flatten()
 
         end_time = time.time()
-        print(f"Time taken for data Filt: {end_time - start_time:0.5f} s")
+        if self.bverbose:
+            print(f"Time taken for data Filt: {end_time - start_time:0.5f} s")
         self._ev_valid_no = int(self._ev_valid.sum())
-        print(
-            "Remaining events:     ",
-            self._ev_valid_no,
-            "     from a total of:     ",
-            self._ev_no,
-        )
+        if self.bverbose:
+            print(
+                "Remaining events:     ",
+                self._ev_valid_no,
+                "     from a total of:     ",
+                self._ev_no,
+            )
 
         # FIXME!
         # assert self._ev_valid_no > 0, "ERROR: No events left. This wouldn't leave data."
@@ -682,7 +697,8 @@ class RootPerkeo:
     def clear_filt(self):
         """Set all filters to inactive. Data needs to be refiltered."""
 
-        print("---\t Clearing all filters: \t ---")
+        if self.bverbose:
+            print("---\t Clearing all filters: \t ---")
         self.cyclefilter.clear()
         self.datafilter.clear()
 
@@ -691,7 +707,8 @@ class RootPerkeo:
     def set_filtdef(self):
         """Set filter default settings: filter invalid cycles only."""
 
-        print("---\t Clearing all filters and set to default: \t ---")
+        if self.bverbose:
+            print("---\t Clearing all filters and set to default: \t ---")
         self.clear_filt()
         self.set_filt("cycle", fkey="Valid", active=True, ftype="bool", rightval=True)
         self.set_filt("data", fkey="Cycle", active=True, ftype="cyc")
@@ -839,10 +856,12 @@ class RootPerkeo:
 
         # FIXME: First entry in dptt for both cases?
         if self._bDPTT:
-            print("DPTT already exists.")  # [mus]
+            if self.bverbose:
+                print("DPTT already exists.")  # [mus]
             self.dptt = 0.01 * self.file["dataTree"].array("DeltaPrevTriggerTime")
         else:
-            print("DPTT doesnt exist. Is calculated.")
+            if self.bverbose:
+                print("DPTT doesnt exist. Is calculated.")
             self.calc_dptt()
         if set_mode == 0:
             self.set_filtdef()
