@@ -45,6 +45,12 @@ class MeasPerkeo:
         self.cyc_no = cyc_no
         self.nomad_no = nomad_no
 
+    def __str__(self):
+        return "MeasP" + str(self.cyc_no) + "_src_" + str(self.src)
+
+    def __repr__(self):
+        return "MeasP" + str(self.cyc_no) + "_src_" + str(self.src)
+
     def __call__(self, *args, **kwargs):
         event = []
         for (key, entry) in self.__dict__.items():
