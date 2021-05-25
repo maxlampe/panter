@@ -176,17 +176,20 @@ class DoFit:
             self._fitdata = self._data
 
         # check for label and then do case specific range limitation
-        if self._label == "gaus_pdec" or self._label == "gaus_expmod":
+        if self._label in ["gaus_pdec", "gaus_expmod", "charge_spec"]:
             maxpos = np.argmax(self._fitdata["y"])
             peakpos = self._fitdata["x"].values[maxpos]
+
             if self._label == "gaus_pdec":
                 self._fitparams["c3"].value = peakpos
-            else:
+            elif self._label == "gaus_expmod":
                 self._fitparams["mu"].value = peakpos
+
             self._fitrange = [peakpos * 0.7 - 150.0, peakpos * 1.4 + 300.0]
             self._fitdata = self._data.query(
                 f"{self._fitrange[0]}" f" < x < " f"{self._fitrange[1]}"
             )
+
         if self._label == "gaus_gen":
             self.set_recursive("mu", "sig", 2, 1.35)
 
