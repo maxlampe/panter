@@ -2,6 +2,7 @@
 
 import numpy as np
 from scipy.special import erfc
+from scipy.stats import poisson
 from math import factorial
 
 
@@ -95,6 +96,42 @@ def appr_erfc(x):
     )
 
     return np.sign(x) * np.sqrt(1 - exp_comp)
+
+
+def pmt_pois(x: int, energy: float, f_pe: float, loc: int = 0):
+    """PMT spectra described by a Poisson distribution [Sau18].
+
+    Parameters:
+    ----------
+    x: int
+        Number of photo-electrons generated.
+    energy: float
+        Electron energy.
+    f_pe: float
+        Characteristic property of detector. f_pe = a * t * sigma with "a" being the
+        Energy to photon conversion, "t" the photon transmission probability and "sigma"
+        PMT quantum efficiency.
+    loc: int
+        Shift x to get non-standardized poisson form.
+    """
+
+    x = np.array(x, dtype=int)
+
+    return poisson.pmf(k=x, mu=(f_pe * energy), loc=loc)
+
+
+def pmt_diffapp(x: float, A: float, B: float):
+    """PMT spectra described by a Poisson distribution [Sau18].
+
+    Parameters:
+    ----------
+    """
+
+    x = np.array(x, dtype=float)
+
+    t1 = np.exp(- A / B)
+
+    pass
 
 
 # TODO: set h (norm?) to default 1. and change in project acc.
