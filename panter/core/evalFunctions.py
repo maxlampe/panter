@@ -149,6 +149,7 @@ def charge_spec(
     """
 
     x = a * np.array(x, dtype=float)
+    k_max = int(k_max)
 
     sum = 0.0
     for k in range(k_max):
