@@ -154,3 +154,49 @@ trigger_func.label = "trigger_func"
 trigger_func.fitfunc = eF.trigger_func
 trigger_func.initvals = {"a": 0.32, "p": 0.78}
 trigger_func.paramvary = [True] * len(trigger_func.initvals)
+
+charge_spec = FitSetting()
+charge_spec.label = "charge_spec"
+charge_spec.fitfunc = eF.charge_spec
+charge_spec.fitrange = [350.0, 3500.0]
+charge_spec.booldict["blimfit"] = True
+"""charge_spec.initvals = {
+    "w": 0.3,
+    "a": 0.03,
+    "lam": 1.4,
+    "q0": 2.0,
+    "sig0": 0.9,
+    "c0": 10.0,
+    "sig": 3.0,
+    "mu": 5.0,
+    "norm": 5000000.,
+    "k_max": 100,
+}"""
+charge_spec.initvals = {
+    "w": 0.3,
+    "a": 0.033,
+    "lam": 2.4205891,
+    "q0": 25.0,
+    "sig0": 0.38,
+    "c0": 65.6810578,
+    "sig": 1.83963263,
+    "mu": 4.11133937,
+    "norm": 4035218.14,
+    "k_max": 100,
+}
+charge_spec.paramvary = [True] * len(charge_spec.initvals)
+charge_spec.paramvary[0] = False
+charge_spec.paramvary[1] = False
+charge_spec.paramvary[-1] = False
+
+charge_spec.param_limit = {
+    "w": [0.0, np.inf],
+    "a": [0.0, np.inf],
+    "lam": [0.0, np.inf],
+    "q0": [0.0, np.inf],
+    "sig0": [0.0, np.inf],
+    "c0": [0.0, np.inf],
+    "sig": [0.0, np.inf],
+    "mu": [0.0, np.inf],
+    "norm": [0.0, np.inf],
+}
