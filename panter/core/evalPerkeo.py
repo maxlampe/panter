@@ -281,6 +281,13 @@ class DoFit:
             print('WARNING: No fit results yet set. Returning "None".')
         return self._gof
 
+    def ret_fitrange(self):
+        """Return goodness of fit results."""
+
+        if self._fitrange is None:
+            print('WARNING: No fit range yet set. Returning "None".')
+        return self._fitrange
+
     def plot_fit(self):
         """Plot data, fitresult and residuals of current fit."""
 
