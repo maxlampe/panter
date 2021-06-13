@@ -129,7 +129,7 @@ def pmt_diffapp(x: float, A: float, B: float):
 
     x = np.array(x, dtype=float)
 
-    t1 = np.exp(- A / B)
+    t1 = np.exp(-A / B)
 
     pass
 
