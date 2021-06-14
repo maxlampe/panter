@@ -111,6 +111,7 @@ class CorrPerkeo:
         self._weight_arr = weight_arr
         self._mode = mode
         self._pmt_sum_selection = pmt_sum_selection
+
         if self._pmt_sum_selection is not None:
             assert self._mode == 0, "ERROR: Wrong mode for custom pmt sum selection."
 
@@ -130,7 +131,7 @@ class CorrPerkeo:
         self._drift_map = None
 
     def _calc_detsum(
-        self, vals: list, start_it: int = 0
+        self, vals: np.array, start_it: int = 0
     ) -> [dP.HistPerkeo, dP.HistPerkeo]:
         """Calculate the DetSum for list of ADC values."""
 
@@ -259,10 +260,12 @@ class CorrPerkeo:
                     ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
                 )
 
+        ampl_corr = np.asarray(ampl_corr)
         if self._bonlynew:
             hist_old = None
         else:
             hist_old = self._calc_detsum(data.pmt_data)
+
         hist_new = self._calc_detsum(ampl_corr)
 
         if self.corrections["DeadTime"]:
