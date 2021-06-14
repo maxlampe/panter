@@ -61,6 +61,9 @@ class CorrPerkeo:
         Array of pedestal values to be used instead of calculated from data file.
     weight_arr: np.array
         Array of individual PMT weights to multiply each event for each PMT.
+    pmt_sum_selection: list
+        List of pmt indices for which pmts should be summed up in spectra creation.
+        Requires mode=0, as everything else would make no sense.
 
     Attributes
     ----------
@@ -100,12 +103,17 @@ class CorrPerkeo:
         bonlynew: bool = True,
         ped_arr=None,
         weight_arr=None,
+        pmt_sum_selection=None,
     ):
         self._dataloader = dataloader
         self._bonlynew = bonlynew
         self._ped_arr = ped_arr
         self._weight_arr = weight_arr
         self._mode = mode
+        self._pmt_sum_selection = pmt_sum_selection
+        if self._pmt_sum_selection is not None:
+            assert self._mode == 0, "ERROR: Wrong mode for custom pmt sum selection."
+
         self._histpar_sum = SUM_hist_par
         self._histpar_pmt = PMT_hist_par
         self._beam_mtime = BEAM_MEAS_TIME
@@ -128,7 +136,12 @@ class CorrPerkeo:
 
         calc_hists = []
         if self._mode == 0:
-            det_sum_tot = np.array(vals[:]).sum(axis=0)[start_it:]
+            if self._pmt_sum_selection is None:
+                det_sum_tot = np.array(vals[:]).sum(axis=0)[start_it:]
+            else:
+                det_sum_tot = np.array(vals[self._pmt_sum_selection]).sum(axis=0)[
+                    start_it:
+                ]
             calc_hists.append(dP.HistPerkeo(det_sum_tot, **self._histpar_sum))
         elif self._mode == 1:
             det_sum_0 = np.array(vals[:8]).sum(axis=0)[start_it:]
