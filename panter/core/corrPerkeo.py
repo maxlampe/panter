@@ -55,8 +55,10 @@ class CorrPerkeo:
         O = total DetSum (only one spectra is returned)
         1 = only Sum over each detector PMTs (two spectra are returned)
         2 = all PMTs will be treated individually (no_pmt spectra)
-    bonlynew: bool
+    bonlynew: True
         Only create corrected spectra instead of uncorrected spectra as well.
+    bdetsum_drift: True
+        Use DetSum drift correction instead of individual PMT factors.
     ped_arr: np.array
         Array of pedestal values to be used instead of calculated from data file.
     weight_arr: np.array
@@ -101,12 +103,14 @@ class CorrPerkeo:
         dataloader: DLPerkeo,
         mode: int = 0,
         bonlynew: bool = True,
+        bdetsum_drift: bool = True,
         ped_arr=None,
         weight_arr=None,
         pmt_sum_selection=None,
     ):
         self._dataloader = dataloader
         self._bonlynew = bonlynew
+        self._bdetsum_drift = bdetsum_drift
         self._ped_arr = ped_arr
         self._weight_arr = weight_arr
         self._mode = mode
@@ -214,7 +218,10 @@ class CorrPerkeo:
         binvalid = False
 
         if self.corrections["Drift"]:
-            impfile = dP.FilePerkeo(conf_path + "/pmt_fac_map.p")
+            if self._bdetsum_drift:
+                impfile = dP.FilePerkeo(conf_path + "/det_fac_map.p")
+            else:
+                impfile = dP.FilePerkeo(conf_path + "/pmt_fac_map.p")
             self._drift_map, _ = impfile.imp()
 
             time_stamps = self._drift_map["time"]
@@ -226,7 +233,15 @@ class CorrPerkeo:
                 print("ERROR: Last drift meas more than 2h away")
                 binvalid = True
 
-            drift_factors = self._drift_map["pmt_fac"][nearest_drift]
+            if self._bdetsum_drift:
+                det_sum_fac = self._drift_map["pmt_fac"][nearest_drift]
+                drift_factors = np.asarray(
+                    [[det_sum_fac[0]] * 8, [det_sum_fac[1]] * 8]
+                ).flatten()
+            else:
+                drift_factors = self._drift_map["pmt_fac"][nearest_drift]
+            print(drift_factors)
+            print(type(drift_factors))
 
         if self.corrections["Pedestal"]:
             if self._ped_arr is None:
