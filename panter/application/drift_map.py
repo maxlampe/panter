@@ -1,4 +1,4 @@
-"""Calculate drift map from Sn measurements."""
+"""Calculate individual PMT drift map from Sn measurements."""
 
 import pandas as pd
 import numpy as np
@@ -14,7 +14,7 @@ from panter import output_path
 
 
 class DriftMapPerkeo(MapPerkeo):
-    """Class for creating and handling of drift correction factors.
+    """Class for creating and handling of individual PMT drift correction factors.
 
     Based on core master class MapPerkeo. Can either create from scratch a map of Sn
     drift measurement fits to single PMT spectra or use the latter and create a drift
