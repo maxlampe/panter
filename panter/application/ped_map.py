@@ -149,7 +149,7 @@ class PedMapPerkeo(MapPerkeo):
         axs[0].set_title("Pedestals over time Det 0")
         axs[1].set_title("Peak pos over time Det 1")
         axs.flat[0].set(xlabel="Time [D - M ]", ylabel="Ped pos [ch]")
-        axs.flat[1].set(xlabel="Time [ ]", ylabel="Ped pos [ch]")
+        axs.flat[1].set(xlabel="Time [D - M ]", ylabel="Ped pos [ch]")
 
         xfmt = md.DateFormatter("%m-%d\n%H:%M")
         axs[0].xaxis.set_major_formatter(xfmt)
