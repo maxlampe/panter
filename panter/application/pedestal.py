@@ -29,7 +29,6 @@ pedtest = eP.PedPerkeo(
     bplot_res=False,
     bplot_fit=False,
     bplot_log=True,
-    bfilt_detsum=False,
 )
 print(pedtest.ret_pedestals().T[0].sum())
 print(np.sqrt((pedtest.ret_pedestals().T[1] ** 2).sum()))
@@ -44,7 +43,6 @@ if True:
             bplot_res=False,
             bplot_fit=False,
             bplot_log=True,
-            bfilt_detsum=True,
             range_detsum=[detsum, detsum + step_size],
         )
         results.append(pedtest.ret_pedestals().T)

@@ -65,7 +65,6 @@ if 0:
                     bplot_fit=False,
                     bplot_log=True,
                     bnaive_filt=True,
-                    bfilt_detsum=False,
                 )
                 res = pedtest.ret_pedestals()
                 for pmt, ped in enumerate(res):

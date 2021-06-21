@@ -686,9 +686,10 @@ class PedPerkeo:
         If True, deactivates standard filter (detector == 0/1) to get electronic Eigen-
         signal and fit a Gaussian to data below 500 channels for each PMT. Useful for
         e.g. electronics data with non-organic trigger patterns.
-    bfilt_detsum : False
-        Filter DetSum for specific range range_detsum
-    range_detsum
+    range_detsum: None
+        Filter DetSum for specific range (list). If None, it's not applied.
+    range_dtt: None
+        Filter DeltraTriggerTime for specific range (list). If None, it's not applied.
 
     Examples
     --------
@@ -705,15 +706,15 @@ class PedPerkeo:
         bplot_fit: bool = False,
         bplot_log: bool = False,
         bnaive_filt: bool = False,
-        bfilt_detsum: bool = False,
-        range_detsum: list = [0.0, 100e3],
+        range_detsum: list = None,
+        range_dtt: list = None,
     ):
         self._dataclass = dataclass
         self._bplot_fit = bplot_fit
         self._bplot_log = bplot_log
         self._bnaive_filt = bnaive_filt
-        self._bfilt_detsum = bfilt_detsum
         self._range_detsum = range_detsum
+        self._range_dtt = range_dtt
 
         if self._dataclass.no_pmts is None:
             self._dataclass.auto()
@@ -740,7 +741,7 @@ class PedPerkeo:
                     "data", fkey="Detector", active=True, ftype="bool", rightval=1 - DET
                 )
 
-            if self._bfilt_detsum:
+            if self._range_detsum is not None:
                 self._dataclass.set_filt(
                     "data",
                     fkey="DetSum",
@@ -748,6 +749,15 @@ class PedPerkeo:
                     ftype="num",
                     low_lim=self._range_detsum[0],
                     up_lim=self._range_detsum[1],
+                )
+            if self._range_dtt is not None:
+                self._dataclass.set_filt(
+                    "data",
+                    fkey="DeltaTriggerTime",
+                    active=True,
+                    ftype="num",
+                    low_lim=self._range_dtt[0],
+                    up_lim=self._range_dtt[1],
                 )
             self._dataclass.auto(1)
             if DET == 0:
