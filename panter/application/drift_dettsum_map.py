@@ -299,12 +299,15 @@ def main():
     pos3 = filt_meas[234:]
 
     # was ist am 13.1. passiert?
-    # 16.1. switch to dobuel meas
-    # 18.1. mittags shift of two step pattern
+    # https://tuphene-dev1.ph.tum.de/elog/Perkeo+III+b+Beamtime/173
+    # weird pudel crash am 12.!!!!
+    #
+    # 16.1. switch to double meas
+    # 18.1. noon shift of two step pattern
     # 16846-82
 
     only_encoder = np.concatenate([pos0, pos2])
-    for pos_set in [only_encoder]:
+    for pos_set in [pos0, pos2, pos1, pos3, only_encoder]:
         pdm = DriftDetSumMapPerkeo(pos_set, bimp_detsum=False, bimp_sn=False)
         pdm()
         pdm.plot_sn_map()
