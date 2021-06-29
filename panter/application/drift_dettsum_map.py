@@ -116,8 +116,6 @@ class DriftDetSumMapPerkeo(MapPerkeo):
         """Calculate peak position from Sn drift measurements"""
 
         for i, meas in enumerate(self._fmeas):
-            # if i in [61, 109, 294, 411, 625]:
-            #     continue
 
             print(f"Meas No: {i} - {meas.cyc_no}")
             if i % 100 == 0 and i > 0:
@@ -153,6 +151,8 @@ class DriftDetSumMapPerkeo(MapPerkeo):
                 dofitclass.setup(fitsettings)
                 dofitclass.set_fitparam("mu", 10000.0)
                 dofitclass.set_bool("boutput", False)
+                dofitclass.set_bool("bsave_fit", False)
+                dofitclass.plot_file = f"SnDrift_{j}_{meas.cyc_no}"
                 dofitclass.fit()
 
                 fit_results = dofitclass.ret_results()
@@ -287,31 +287,32 @@ class DriftDetSumMapPerkeo(MapPerkeo):
         return 0
 
 
-def main():
+def main(bexp_meas_list: bool = False, bimp_meas_list: bool = True):
+    encoder_file_name = "drift_encoder_meas.p"
+
     file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
     dataloader = DLPerkeo(file_dir)
     dataloader.auto()
     filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
 
-    pos0 = filt_meas[:117]
-    pos1 = filt_meas[117:234:2]
-    pos2 = filt_meas[118:234:2]
-    pos3 = filt_meas[234:]
+    if bimp_meas_list:
+        impfile = dP.FilePerkeo(f"{conf_path}/{encoder_file_name}")
+        only_encoder = impfile.imp()
+    else:
+        pos0 = filt_meas[:113]
+        pos1 = filt_meas[114:351:2]
+        pos2 = filt_meas[353:630:4]
+        pos3 = filt_meas[354:631:4]
+        only_encoder = np.concatenate([pos0, pos1, pos2, pos3])
 
-    # was ist am 13.1. passiert?
-    # https://tuphene-dev1.ph.tum.de/elog/Perkeo+III+b+Beamtime/173
-    # weird pudel crash am 12.!!!!
-    #
-    # 16.1. switch to double meas
-    # 18.1. noon shift of two step pattern
-    # 16846-82
+    if bexp_meas_list:
+        outfile = dP.FilePerkeo(encoder_file_name)
+        outfile.dump(only_encoder, conf_path)
 
-    only_encoder = np.concatenate([pos0, pos2])
-    for pos_set in [pos0, pos2, pos1, pos3, only_encoder]:
-        pdm = DriftDetSumMapPerkeo(pos_set, bimp_detsum=False, bimp_sn=False)
-        pdm()
-        pdm.plot_sn_map()
-        pdm.plot_detsum_map()
+    pdm = DriftDetSumMapPerkeo(only_encoder, bimp_detsum=False, bimp_sn=False)
+    pdm()
+    pdm.plot_sn_map()
+    pdm.plot_detsum_map()
 
 
 if __name__ == "__main__":
