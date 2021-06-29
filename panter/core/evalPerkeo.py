@@ -14,8 +14,9 @@ from lmfit import Model
 from lmfit.model import ModelResult
 
 import panter.core.dataPerkeo as dP
-from panter.config import conf_path
 import panter.config.evalFitSettings as eFS
+from panter.config import conf_path
+from panter import output_path
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
@@ -50,10 +51,12 @@ class DoFit:
 
     Attributes
     ----------
-    plotrange : [float, float]
-    plot_labels : [str]*3
+    plotrange: [float, float]
+    plot_labels: [str]*3
         (default ['Fit result', 'xLabel [ ]', 'yLabel [ ]'])
-    blogscale : False
+    plot_file: 'Fit_res'
+        Name of file to store plot figure into.
+    blogscale: False
         Plot fitresults with y-axis log scaled.
     bfit_residuals : False
         Fit gaussian to fit residuals in DoFit.plot_fit()
@@ -79,6 +82,7 @@ class DoFit:
         self._fitrange = None
         self.plotrange = {"x": None, "y": None}
         self.plot_labels = ["Fit result", "xLabel [ ]", "yLabel [ ]"]
+        self.plot_file = None
         self.blogscale = False
         self.bfit_residuals = False
         self._initvals = None
@@ -112,6 +116,9 @@ class DoFit:
 
         if fitsettings.plot_labels is not None:
             self.plot_labels = fitsettings.plot_labels
+
+        if fitsettings.plot_file is not None:
+            self.plot_file = fitsettings.plot_file
 
         return 0
 
@@ -238,7 +245,7 @@ class DoFit:
         else:
             self._gof = [None, None]
 
-        if self._booldict["boutput"]:
+        if self._booldict["boutput"] or self._booldict["bsave_fit"]:
             self.plot_fit()
 
         return self._fitresult
@@ -387,7 +394,14 @@ class DoFit:
                 )
             except TypeError:
                 print("WARNING: Residual Gaussian fit failed.")
-        plt.show()
+
+        if self._booldict["bsave_fit"]:
+            if self.plot_file is None:
+                self.plot_file = "Fit_res"
+            plt.savefig(output_path + "/" + self.plot_file + ".png", dpi=300)
+
+        if self._booldict["boutput"]:
+            plt.show()
 
         return 0
 
