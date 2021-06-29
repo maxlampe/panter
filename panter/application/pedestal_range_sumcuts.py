@@ -1,7 +1,7 @@
 """Studying effect of pedestal fit range and individual PMT cuts"""
 
 import panter.core.dataPerkeo as dP
-import panter.core.evalPerkeo as eP
+from panter.core.pedPerkeo import PedPerkeo
 
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 filename2 = "data119886-67506_bg.root"
@@ -21,7 +21,7 @@ data = dP.RootPerkeo(file)
 
 PED_CUT = 0.4
 
-pedtest = eP.PedPerkeo(
+pedtest = PedPerkeo(
     dataclass=data,
     bplot_res=False,
     bplot_fit=True,

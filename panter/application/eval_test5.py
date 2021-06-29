@@ -10,6 +10,7 @@ import panter.core.evalPerkeo as eP
 import panter.core.dataFiles as dF
 import panter.config.evalFitSettings as eFS
 
+from panter.core.pedPerkeo import PedPerkeo
 from panter.config import conf_path
 from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.core.corrPerkeo import CorrPerkeo
@@ -59,7 +60,7 @@ if 0:
                 currResFixed = []
 
                 data = dP.RootPerkeo(j_lis)
-                pedtest = eP.PedPerkeo(
+                pedtest = PedPerkeo(
                     dataclass=data,
                     bplot_res=False,
                     bplot_fit=False,

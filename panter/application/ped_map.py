@@ -5,8 +5,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import datetime
+
 import panter.core.dataPerkeo as dP
-import panter.core.evalPerkeo as eP
+
+from panter.core.pedPerkeo import PedPerkeo
 from panter.core.mapPerkeo import MapPerkeo
 from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.config import conf_path
@@ -112,7 +114,7 @@ class PedMapPerkeo(MapPerkeo):
             time = meas.date_list[0]
 
             data = dP.RootPerkeo(meas.file_list[0])
-            pedtest = eP.PedPerkeo(
+            pedtest = PedPerkeo(
                 dataclass=data,
                 bplot_res=False,
                 bplot_fit=False,
