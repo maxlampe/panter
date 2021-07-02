@@ -2,17 +2,13 @@
 
 import configparser
 import numpy as np
-import pandas as pd
-import subprocess
 import copy
-import uproot
+
 import panter.core.dataPerkeo as dP
 import panter.core.evalFunctions as eF
-import panter.core.evalPerkeo as eP
+from panter.core.pedPerkeo import PedPerkeo
 from panter.core.dataloaderPerkeo import DLPerkeo
-from panter.core import core_path
 from panter.config import conf_path
-from panter.application import appl_path
 from panter.config.params import delt_pmt
 from panter.config.params import k_pmt_fix
 
@@ -247,7 +243,7 @@ class CorrPerkeo:
             if self._ped_arr is None:
                 datacop = copy.copy(data)
                 datacop.set_filtdef()
-                pedestals = eP.PedPerkeo(datacop).ret_pedestals()
+                pedestals = PedPerkeo(datacop).ret_pedestals()
             else:
                 print("Warning: Using passed pedestals.")
                 pedestals = self._ped_arr

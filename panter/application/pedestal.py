@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import panter.core.dataPerkeo as dP
-import panter.core.evalPerkeo as eP
+from panter.core.pedPerkeo import PedPerkeo
 
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 filename2 = "data119886-67506_bg.root"
@@ -24,7 +24,7 @@ filenames_all = ["data201964-70606_bg.root", "data201980-70606_3.root"]
 
 file = dir + filename6
 data = dP.RootPerkeo(file)
-pedtest = eP.PedPerkeo(
+pedtest = PedPerkeo(
     dataclass=data,
     bplot_res=False,
     bplot_fit=False,
@@ -38,7 +38,7 @@ if True:
     results = []
     detsum_range = range(1000, 45000, step_size)
     for detsum in detsum_range:
-        pedtest = eP.PedPerkeo(
+        pedtest = PedPerkeo(
             dataclass=data,
             bplot_res=False,
             bplot_fit=False,

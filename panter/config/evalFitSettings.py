@@ -10,29 +10,47 @@ class FitSetting:
 
     Attributes
     ----------
-    label : str
-        {'gaus_simp', 'gaus_gen', 'gaus_pdec', 'gaus_expmod',
-         'gau_DoGG', 'exp_sat_simp', 'exp_sat_ord2'}
-    booldict : dict of bool
-        {'boutput': False, 'blimfit': False,
-         'bfitall': False,  'brecfit': False}
-    initvals : dict
+    label: str {
+        'gaus_simp',
+        'gaus_gen',
+        'gaus_pdec',
+        'gaus_expmod',
+        'gau_DoGG',
+        'exp_sat_simp',
+        'exp_sat_ord2',
+        'pol0',
+        'pol1',
+        'pol2',
+        'trigger_func',
+        'charge_spec',
+    }
+    booldict: dict of bool {
+        'boutput': False,
+        'bsave_fit': False,
+        'blimfit': False,
+        'bfitall': False,
+        'brecfit': False
+    }
+    initvals: dict
         Initial values for fit for all parameters by keyword.
-    paramvary : list of bool
+    paramvary: list of bool
         List of bools whether parameter should be fixed.
-    param_limit : dict of [float, float]
+    param_limit: dict of [float, float]
         Parameter range fit limits by keyword.
-    fitfunc : function
-    fitrange : [float, float]
-    plotrange : {"x": float, "y": float}
-    plot_labels : [str, str, str]
+    fitfunc: function
+    fitrange: [float, float]
+    plotrange: {"x": float, "y": float}
+    plot_labels: [str, str, str]
         (PlotLabel, XLabel, YLabel)
+    plot_file: str
+        Name of file to store plot figure into.
     """
 
     def __init__(self):
         self.label = None
         self.booldict = {
             "boutput": False,
+            "bsave_fit": False,
             "blimfit": False,
             "bfitall": False,
             "brecfit": False,
@@ -44,6 +62,7 @@ class FitSetting:
         self.fitrange = None
         self.plotrange = {"x": None, "y": None}
         self.plot_labels = None
+        self.plot_file = None
 
 
 gaus_simp = FitSetting()
