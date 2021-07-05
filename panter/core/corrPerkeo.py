@@ -6,8 +6,8 @@ import copy
 
 import panter.core.dataPerkeo as dP
 import panter.core.evalFunctions as eF
+from panter.core.corrBase import CorrBase
 from panter.core.pedPerkeo import PedPerkeo
-from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.config import conf_path
 from panter.config.params import delt_pmt
 from panter.config.params import k_pmt_fix
@@ -26,26 +26,16 @@ SUM_hist_par = {
     "low_lim": int(cnf["dataPerkeo"]["SUM_hist_min"]),
     "up_lim": int(cnf["dataPerkeo"]["SUM_hist_max"]),
 }
-BEAM_MEAS_TIME = {
-    "sg": [
-        float(cnf["dataPerkeo"]["BEAM_SIG_LOW"]),
-        float(cnf["dataPerkeo"]["BEAM_SIG_UP"]),
-    ],
-    "bg": [
-        float(cnf["dataPerkeo"]["BEAM_BG_LOW"]),
-        float(cnf["dataPerkeo"]["BEAM_BG_UP"]),
-    ],
-}
 
 
-class CorrPerkeo:
+class CorrPerkeo(CorrBase):
     """Class for doing correction on PERKEO data.
 
     Takes a data loader and corrects all entries in it.
 
     Parameters
     ----------
-    dataloader: DLPerkeo
+    dataloader: np.array()
     mode: {0, 1, 2}
         Mode variable to determine calculated spectra.
         O = total DetSum (only one spectra is returned)
@@ -96,7 +86,7 @@ class CorrPerkeo:
 
     def __init__(
         self,
-        dataloader: DLPerkeo,
+        dataloader: np.array,
         mode: int = 0,
         bonlynew: bool = True,
         bdetsum_drift: bool = True,
@@ -104,8 +94,7 @@ class CorrPerkeo:
         weight_arr=None,
         pmt_sum_selection=None,
     ):
-        self._dataloader = dataloader
-        self._bonlynew = bonlynew
+        super().__init__(dataloader=dataloader, bonlynew=bonlynew)
         self._bdetsum_drift = bdetsum_drift
         self._ped_arr = ped_arr
         self._weight_arr = weight_arr
@@ -117,17 +106,12 @@ class CorrPerkeo:
 
         self._histpar_sum = SUM_hist_par
         self._histpar_pmt = PMT_hist_par
-        self._beam_mtime = BEAM_MEAS_TIME
         self.corrections = {
             "Pedestal": True,
             "RateDepElec": False,
             "DeadTime": True,
             "Drift": True,
         }
-        self.histograms = []
-        self.hist_concat = None
-        self.addition_filters = []
-
         self._drift_map = None
 
     def _calc_detsum(
@@ -166,42 +150,6 @@ class CorrPerkeo:
 
         for corr in self.corrections:
             self.corrections[corr] = bactive
-
-        return 0
-
-    def clear(self):
-        """Clear relevant attributes enabling re-usability without new instantiation."""
-
-        self.addition_filters = []
-        self.histograms = []
-
-        return 0
-
-    def _filt_data(self, data: dP.RootPerkeo, bbeam=False, key=""):
-        """Filter data set."""
-
-        if bbeam:
-            data.set_filtdef()
-            data.set_filt(
-                "data",
-                fkey="DeltaTriggerTime",
-                active=True,
-                ftype="num",
-                low_lim=self._beam_mtime[key][0],
-                up_lim=self._beam_mtime[key][1],
-            )
-            if len(self.addition_filters) != 0:
-                for entry in self.addition_filters:
-                    data.set_filt(**entry)
-            data.auto(1)
-        else:
-            if len(self.addition_filters) != 0:
-                data.set_filtdef()
-                for entry in self.addition_filters:
-                    data.set_filt(**entry)
-                data.auto(1)
-            else:
-                data.auto()
 
         return 0
 
