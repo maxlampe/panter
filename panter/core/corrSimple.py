@@ -72,11 +72,7 @@ class CorrSimple(CorrBase):
                 coin0 = np.array(data_by_branch[0], dtype=float)
                 coin1 = np.array(data_by_branch[1], dtype=float)
                 diff = coin0 - coin1
-                hist_of_branch = [
-                    dP.HistPerkeo(
-                        diff, **self._hist_par
-                    )
-                ]
+                hist_of_branch = [dP.HistPerkeo(diff, **self._hist_par)]
             else:
                 hist_of_branch = []
                 for dim in data_by_branch:
