@@ -141,18 +141,6 @@ class CorrPerkeo(CorrBase):
 
         return calc_hists
 
-    def _set_corr(self):
-        """Activate corrections from list."""
-        pass
-
-    def set_all_corr(self, bactive: bool):
-        """Switch all corrections to active or inactive"""
-
-        for corr in self.corrections:
-            self.corrections[corr] = bactive
-
-        return 0
-
     def _calc_corr(self, data: dP.RootPerkeo):
         """Calculate corrected amplitude for each event and file."""
 

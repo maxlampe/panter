@@ -67,14 +67,10 @@ class CorrBase:
         self._bonlynew = bonlynew
 
         self._beam_mtime = BEAM_MEAS_TIME
-        self.corrections = None
+        self.corrections = {}
         self.histograms = []
         self.hist_concat = None
         self.addition_filters = []
-
-    def _calc_detsum(self, **kwargs) -> [dP.HistPerkeo, dP.HistPerkeo]:
-        """Calculate the DetSum for list of ADC values."""
-        pass
 
     def _set_corr(self):
         """Activate corrections from list."""
@@ -121,8 +117,6 @@ class CorrBase:
                 data.auto(1)
             else:
                 data.auto()
-
-        return 0
 
     def _calc_corr(self, data: dP.RootPerkeo):
         """Calculate corrected amplitude for each event and file."""

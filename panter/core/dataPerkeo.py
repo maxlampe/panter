@@ -839,7 +839,7 @@ class RootPerkeo:
         return 0
 
     def auto(self, set_mode: int = 0):
-        """Run functions in correct order to get data out of file.
+        """Run functions in correct order to get PMT data out of file.
 
         This function calls all other necessary functions in
         appropriate order to generate pmt_data. DeltaPrevTriggerTime data is
@@ -874,8 +874,6 @@ class RootPerkeo:
         self.gen_dptt()
         self.calc_stats()
 
-        return 0
-
     def ret_actpmt(self) -> list:
         """Returns list of PMT index of 'active' (see _pmt_thres) PMTs."""
 
@@ -887,7 +885,7 @@ class RootPerkeo:
         return liste
 
     def gen_hist(
-        self, lpmt: list(int), cust_hist_par: dict = None, cust_histsum_par: dict = None
+        self, lpmt: list, cust_hist_par: dict = None, cust_histsum_par: dict = None
     ):
         """Generate histograms from pmt_data. Last function to call.
 
