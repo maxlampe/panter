@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 
 from panter.config.filesScanMaps import scan_200117
+
 # from panter.core.pedPerkeo import PedPerkeo
 from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.core.corrPerkeo import CorrPerkeo
@@ -35,6 +36,14 @@ class ScanMapClass:
         self._pedestals = None
         self._num_pmt = 16
         self._peak_pos_map = None
+        self.avg_dev = None
+        self.loss = None
+
+        # Calculate peak positions for weights=np.ones(16) and fix middle peak
+        # TODO: optimize by only calculating middle peak and not entire map?
+        self.calc_peak_positions()
+        mid_ind = self._find_closest_ind(self._scan_pos_arr, self._mid_pos)
+        self._center_peak = self._peak_pos_map[mid_ind]
 
     def _calc_pedestals(self):
         """Calculate pedestals for all files to be reused"""
@@ -72,7 +81,12 @@ class ScanMapClass:
             fitclass.set_fitparam("mu", 10000.0)
             fitclass.fit()
 
-            peak = fitclass.ret_results().params["mu"].value
+            try:
+                peak = fitclass.ret_results().params["mu"].value
+            except AttributeError:
+                peak = None
+                fitclass.set_bool("boutput", True)
+                fitclass.fit()
             self._peak_pos_map.append(peak)
 
         self._peak_pos_map = np.asarray(self._peak_pos_map)
@@ -83,32 +97,33 @@ class ScanMapClass:
         assert self._peak_pos_map is not None, "ERROR: Map is empty."
         avg_dev = 0.0
         loss = 0.0
+        try:
+            for peak in self._peak_pos_map:
+                avg_dev += (peak - self._center_peak) ** 2
+            avg_dev = avg_dev / self._peak_pos_map.shape[0]
 
-        mid_ind = self._find_closest_ind(self._scan_pos_arr, self._mid_pos)
-        mid_peak_pos = self._peak_pos_map[mid_ind]
+            if bsymm_loss:
+                loss_lr = 0.0
+                loss_ud = 0.0
+                all_l, all_r = self._get_lr_pairs(self._scan_pos_arr)
+                peaks_l = self._peak_pos_map[all_l]
+                peaks_r = self._peak_pos_map[all_r]
 
-        for peak in self._peak_pos_map:
-            avg_dev += (peak - mid_peak_pos) ** 2
-        avg_dev = avg_dev / self._peak_pos_map.shape[0]
+                for ind in range(peaks_l.shape[0]):
+                    loss_lr += (peaks_l[ind] - peaks_r[ind]) ** 2
+                loss_lr = loss_lr / all_l.shape[0]
 
-        if bsymm_loss:
-            loss_lr = 0.0
-            loss_ud = 0.0
-            all_l, all_r = self._get_lr_pairs(self._scan_pos_arr)
-            peaks_l = self._peak_pos_map[all_l]
-            peaks_r = self._peak_pos_map[all_r]
+                for ind in range(int(peaks_l.shape[0] * 0.5)):
+                    loss_ud += (peaks_l[ind] - peaks_l[peaks_l.shape[0] - 1 - ind]) ** 2
+                    loss_ud += (peaks_r[ind] - peaks_r[peaks_r.shape[0] - 1 - ind]) ** 2
+                loss_ud = loss_ud / (int(peaks_l.shape[0] * 0.5) * 2.0)
 
-            for ind in range(peaks_l.shape[0]):
-                loss_lr += (peaks_l[ind] - peaks_r[ind]) ** 2
-            loss_lr = loss_lr / all_l.shape[0]
+                loss += beta_symm_loss * (loss_ud + loss_lr)
+            loss += loss + avg_dev
 
-            for ind in range(int(peaks_l.shape[0] * 0.5)):
-                loss_ud += (peaks_l[ind] - peaks_l[peaks_l.shape[0] - 1 - ind]) ** 2
-                loss_ud += (peaks_r[ind] - peaks_r[peaks_r.shape[0] - 1 - ind]) ** 2
-            loss_ud = loss_ud / (int(peaks_l.shape[0] * 0.5) * 2.)
-
-            loss += beta_symm_loss * (loss_ud + loss_lr)
-        loss += loss + avg_dev
+        except TypeError:
+            loss = None
+            avg_dev = None
 
         self.avg_dev = avg_dev
         self.loss = loss
@@ -190,8 +205,9 @@ class ScanMapClass:
         x_points = np.unique(pos_arr.T[0])
         x_l = x_points[0]
         x_r = x_points[-1]
-        all_left = (pos_arr[:, 0] == x_l)
-        all_right = (pos_arr[:, 0] == x_r)
+        # TODO: Does this work without parenthesis?
+        all_left = pos_arr[:, 0] == x_l
+        all_right = pos_arr[:, 0] == x_r
 
         return all_left, all_right
 
@@ -204,7 +220,6 @@ def main():
         event_arr=evs,
         detector=1,
     )
-    smc.calc_peak_positions()
     print(smc.calc_loss())
     smc.plot_scanmap()
 
