@@ -22,8 +22,8 @@ def const_weights(weights: np.array):
 
     if weights.shape[0] == 4:
         for i in range(4):
-            w_list[(i*2)] = weights[i]
-            w_list[(i*2 + 1)] = weights[i]
+            w_list[(i * 2)] = weights[i]
+            w_list[(i * 2 + 1)] = weights[i]
     elif weights.shape[0] == 8:
         for i in range(4):
             w_list[i] = weights[i]
@@ -130,7 +130,6 @@ def main(
         candidates = []
         values = []
 
-
         # Start with best candidate x and sample rest random
         argmin = torch.min(gpmodel.y, dim=0)[1].item()
         x_init = torch.unsqueeze(gpmodel.X[argmin], 0)
@@ -140,6 +139,7 @@ def main(
             candidates.append(x)
             values.append(y)
             # DIM!
+            # TODO: Maybe not use uniform sampling?
             x_init = x.new_empty((1, 4)).uniform_(lower_bound, upper_bound)
 
         # Use minimum (best) result
