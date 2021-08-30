@@ -33,7 +33,7 @@ torch.set_printoptions(precision=6, linewidth=120)
 # TODO: EI gets stuck, util value is -0.?
 # TODO: Check GP train loss (how good is approx?)
 # TODO: check noise EI - averages over lowest known value?
-
+# TODO: MC integrate EI?
 
 def const_weights(weights: np.array):
     w_list = [1.0] * 16
@@ -205,10 +205,10 @@ def main(
 if __name__ == "__main__":
     main(
         b_dummy_val=False,
-        n_start_data=20,
+        n_start_data=50,
         n_opt_steps=50,
-        n_candidates=100,
-        dim=4,
+        n_candidates=20,
+        dim=8,
     )
 
 # [1.0040, 0.9734, 0.9903, 0.9905] (6567, 7839)
@@ -217,8 +217,14 @@ if __name__ == "__main__":
 
 # EI runs
 # kappa 0
-# [0.992950, 0.955659, 1.000981, 1.003407] (6463.6, 7499.2)
+# [0.992950, 0.955659, 1.000981, 1.003407] (6464, 7499)
 # [1.010134, 1.002948, 0.964882, 0.988906, 0.990236, 0.990926, 0.992734, 0.978815] (6408, 7226)
-# kappa 1
+# kappa 1 / 50 50 100
 # [0.995389, 0.957945, 0.999247, 1.001300] (6457, 7439)
 # [0.989336, 0.983152, 0.936838, 0.963596, 1.012520, 1.003641, 1.013249, 1.003278] (6293, 7156)
+# kappa 1 / 20 50(45) 100
+# [0.993375, 0.956549, 1.000868, 1.002985] (6455, 7483)
+# [0.998838, 0.959562, 0.997056, 0.999847] (6457, 7434)
+# [0.992441, 0.954160, 1.001888, 1.005544] (6474, 7478)
+# does not suffice for 8 dim! (reaches about 11k)
+#
