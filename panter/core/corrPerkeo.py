@@ -47,6 +47,8 @@ class CorrPerkeo(CorrBase):
         Use DetSum drift correction instead of individual PMT factors.
     ped_arr: np.array
         Array of pedestal values to be used instead of calculated from data file.
+    bgped_arr: np.array
+        Array of pedestal values to be used for bg data (works only for MeasP type 1).
     weight_arr: np.array
         Array of individual PMT weights to multiply each event for each PMT.
     pmt_sum_selection: list
@@ -91,12 +93,14 @@ class CorrPerkeo(CorrBase):
         bonlynew: bool = True,
         bdetsum_drift: bool = True,
         ped_arr=None,
+        bgped_arr=None,
         weight_arr=None,
         pmt_sum_selection=None,
     ):
         super().__init__(dataloader=dataloader, bonlynew=bonlynew)
         self._bdetsum_drift = bdetsum_drift
         self._ped_arr = ped_arr
+        self._bgped_arr = bgped_arr
         self._weight_arr = weight_arr
         self._mode = mode
         self._pmt_sum_selection = pmt_sum_selection
@@ -141,7 +145,7 @@ class CorrPerkeo(CorrBase):
 
         return calc_hists
 
-    def _calc_corr(self, data: dP.RootPerkeo):
+    def _calc_corr(self, data: dP.RootPerkeo, buse_bgped: bool = False):
         """Calculate corrected amplitude for each event and file."""
 
         pedestals = [[0]] * data.no_pmts
@@ -181,8 +185,10 @@ class CorrPerkeo(CorrBase):
                 datacop.set_filtdef()
                 pedestals = PedPerkeo(datacop).ret_pedestals()
             else:
-                print("Warning: Using passed pedestals.")
-                pedestals = self._ped_arr
+                if buse_bgped:
+                    pedestals = self._bgped_arr
+                else:
+                    pedestals = self._ped_arr
 
         if self._weight_arr is None:
             self._weight_arr = np.ones(data.no_pmts)
@@ -282,11 +288,14 @@ class CorrPerkeo(CorrBase):
         res = []
         scal = []
 
-        for file_name in ev_files:
+        for ind, file_name in enumerate(ev_files):
             data = dP.RootPerkeo(file_name)
             self._filt_data(data)
 
-            r, s, i = self._calc_corr(data)
+            if ind == 1:
+                r, s, i = self._calc_corr(data, buse_bgped=True)
+            else:
+                r, s, i = self._calc_corr(data)
             if i:
                 return [None, None]
             res.append(r)
