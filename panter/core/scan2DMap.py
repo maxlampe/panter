@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 
 from panter.config.filesScanMaps import scan_200117
-
-# from panter.core.pedPerkeo import PedPerkeo
+from panter.core.dataPerkeo import RootPerkeo
+from panter.core.pedPerkeo import PedPerkeo
 from panter.core.dataloaderPerkeo import DLPerkeo
 from panter.core.corrPerkeo import CorrPerkeo
 import panter.config.evalFitSettings as eFS
@@ -34,28 +34,77 @@ class ScanMapClass:
         self._meas = self._dataloader.ret_meas()
 
         self._pedestals = None
+        self._weights = None
         self._num_pmt = 16
         self._peak_pos_map = None
         self.avg_dev = None
         self.loss = None
 
-        # Calculate peak positions for weights=np.ones(16) and fix middle peak
-        # TODO: optimize by only calculating middle peak and not entire map?
-        self.calc_peak_positions()
-        mid_ind = self._find_closest_ind(self._scan_pos_arr, self._mid_pos)
-        self._center_peak = self._peak_pos_map[mid_ind]
+        # Calculate middle peak positions for weights=np.ones(16)
+        self._mid_ind = self._find_closest_ind(self._scan_pos_arr, self._mid_pos)
+        self._center_peak = self._calc_single_peak(self._meas[self._mid_ind])
 
     def _calc_pedestals(self):
         """Calculate pedestals for all files to be reused"""
-        # FIXME: CorrPerkeo currently does not support tuples as ped_arr input
-        # i.e. it does not work for type=1 events with sep. sig and bg files
-        pass
+
+        self._pedestals = []
+        for ind, meas in enumerate(self._meas):
+            data_sig = RootPerkeo(meas.file_list[0])
+            ped_sid = PedPerkeo(
+                dataclass=data_sig,
+            ).ret_pedestals()
+            data_bg = RootPerkeo(meas.file_list[1])
+            ped_bd = PedPerkeo(
+                dataclass=data_bg,
+            ).ret_pedestals()
+            self._pedestals.append([ped_sid, ped_bd])
+
+    def _calc_single_peak(self, meas, ped=None, brec: bool = True):
+        """"""
+
+        if ped is None:
+            ped = [None, None]
+        corr_class = CorrPerkeo(
+            meas, mode=1, ped_arr=ped[0], bgped_arr=ped[1], weight_arr=self._weights
+        )
+        corr_class.set_all_corr(bactive=True)
+        corr_class.corrections["Drift"] = False
+        corr_class.corr(bstore=True, bwrite=False)
+
+        histp = corr_class.histograms[0]
+        test = histp[1][self._detector]
+
+        fitclass = DoFit(test.hist)
+        fitclass.setup(eFS.gaus_gen)
+        fitclass.set_bool("boutput", False)
+        # fitclass.limit_range([8000,12000])
+        fitclass.set_fitparam("mu", 10500.0)
+        fitclass.fit()
+
+        try:
+            peak = fitclass.ret_results().params["mu"].value
+        except AttributeError:
+            print(meas)
+            print(self._weights)
+            test.plot_hist()
+            if brec:
+                print("Trying refit with higher mu val")
+                fitclass.set_fitparam("mu", 11000.0)
+                fitclass.fit()
+                try:
+                    peak = fitclass.ret_results().params["mu"].value
+                except AttributeError:
+                    peak = None
+            else:
+                peak = None
+
+        return peak
 
     def calc_peak_positions(self, weights: np.array = None):
         """Calculate Sn peaks for all positions"""
 
-        # if self._pedestals is None:
-        # self._calc_pedestals()
+        if self._pedestals is None:
+            self._calc_pedestals()
 
         self._weights = weights
         if self._weights is None:
@@ -64,29 +113,8 @@ class ScanMapClass:
         self._peak_pos_map = []
 
         for ind, meas in enumerate(self._meas):
-            # ped = self._pedestals[ind]
-            ped = None
-            corr_class = CorrPerkeo(meas, mode=1, ped_arr=ped, weight_arr=self._weights)
-            corr_class.set_all_corr(bactive=True)
-            corr_class.corrections["Drift"] = False
-            corr_class.corr(bstore=True, bwrite=False)
-
-            histp = corr_class.histograms[0]
-            test = histp[1][self._detector]
-
-            fitclass = DoFit(test.hist)
-            fitclass.setup(eFS.gaus_gen)
-            fitclass.set_bool("boutput", False)
-            # fitclass.limit_range([8000,12000])
-            fitclass.set_fitparam("mu", 10000.0)
-            fitclass.fit()
-
-            try:
-                peak = fitclass.ret_results().params["mu"].value
-            except AttributeError:
-                peak = None
-                fitclass.set_bool("boutput", True)
-                fitclass.fit()
+            ped = self._pedestals[ind]
+            peak = self._calc_single_peak(meas, ped)
             self._peak_pos_map.append(peak)
 
         self._peak_pos_map = np.asarray(self._peak_pos_map)
@@ -130,13 +158,17 @@ class ScanMapClass:
 
         return avg_dev, loss
 
-    def plot_scanmap(self, bsavefig: bool = False, filename: str = ""):
+    def plot_scanmap(
+        self, bsavefig: bool = False, brel_map: bool = True, filename: str = ""
+    ):
         """Make a 2D plot of the scan map results."""
 
         det_label = f"Detector: {self._detector}/1\n"
 
         x = np.unique(self._scan_pos_arr.T[0])
         y = np.unique(self._scan_pos_arr.T[1])
+        peak_map = self._peak_pos_map
+
         listx = np.arange(x.shape[0])
         listy = np.arange(y.shape[0])
 
@@ -150,7 +182,10 @@ class ScanMapClass:
             indx = mappingx[indx]
             indy = self._scan_pos_arr[i][1]
             indy = mappingy[indy]
-            data[indy][indx] = f"{self._peak_pos_map[i]:.0f}"
+            if brel_map:
+                data[indy][indx] = f"{peak_map[i]/peak_map[self._mid_ind]:.4f}"
+            else:
+                data[indy][indx] = f"{peak_map[i]:.0f}"
 
         fig, ax = plt.subplots(figsize=(8, 8))
         ax.imshow(data, cmap="Wistia")
@@ -205,7 +240,6 @@ class ScanMapClass:
         x_points = np.unique(pos_arr.T[0])
         x_l = x_points[0]
         x_r = x_points[-1]
-        # TODO: Does this work without parenthesis?
         all_left = pos_arr[:, 0] == x_l
         all_right = pos_arr[:, 0] == x_r
 
@@ -218,7 +252,29 @@ def main():
     smc = ScanMapClass(
         scan_pos_arr=pos,
         event_arr=evs,
-        detector=1,
+        detector=0,
+    )
+    smc.calc_peak_positions(
+        weights=np.array(
+            [
+                0.989336,
+                0.983152,
+                0.936838,
+                0.963596,
+                1.012520,
+                1.003641,
+                1.013249,
+                1.003278,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+            ]
+        )
     )
     print(smc.calc_loss())
     smc.plot_scanmap()
