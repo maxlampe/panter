@@ -23,7 +23,7 @@ class ScanFiles:
     ):
         self._dir_sig_files = dir_sig_files
         self._dir_bg_files = dir_bg_files
-        self._label = label
+        self.label = label
         self._measp_type = measp_type
         self._measp_src = measp_src
 
@@ -57,10 +57,10 @@ class ScanFiles:
         return self._positions, self.events
 
     def __str__(self):
-        return "ScanFiles" + "_" + self._label
+        return "ScanFiles" + "_" + self.label
 
     def __repr__(self):
-        return "ScanFiles" + "_" + self._label
+        return "ScanFiles" + "_" + self.label
 
 
 pos = np.asarray(
