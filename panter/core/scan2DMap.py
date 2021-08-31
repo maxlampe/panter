@@ -2,7 +2,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import colors
 
 from panter.config.filesScanMaps import scan_200117
 from panter.core.dataPerkeo import RootPerkeo
@@ -23,11 +22,13 @@ class ScanMapClass:
         event_arr: np.array,
         detector: int = 0,
         mid_pos: np.array = np.array([170, 5770]),
+        label: str = "unlabelled",
     ):
         self._scan_pos_arr = scan_pos_arr
         self._event_arr = event_arr
-        self._detector = detector
+        self.detector = detector
         self._mid_pos = mid_pos
+        self.label = label
 
         self._dataloader = DLPerkeo("")
         self._dataloader.fill(self._event_arr)
@@ -72,7 +73,7 @@ class ScanMapClass:
         corr_class.corr(bstore=True, bwrite=False)
 
         histp = corr_class.histograms[0]
-        test = histp[1][self._detector]
+        test = histp[1][self.detector]
 
         fitclass = DoFit(test.hist)
         fitclass.setup(eFS.gaus_gen)
@@ -163,7 +164,7 @@ class ScanMapClass:
     ):
         """Make a 2D plot of the scan map results."""
 
-        det_label = f"Detector: {self._detector}/1\n"
+        det_label = f"Detector: {self.detector}/1\n"
 
         x = np.unique(self._scan_pos_arr.T[0])
         y = np.unique(self._scan_pos_arr.T[1])
@@ -188,7 +189,11 @@ class ScanMapClass:
                 data[indy][indx] = f"{peak_map[i]:.0f}"
 
         fig, ax = plt.subplots(figsize=(8, 8))
-        ax.imshow(data, cmap="Wistia")
+        if brel_map:
+            # ax.imshow(data, cmap="Wistia", vmin=0.94, vmax=1.06)
+            ax.imshow(data, cmap="Wistia")
+        else:
+            ax.imshow(data, cmap="Wistia")
 
         ax.set_xticks(np.arange(x.shape[0]))
         ax.set_yticks(np.arange(y.shape[0]))
@@ -197,7 +202,7 @@ class ScanMapClass:
 
         string = "Weights:\n"
         string = det_label + "\n" + string
-        w_rng = [self._detector * 8, len(self._weights) - 8 * (1 - self._detector)]
+        w_rng = [self.detector * 8, len(self._weights) - 8 * (1 - self.detector)]
         for i in range(w_rng[0], w_rng[1]):
             string += f"pmt{i}/15: {self._weights[i]:.4f}\n"
         plt.text(0.02, 0.3, string, fontsize=10, transform=plt.gcf().transFigure)
@@ -207,7 +212,7 @@ class ScanMapClass:
             for j in range(x.shape[0]):
                 ax.text(j, i, data[i, j], ha="center", va="center", color="black")
 
-        ax.set_title(f"Scan_map with avg_dev: {self.avg_dev:.0f}")
+        ax.set_title(f"Scan_map - avg_dev: {self.avg_dev:.0f}, loss: {self.loss:.0f}")
         fig.tight_layout()
 
         if bsavefig:
@@ -250,21 +255,21 @@ def main():
     pos, evs = scan_200117()
 
     smc = ScanMapClass(
-        scan_pos_arr=pos,
-        event_arr=evs,
-        detector=0,
+        scan_pos_arr=pos, event_arr=evs, detector=0, label=scan_200117.label
     )
+    """
+    # smc.calc_peak_positions()
     smc.calc_peak_positions(
         weights=np.array(
             [
-                0.989336,
-                0.983152,
-                0.936838,
-                0.963596,
-                1.012520,
-                1.003641,
-                1.013249,
-                1.003278,
+                0.988395,
+                0.988395,
+                0.952541,
+                0.952541,
+                1.004483,
+                1.004483,
+                1.006872,
+                1.006872,
                 1.0,
                 1.0,
                 1.0,
@@ -276,6 +281,30 @@ def main():
             ]
         )
     )
+    """  
+    smc.calc_peak_positions(
+        weights=np.array(
+            [
+                0.998394,
+                0.991246,
+                0.948916,
+                0.972422,
+                1.007636,
+                0.993730,
+                1.003973,
+                0.994475,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+            ]
+        )
+    )
+
     print(smc.calc_loss())
     smc.plot_scanmap()
 
