@@ -35,6 +35,7 @@ torch.set_printoptions(precision=6, linewidth=120)
 # TODO: check noise EI - averages over lowest known value?
 # TODO: MC integrate EI?
 
+
 def const_weights(weights: np.array):
     w_list = [1.0] * 16
 
@@ -128,7 +129,7 @@ def main(
         sigma = variance.sqrt()
         argmin = torch.min(gpmodel.y, dim=0)[1].item()
         mu_min = gpmodel.y[argmin]
-        n_dist = torch.distributions.normal.Normal(loc=0., scale=1.)
+        n_dist = torch.distributions.normal.Normal(loc=0.0, scale=1.0)
         return n_dist.cdf((mu - mu_min - kappa) / sigma)
 
     def expected_improvement(x_in, kappa=1.0):
@@ -137,12 +138,13 @@ def main(
         sigma = variance.sqrt()
         argmin = torch.min(gpmodel.y, dim=0)[1].item()
         mu_min = gpmodel.y[argmin]
-        n_dist = torch.distributions.normal.Normal(loc=0., scale=1.)
+        n_dist = torch.distributions.normal.Normal(loc=0.0, scale=1.0)
 
         # gamma = (mu - mu_min - kappa) / sigma
         gamma = (mu_min - mu + kappa) / sigma
-        return -(sigma * (
-                    gamma * n_dist.cdf(gamma) + torch.exp(n_dist.log_prob(gamma))))
+        return -(
+            sigma * (gamma * n_dist.cdf(gamma) + torch.exp(n_dist.log_prob(gamma)))
+        )
 
     def find_a_candidate(x_init, lower_bound=w_range[0], upper_bound=w_range[1]):
         # transform x to an unconstrained domain
@@ -182,7 +184,7 @@ def main(
             candidates.append(x)
             values.append(y)
             # x_init = x.new_empty((1, dim)).uniform_(lower_bound, upper_bound)
-            x_init = x.new_empty((1, dim)).normal_(1., 0.05)
+            x_init = x.new_empty((1, dim)).normal_(1.0, 0.05)
         # Use minimum (best) result
         argmin = torch.min(torch.cat(values), dim=0)[1].item()
         print(f"winner: {candidates[argmin]}, LBO: {values[argmin]}")
@@ -206,8 +208,8 @@ if __name__ == "__main__":
     main(
         b_dummy_val=False,
         n_start_data=50,
-        n_opt_steps=50,
-        n_candidates=20,
+        n_opt_steps=70,
+        n_candidates=50,
         dim=8,
     )
 
@@ -227,4 +229,12 @@ if __name__ == "__main__":
 # [0.998838, 0.959562, 0.997056, 0.999847] (6457, 7434)
 # [0.992441, 0.954160, 1.001888, 1.005544] (6474, 7478)
 # does not suffice for 8 dim! (reaches about 11k)
-#
+# kappa 1 / 50 50 20
+# [1.007533, 1.003166, 0.959988, 0.980420, 0.991973, 0.991907, 0.998605, 0.983629] (6371, 7022)
+# [0.960330, 1.010716, 0.959088, 0.963435, 1.030832, 0.989064, 0.986494, 1.004305] (7211, 9411)
+# kappa 1 / 50 70 20
+# [1.030843, 1.006677, 0.961154, 0.999453, 0.987405, 0.977974, 0.986383, 0.977584] (6476, 7256)
+# [0.972688, 0.952187, 0.900349, 0.954270, 1.057235, 1.008276, 1.012375, 1.040411] (7202, 8681)
+# kappa 1 / 50 70 50
+# [0.998394, 0.991246, 0.948916, 0.972422, 1.007636, 0.993730, 1.003973, 0.994475] (6310, 6961)
+# [0.989509, 0.991025, 0.949082, 0.966628, 1.013632, 0.999015, 1.009884, 0.993862] (6457, 7169)
