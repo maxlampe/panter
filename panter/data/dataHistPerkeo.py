@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.pyplot import figure
 
+from panter.data.dataMisc import ret_hist
+
 output_path = "../base"
 
 bfound_root = True

@@ -12,6 +12,7 @@ import uproot
 
 from panter.config import conf_path
 from panter.data.dataHistPerkeo import HistPerkeo
+from panter.data.dataMisc import FiltPerkeo
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()

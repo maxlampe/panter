@@ -1,14 +1,10 @@
 """Module for handling Perkeo root files and creating histograms."""
 
-from __future__ import annotations
-
 import glob
 import pickle
 
 import numpy as np
 import pandas as pd
-
-from panter.data.dataHistPerkeo import HistPerkeo
 
 output_path = "../base"
 
@@ -52,7 +48,7 @@ def filt_zeros(hist_df: pd.DataFrame, bdrop_nan: bool = True) -> pd.DataFrame:
     return hist_df
 
 
-def concat_hists(hist_array: np.array) -> HistPerkeo:
+def concat_hists(hist_array: np.array):
     """Concatenate multiple histograms in an array by adding them up with error prop."""
 
     hist_final = hist_array[0]
@@ -122,7 +118,7 @@ class DirPerkeo:
 
         return liste
 
-    def get_subset(self, liste: list(str)) -> list(str):
+    def get_subset(self, liste: list) -> list:
         """Returns list of required files (full name) out of list in dir"""
 
         retlist = []
