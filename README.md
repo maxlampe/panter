@@ -45,7 +45,7 @@ from panter.data.dataloaderPerkeo import DLPerkeo
 
 help(DLPerkeo)
 # General Fitter and specific fitting analysis
-from panter.eval.evalMisc import DoFit, DoFitData
+from panter.eval.evalFit import DoFit, DoFitData
 
 help(DoFit)
 help(DoFitData)
