@@ -5,20 +5,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import datetime
-import panter.core.dataPerkeo as dP
-import panter.core.evalPerkeo as eP
-from panter.core.mapPerkeo import MapPerkeo
+import panter.data.dataPerkeo as dP
+import panter.eval.evalPerkeo as eP
+from panter.base.mapPerkeo import MapPerkeo
 from panter.config.evalFitSettings import gaus_gen
-from panter.core.dataloaderPerkeo import DLPerkeo
-from panter.core.corrPerkeo import CorrPerkeo
+from panter.data.dataloaderPerkeo import DLPerkeo
+from panter.eval.corrPerkeo import CorrPerkeo
 from panter.config import conf_path
-from panter import output_path
+
+output_path = "."
 
 
 class DriftDetSumMapPerkeo(MapPerkeo):
     """Class for creating and handling of DetSum drift correction factors.
 
-    Based on core master class MapPerkeo. Can either create from scratch a map of Sn
+    Based on base master class MapPerkeo. Can either create from scratch a map of Sn
     drift measurement fits to detector DetSum spectra or use the latter and create a
     drift correction factor map for each detector. The maps can either be imported or
     created anew. For the drift correction factors, the relative deviation to the

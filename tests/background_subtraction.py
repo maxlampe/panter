@@ -3,9 +3,9 @@
 import configparser
 import numpy as np
 from panter.config import conf_path
-from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
-from panter.core.corrPerkeo import CorrPerkeo
-import panter.core.evalPerkeo as eP
+from panter.data.dataloaderPerkeo import DLPerkeo, MeasPerkeo
+from panter.eval.corrPerkeo import CorrPerkeo
+import panter.eval.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
 from tests.unittestroot import UnitTestRoot
 

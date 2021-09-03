@@ -6,19 +6,20 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import datetime
 
-import panter.core.dataPerkeo as dP
+import panter.data.dataPerkeo as dP
 
-from panter.core.pedPerkeo import PedPerkeo
-from panter.core.mapPerkeo import MapPerkeo
-from panter.core.dataloaderPerkeo import DLPerkeo
+from panter.eval.pedPerkeo import PedPerkeo
+from panter.base.mapPerkeo import MapPerkeo
+from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.config import conf_path
-from panter import output_path
+
+output_path = "."
 
 
 class PedMapPerkeo(MapPerkeo):
     """Class for creating and handling of drift correction factors.
 
-    Based on core master class MapPerkeo. Can either create from scratch or import a map
+    Based on base master class MapPerkeo. Can either create from scratch or import a map
     of pedestal results for each pmt over time.
 
     Parameters

@@ -2,8 +2,8 @@
 
 import configparser
 
-import panter.core.dataPerkeo as dP
-from panter.core.dataloaderPerkeo import DLPerkeo
+from panter.data.dataPerkeo import RootPerkeo
+from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.config import conf_path
 
 cnf = configparser.ConfigParser()
@@ -92,7 +92,7 @@ class CorrBase:
 
         return 0
 
-    def _filt_data(self, data: dP.RootPerkeo, bbeam=False, key=""):
+    def _filt_data(self, data: RootPerkeo, bbeam=False, key=""):
         """Filter data set."""
 
         if bbeam:
@@ -118,7 +118,7 @@ class CorrBase:
             else:
                 data.auto()
 
-    def _calc_corr(self, data: dP.RootPerkeo):
+    def _calc_corr(self, data: RootPerkeo):
         """Calculate corrected amplitude for each event and file."""
         pass
 

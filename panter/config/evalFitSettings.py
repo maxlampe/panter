@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import panter.core.evalFunctions as eF
+import panter.eval.evalFunctions as eF
 
 
 class FitSetting:

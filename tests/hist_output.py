@@ -3,7 +3,7 @@
 import numpy as np
 import uproot
 import subprocess
-import panter.core.dataPerkeo as dP
+import panter.data.dataPerkeo as dP
 from tests.unittestroot import UnitTestRoot
 from tests import tests_path
 

@@ -4,9 +4,9 @@ import configparser
 import numpy as np
 import matplotlib.pyplot as plt
 
-import panter.core.dataPerkeo as dP
-import panter.core.evalPerkeo as eP
-import panter.config.evalFitSettings as eFS
+from panter.data.dataPerkeo import RootPerkeo, HistPerkeo
+from panter.eval.evalPerkeo import DoFit
+from panter.config.evalFitSettings import gaus_simp
 from panter.config import conf_path
 
 # import global analysis parameters
@@ -18,11 +18,11 @@ class PedPerkeo:
     """
     Class for generating, plotting and storing pedestal values of PERKEO III datasets.
 
-    Does not overwrite previous filters in dataclass dP.RootPerkeo.
+    Does not overwrite previous filters in dataclass RootPerkeo.
 
     Parameters
     ----------
-    dataclass : dP.RootPerkeo
+    dataclass : RootPerkeo
     bplot_res, bplot_fit, bplot_log: False, False, False
         Activate plotting the pedestal results, plotting each fit result and plotting
         each fit result with a log scaled y-axis.
@@ -37,7 +37,7 @@ class PedPerkeo:
 
     Examples
     --------
-    >>> data = dP.RootPerkeo(filename)
+    >>> data = RootPerkeo(filename)
     >>> pedtest = PedPerkeo(data)
     >>> pedtest.plot_pedestals()
     >>> print(pedtest.ret_pedestals())
@@ -45,7 +45,7 @@ class PedPerkeo:
 
     def __init__(
         self,
-        dataclass: dP.RootPerkeo,
+        dataclass: RootPerkeo,
         bplot_res: bool = False,
         bplot_fit: bool = False,
         bplot_log: bool = False,
@@ -106,13 +106,13 @@ class PedPerkeo:
             self._dataclass.auto(1)
             if DET == 0:
                 for i in range(0, 8):
-                    ped_hists[i] = dP.HistPerkeo(
+                    ped_hists[i] = HistPerkeo(
                         self._dataclass.pmt_data[i], **self._ped_hist_par
                     )
 
             elif DET == 1:
                 for i in range(8, 16):
-                    ped_hists[i] = dP.HistPerkeo(
+                    ped_hists[i] = HistPerkeo(
                         self._dataclass.pmt_data[i], **self._ped_hist_par
                     )
 
@@ -121,10 +121,10 @@ class PedPerkeo:
                 histogram = hist.hist
 
                 for i in [0, 1]:
-                    fitclass = eP.DoFit(histogram)
-                    fitclass.setup(eFS.gaus_simp)
+                    fitclass = DoFit(histogram)
+                    fitclass.setup(gaus_simp)
                     # FIXME: Why is this necessary?
-                    # FIXME: Why does it change eFS.gaus_simp instead of fitclass att?
+                    # FIXME: Why does it change gaus_simp instead of fitclass att?
                     fitclass.set_bool("blimfit", False)
                     fitclass.set_bool("boutput", False)
 

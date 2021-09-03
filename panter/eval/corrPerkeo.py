@@ -4,10 +4,10 @@ import configparser
 import numpy as np
 import copy
 
-import panter.core.dataPerkeo as dP
-import panter.core.evalFunctions as eF
-from panter.core.corrBase import CorrBase
-from panter.core.pedPerkeo import PedPerkeo
+from panter.data.dataPerkeo import HistPerkeo, RootPerkeo, FilePerkeo
+from panter.eval.evalFunctions import calc_acorr_ratedep
+from panter.base.corrBase import CorrBase
+from panter.eval.pedPerkeo import PedPerkeo
 from panter.config import conf_path
 from panter.config.params import delt_pmt
 from panter.config.params import k_pmt_fix
@@ -120,7 +120,7 @@ class CorrPerkeo(CorrBase):
 
     def _calc_detsum(
         self, vals: np.array, start_it: int = 0
-    ) -> [dP.HistPerkeo, dP.HistPerkeo]:
+    ) -> [HistPerkeo, HistPerkeo]:
         """Calculate the DetSum for list of ADC values."""
 
         calc_hists = []
@@ -131,21 +131,21 @@ class CorrPerkeo(CorrBase):
                 det_sum_tot = np.array(vals[self._pmt_sum_selection]).sum(axis=0)[
                     start_it:
                 ]
-            calc_hists.append(dP.HistPerkeo(det_sum_tot, **self._histpar_sum))
+            calc_hists.append(HistPerkeo(det_sum_tot, **self._histpar_sum))
         elif self._mode == 1:
             det_sum_0 = np.array(vals[:8]).sum(axis=0)[start_it:]
             det_sum_1 = np.array(vals[8:]).sum(axis=0)[start_it:]
 
-            calc_hists.append(dP.HistPerkeo(det_sum_0, **self._histpar_sum))
-            calc_hists.append(dP.HistPerkeo(det_sum_1, **self._histpar_sum))
+            calc_hists.append(HistPerkeo(det_sum_0, **self._histpar_sum))
+            calc_hists.append(HistPerkeo(det_sum_1, **self._histpar_sum))
 
         elif self._mode == 2:
             for val in vals:
-                calc_hists.append(dP.HistPerkeo(val, **self._histpar_pmt))
+                calc_hists.append(HistPerkeo(val, **self._histpar_pmt))
 
         return calc_hists
 
-    def _calc_corr(self, data: dP.RootPerkeo, buse_bgped: bool = False):
+    def _calc_corr(self, data: RootPerkeo, buse_bgped: bool = False):
         """Calculate corrected amplitude for each event and file."""
 
         pedestals = [[0]] * data.no_pmts
@@ -155,9 +155,9 @@ class CorrPerkeo(CorrBase):
 
         if self.corrections["Drift"]:
             if self._bdetsum_drift:
-                impfile = dP.FilePerkeo(conf_path + "/det_fac_map.p")
+                impfile = FilePerkeo(conf_path + "/det_fac_map.p")
             else:
-                impfile = dP.FilePerkeo(conf_path + "/pmt_fac_map.p")
+                impfile = FilePerkeo(conf_path + "/pmt_fac_map.p")
             self._drift_map, _ = impfile.imp()
 
             time_stamps = self._drift_map["time"]
@@ -209,7 +209,7 @@ class CorrPerkeo(CorrBase):
             for i in range(0, data.no_pmts):
                 ampl_0 = ampl_corr[i][1:]
                 ampl_1 = ampl_corr[i][:-1]
-                ampl_corr[i] = eF.calc_acorr_ratedep(
+                ampl_corr[i] = calc_acorr_ratedep(
                     ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
                 )
 
@@ -233,7 +233,7 @@ class CorrPerkeo(CorrBase):
         """Correct measurement without background subtraction"""
 
         res = []
-        data_sg = dP.RootPerkeo(ev_file[0])
+        data_sg = RootPerkeo(ev_file[0])
 
         self._filt_data(data_sg)
         r, s, i = self._calc_corr(data_sg)
@@ -253,8 +253,8 @@ class CorrPerkeo(CorrBase):
         """Correct beam-like data (i.e. background in same file)."""
 
         res = []
-        data_sg = dP.RootPerkeo(ev_file[0])
-        data_bg = dP.RootPerkeo(ev_file[0])
+        data_sg = RootPerkeo(ev_file[0])
+        data_bg = RootPerkeo(ev_file[0])
         data_dict = {"sg": data_sg, "bg": data_bg}
 
         for (key, data) in data_dict.items():
@@ -289,7 +289,7 @@ class CorrPerkeo(CorrBase):
         scal = []
 
         for ind, file_name in enumerate(ev_files):
-            data = dP.RootPerkeo(file_name)
+            data = RootPerkeo(file_name)
             self._filt_data(data)
 
             if ind == 1:

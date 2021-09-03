@@ -1,7 +1,7 @@
 """Master class for studying different phenomena over time."""
 
 import numpy as np
-import panter.core.dataPerkeo as dP
+from panter.data.dataPerkeo import FilePerkeo
 from panter.config import conf_path
 
 
@@ -55,5 +55,5 @@ class MapPerkeo:
     def _write_map2file(self, map_ind: int = 0, fname: str = "map.p"):
         """Write given map and cache into file in conf directory"""
 
-        outfile = dP.FilePerkeo(fname)
+        outfile = FilePerkeo(fname)
         return outfile.dump([self.maps[map_ind], self.cache], conf_path)

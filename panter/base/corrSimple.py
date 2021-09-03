@@ -2,8 +2,8 @@
 
 import numpy as np
 
-import panter.core.dataPerkeo as dP
-from panter.core.corrBase import CorrBase
+from panter.data.dataPerkeo import RootPerkeo, HistPerkeo
+from panter.base.corrBase import CorrBase
 
 
 class CorrSimple(CorrBase):
@@ -59,24 +59,24 @@ class CorrSimple(CorrBase):
             "DeadTime": True,
         }
 
-    def _calc_corr(self, data: dP.RootPerkeo, bdiff: bool = True):
+    def _calc_corr(self, data: RootPerkeo, bdiff: bool = True):
         """Calculate corrected amplitude for each event and file."""
 
         binvalid = False
         data_by_branch = data.ret_array_by_key(key=self._branch_key)
         if len(data_by_branch.shape) == 1:
-            hist_of_branch = [dP.HistPerkeo(data_by_branch, **self._hist_par)]
+            hist_of_branch = [HistPerkeo(data_by_branch, **self._hist_par)]
         else:
             data_by_branch = data_by_branch.transpose()
             if bdiff:
                 coin0 = np.array(data_by_branch[0], dtype=float)
                 coin1 = np.array(data_by_branch[1], dtype=float)
                 diff = coin0 - coin1
-                hist_of_branch = [dP.HistPerkeo(diff, **self._hist_par)]
+                hist_of_branch = [HistPerkeo(diff, **self._hist_par)]
             else:
                 hist_of_branch = []
                 for dim in data_by_branch:
-                    hist_of_branch.append(dP.HistPerkeo(dim, **self._hist_par))
+                    hist_of_branch.append(HistPerkeo(dim, **self._hist_par))
 
         if self._bonlynew:
             hist_old = None
@@ -96,7 +96,7 @@ class CorrSimple(CorrBase):
         """Correct measurement without background subtraction"""
 
         res = []
-        data_sg = dP.RootPerkeo(ev_file[0])
+        data_sg = RootPerkeo(ev_file[0])
 
         self._filt_data(data_sg)
         r, s, i = self._calc_corr(data_sg)
@@ -116,8 +116,8 @@ class CorrSimple(CorrBase):
         """Correct beam-like data (i.e. background in same file)."""
 
         res = []
-        data_sg = dP.RootPerkeo(ev_file[0])
-        data_bg = dP.RootPerkeo(ev_file[0])
+        data_sg = RootPerkeo(ev_file[0])
+        data_bg = RootPerkeo(ev_file[0])
         data_dict = {"sg": data_sg, "bg": data_bg}
 
         for (key, data) in data_dict.items():
@@ -152,7 +152,7 @@ class CorrSimple(CorrBase):
         scal = []
 
         for file_name in ev_files:
-            data = dP.RootPerkeo(file_name)
+            data = RootPerkeo(file_name)
             self._filt_data(data)
 
             r, s, i = self._calc_corr(data)

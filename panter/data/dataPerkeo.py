@@ -14,7 +14,8 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 import uproot
 from panter.config import conf_path
-from panter import output_path
+
+output_path = "../base"
 
 bfound_root = True
 try:

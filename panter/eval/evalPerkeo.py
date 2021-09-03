@@ -13,10 +13,11 @@ from scipy.stats import chi2
 from lmfit import Model
 from lmfit.model import ModelResult
 
-import panter.core.dataPerkeo as dP
+from panter.data.dataPerkeo import HistPerkeo, filt_zeros, RootPerkeo, FilePerkeo
 import panter.config.evalFitSettings as eFS
 from panter.config import conf_path
-from panter import output_path
+
+output_path = "../base"
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
@@ -47,7 +48,7 @@ class DoFit:
     Parameters
     ----------
     data : pd.DataFrame({'x': , 'y': , 'err': })
-        Could be ret_hist() and therefore dP.HistPerkeo.hist
+        Could be ret_hist() and therefore HistPerkeo.hist
 
     Attributes
     ----------
@@ -200,7 +201,7 @@ class DoFit:
         if self._label == "gaus_gen":
             self.set_recursive("mu", "sig", 2, 1.35)
 
-        self._fitdata = dP.filt_zeros(self._fitdata)
+        self._fitdata = filt_zeros(self._fitdata)
         err_weights = calc_weights(self._fitdata["err"])
 
         if len(self._fitparams) <= self._fitdata["y"].shape[0]:
@@ -226,7 +227,7 @@ class DoFit:
                     f" < x < "
                     f"{self._fitresult.params[key_center].value + delta}"
                 )
-                self._fitdata = dP.filt_zeros(self._fitdata)
+                self._fitdata = filt_zeros(self._fitdata)
 
             err_weights = calc_weights(self._fitdata["err"])
             if len(self._fitparams) <= self._fitdata["y"].shape[0]:
@@ -306,7 +307,7 @@ class DoFit:
             **self._fitresult.params, x=self._data["x"]
         )
 
-        residual_hist = dP.HistPerkeo(
+        residual_hist = HistPerkeo(
             residuals_data,
             int(len(residuals_data) * 0.5),
             residuals_data.min() * 0.91,
@@ -424,7 +425,7 @@ class DoFitData:
 
     Parameters
     ----------
-    dataclass : dP.RootPerkeo
+    dataclass : RootPerkeo
     datatype : {'DriftSn', 'ElecTest4', 'ElecTest5',
                 'ElecTest4_fixSig', 'ElecTest5_fixSig'}
         Implemented measurement evaluation settings
@@ -440,7 +441,7 @@ class DoFitData:
     >>> fitdataclass.write_2log(outputFileDir + LOGFILE)
     """
 
-    def __init__(self, dataclass: dP.RootPerkeo, datatype: str):
+    def __init__(self, dataclass: RootPerkeo, datatype: str):
         self._dataclass = dataclass
         self._datatype = datatype
         self._fitsettings = None
@@ -634,7 +635,7 @@ class DoFitData:
         settings = str(currt) + "\t" + self._datatype + "\t" + set1 + set2 + "\n"
 
         del cnf_int
-        file = dP.FilePerkeo(logfilename)
+        file = FilePerkeo(logfilename)
         print("Write to log file", file.dump(obj=str(settings), bapp=True, btext=True))
 
         return 0

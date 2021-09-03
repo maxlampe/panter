@@ -4,13 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from panter.config.filesScanMaps import scan_200116_3
-from panter.core.dataPerkeo import RootPerkeo
-from panter.core.pedPerkeo import PedPerkeo
-from panter.core.dataloaderPerkeo import DLPerkeo
-from panter.core.corrPerkeo import CorrPerkeo
-import panter.config.evalFitSettings as eFS
-from panter.core.evalPerkeo import DoFit
-from panter import output_path
+from panter.data.dataPerkeo import RootPerkeo
+from panter.eval.pedPerkeo import PedPerkeo
+from panter.data.dataloaderPerkeo import DLPerkeo
+from panter.eval.corrPerkeo import CorrPerkeo
+from panter.config.evalFitSettings import gaus_gen
+from panter.eval.evalPerkeo import DoFit
+
+output_path = "../base"
 
 
 class ScanMapClass:
@@ -76,7 +77,7 @@ class ScanMapClass:
         test = histp[1][self.detector]
 
         fitclass = DoFit(test.hist)
-        fitclass.setup(eFS.gaus_gen)
+        fitclass.setup(gaus_gen)
         fitclass.set_bool("boutput", False)
         # fitclass.limit_range([8000,12000])
         fitclass.set_fitparam("mu", 10500.0)

@@ -1,7 +1,7 @@
 """Unit test for basic histogram creation and subtraction with errors"""
 
 import numpy as np
-import panter.core.dataPerkeo as dP
+import panter.data.dataPerkeo as dP
 from tests.unittestroot import UnitTestRoot
 
 

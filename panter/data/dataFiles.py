@@ -4,7 +4,7 @@ import datetime
 import sys
 import numpy as np
 
-import panter.core.dataPerkeo as dP
+from panter.data.dataPerkeo import DirPerkeo
 import panter.config.filesElecTest as fET
 
 
@@ -34,7 +34,7 @@ def sort_files(curr_dir: str):
 
     """
 
-    curr_dir = dP.DirPerkeo(curr_dir)
+    curr_dir = DirPerkeo(curr_dir)
 
     list_all_rootfiles = list(
         map(lambda x: x[len(curr_dir.dirname) : -5], curr_dir.get_all())
@@ -171,7 +171,7 @@ def setupeval_electest(
         str_type = "RawGaussian_"
 
     if mtype == "Test4":
-        curr_dir = dP.DirPerkeo(fET.TEST4_DIR)
+        curr_dir = DirPerkeo(fET.TEST4_DIR)
 
         filelist1 = curr_dir.get_subset(fET.Test4_0003_200)
         filelist2 = curr_dir.get_subset(fET.Test4_0003_300)
@@ -253,7 +253,7 @@ def setupeval_electest(
             str_ev = "ALL_"
     else:
         if mtype == "Test5":
-            curr_dir = dP.DirPerkeo(fET.TEST5_DIR)
+            curr_dir = DirPerkeo(fET.TEST5_DIR)
 
             filelist1 = curr_dir.get_subset(fET.Test5_0003_200500)
             filelist2 = curr_dir.get_subset(fET.Test5_0003_050300)

@@ -1,10 +1,10 @@
 """Trigger analysis"""
 
-import panter.core.dataPerkeo as dP
-import panter.core.evalPerkeo as eP
+import panter.data.dataPerkeo as dP
+import panter.eval.evalPerkeo as eP
 import panter.config.evalFitSettings as eFS
-from panter.core.dataloaderPerkeo import DLPerkeo, MeasPerkeo
-from panter.core.corrPerkeo import CorrPerkeo
+from panter.data.dataloaderPerkeo import DLPerkeo, MeasPerkeo
+from panter.eval.corrPerkeo import CorrPerkeo
 
 dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir)

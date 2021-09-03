@@ -36,21 +36,21 @@ In _panter/applications/panter_example.py_ additional, but shorter examples can 
 
 ```python
 # Core data structure
-from panter.core.dataPerkeo import HistPerkeo, RootPerkeo
+from panter.data.dataPerkeo import HistPerkeo, RootPerkeo
 
 help(HistPerkeo)
 help(RootPerkeo)
 # Data loader
-from panter.core.dataloaderPerkeo import DLPerkeo
+from panter.data.dataloaderPerkeo import DLPerkeo
 
 help(DLPerkeo)
 # General Fitter and specific fitting analysis
-from panter.core.evalPerkeo import DoFit, DoFitData
+from panter.eval.evalPerkeo import DoFit, DoFitData
 
 help(DoFit)
 help(DoFitData)
 # Data reduction and correction class
-from panter.core.corrPerkeo import CorrPerkeo
+from panter.eval.corrPerkeo import CorrPerkeo
 
 help(CorrPerkeo)
 ```
