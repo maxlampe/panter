@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from panter.config.filesScanMaps import scan_200117
+from panter.config.filesScanMaps import scan_200116_3
 from panter.core.dataPerkeo import RootPerkeo
 from panter.core.pedPerkeo import PedPerkeo
 from panter.core.dataloaderPerkeo import DLPerkeo
@@ -85,9 +85,6 @@ class ScanMapClass:
         try:
             peak = fitclass.ret_results().params["mu"].value
         except AttributeError:
-            print(meas)
-            print(self._weights)
-            test.plot_hist()
             if brec:
                 print("Trying refit with higher mu val")
                 fitclass.set_fitparam("mu", 11000.0)
@@ -95,6 +92,9 @@ class ScanMapClass:
                 try:
                     peak = fitclass.ret_results().params["mu"].value
                 except AttributeError:
+                    print(meas)
+                    print(self._weights)
+                    test.plot_hist()
                     peak = None
             else:
                 peak = None
@@ -164,7 +164,7 @@ class ScanMapClass:
     ):
         """Make a 2D plot of the scan map results."""
 
-        det_label = f"Detector: {self.detector}/1\n"
+        det_label = f"Scan {self.label} \n Detector: {self.detector}/1\n"
 
         x = np.unique(self._scan_pos_arr.T[0])
         y = np.unique(self._scan_pos_arr.T[1])
@@ -252,47 +252,25 @@ class ScanMapClass:
 
 
 def main():
-    pos, evs = scan_200117()
+    pos, evs = scan_200116_3()
 
     smc = ScanMapClass(
-        scan_pos_arr=pos, event_arr=evs, detector=0, label=scan_200117.label
+        scan_pos_arr=pos, event_arr=evs, detector=0, label=scan_200116_3.label
     )
-    """
-    # smc.calc_peak_positions()
-    smc.calc_peak_positions(
-        weights=np.array(
-            [
-                0.988395,
-                0.988395,
-                0.952541,
-                0.952541,
-                1.004483,
-                1.004483,
-                1.006872,
-                1.006872,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-            ]
-        )
-    )
+
+    smc.calc_peak_positions()
     """  
     smc.calc_peak_positions(
         weights=np.array(
             [
-                0.998394,
-                0.991246,
-                0.948916,
-                0.972422,
-                1.007636,
-                0.993730,
-                1.003973,
-                0.994475,
+                0.989955,
+                0.980589,
+                0.941429,
+                0.959186,
+                1.007393,
+                1.005110,
+                1.008838,
+                1.005848,
                 1.0,
                 1.0,
                 1.0,
@@ -304,6 +282,7 @@ def main():
             ]
         )
     )
+    """
 
     print(smc.calc_loss())
     smc.plot_scanmap()
