@@ -1,6 +1,6 @@
 """Unit test for histogram creation using PERKEO data and applying filters."""
 
-import panter.data.dataMisc as dP
+from panter.data.dataRootPerkeo import RootPerkeo
 from tests.unittestroot import UnitTestRoot
 
 
@@ -33,7 +33,7 @@ class HistTestFilter(UnitTestRoot):
     def _do_panter(self):
         """Do panter evaluation part for the unit test."""
 
-        data = dP.RootPerkeo(self._rootfile)
+        data = RootPerkeo(self._rootfile)
         data.info()
         if self._bfilter:
             data.set_filtdef()

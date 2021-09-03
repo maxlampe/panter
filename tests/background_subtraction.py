@@ -1,12 +1,14 @@
 """Unit test for background subtraction in beta spec + fitting a constant to high E."""
 
 import configparser
+
 import numpy as np
+
 from panter.config import conf_path
+from panter.config.evalFitSettings import pol0
 from panter.data.dataloaderPerkeo import DLPerkeo, MeasPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
-import panter.eval.evalMisc as eP
-import panter.config.evalFitSettings as eFS
+from panter.eval.evalFit import DoFit
 from tests.unittestroot import UnitTestRoot
 
 
@@ -64,9 +66,9 @@ class BackgroundFitTest(UnitTestRoot):
 
         panter_fitres = []
         for hist in corr_class.histograms[0, 1]:
-            fitclass = eP.DoFit(hist.hist)
+            fitclass = DoFit(hist.hist)
             # hist.plot_hist([48000, 51500, -40, 40])
-            fitclass.setup(eFS.pol0)
+            fitclass.setup(pol0)
             fitclass.limit_range([fit_range[0], fit_range[1]])
             fitres = fitclass.fit()
 

@@ -2,11 +2,11 @@
 
 import numpy as np
 
-from tests.histogram import do_histtestbasic
-from tests.hist_output import do_histtestout
-from tests.filter import do_histtestfilter
-from tests.basicfit import do_histtestfit
 from tests.background_subtraction import do_backgroundfittest
+from tests.basicfit import do_histtestfit
+from tests.filter import do_histtestfilter
+from tests.hist_output import do_histtestout
+from tests.histogram import do_histtestbasic
 
 
 def run_all():

@@ -1,11 +1,13 @@
 """Unit test for histogram writing to root files with errors. Based on histogram.py"""
 
+import subprocess
+
 import numpy as np
 import uproot
-import subprocess
-import panter.data.dataMisc as dP
-from tests.unittestroot import UnitTestRoot
+
+from panter.data.dataHistPerkeo import HistPerkeo
 from tests import tests_path
+from tests.unittestroot import UnitTestRoot
 
 
 class HistTestOut(UnitTestRoot):
@@ -39,8 +41,8 @@ class HistTestOut(UnitTestRoot):
         data_raw = open(self._txtfile).read().split()
         data_raw = list(map(float, data_raw))
 
-        hpanter1 = dP.HistPerkeo(*[data_raw, *self._params])
-        hpanter2 = dP.HistPerkeo(*[np.array(data_raw) + 2, *self._params])
+        hpanter1 = HistPerkeo(*[data_raw, *self._params])
+        hpanter2 = HistPerkeo(*[np.array(data_raw) + 2, *self._params])
         hpanter1.addhist(hpanter2, -0.5)
         # export
         hpanter1.write2root(histname="hpanter", filename="inter", out_dir=tests_path)

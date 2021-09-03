@@ -1,7 +1,8 @@
 """Unit test for basic histogram creation and subtraction with errors"""
 
 import numpy as np
-import panter.data.dataMisc as dP
+
+from panter.data.dataHistPerkeo import HistPerkeo
 from tests.unittestroot import UnitTestRoot
 
 
@@ -35,8 +36,8 @@ class HistTestBasic(UnitTestRoot):
         data_raw = open(self._txtfile).read().split()
         data_raw = list(map(float, data_raw))
 
-        hpanter1 = dP.HistPerkeo(*[data_raw, *self._params])
-        hpanter2 = dP.HistPerkeo(*[np.array(data_raw) + 2, *self._params])
+        hpanter1 = HistPerkeo(*[data_raw, *self._params])
+        hpanter2 = HistPerkeo(*[np.array(data_raw) + 2, *self._params])
         hpanter1.addhist(hpanter2, -0.5)
 
         return hpanter1.hist.to_numpy().flatten()
