@@ -9,4 +9,5 @@
 *.dat
 /venv/
 *.pdf
+/.idea/
 
