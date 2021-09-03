@@ -5,7 +5,7 @@
 
 _panter_ (**P**erkeo **AN**alysis **T**ool for **E**valuation and **R**eduction) is a Python package for reducing, evaluating and analyzing PERKEO III data.
 
-Created and maintained by [Max Lamparth](https://gitlab.lrz.de/ge39dat)
+Created and maintained by [Max Lamparth](https://github.com/maxlampe/)
 
 ## Project status
 
@@ -16,12 +16,12 @@ Currently, even core features are still implemented and can be subject to change
 
 ### Installation
 
-Get the package from gitlab: https://gitlab.lrz.de/perkeo/panter
+Get the package from gitlab: https://github.com/maxlampe/panter
 
 Python version 3.8 or above required.
 
 ```bash
-git clone https://gitlab.lrz.de/perkeo/panter.git
+git clone https://github.com/maxlampe/panter
 pip3 install -r requirements.txt
 ```
 
@@ -36,7 +36,8 @@ In _panter/applications/panter_example.py_ additional, but shorter examples can 
 
 ```python
 # Core data structure
-from panter.data.dataMisc import HistPerkeo, RootPerkeo
+from panter.data.dataHistPerkeo import HistPerkeo
+from panter.data.dataRootPerkeo import RootPerkeo
 
 help(HistPerkeo)
 help(RootPerkeo)

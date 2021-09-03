@@ -11,7 +11,7 @@ setuptools.setup(
     description="panter - Perkeo ANalysis Tool for Evaluation and Reduction",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://gitlab.lrz.de/perkeo/panter",
+    url="https://github.com/maxlampe/panter",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
