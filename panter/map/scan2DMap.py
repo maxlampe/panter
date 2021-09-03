@@ -5,10 +5,10 @@ import numpy as np
 
 from panter.config.evalFitSettings import gaus_gen
 from panter.config.filesScanMaps import scan_200116_3
-from panter.data.dataPerkeo import RootPerkeo
+from panter.data.dataRootPerkeo import RootPerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
-from panter.eval.evalMisc import DoFit
+from panter.eval.evalFit import DoFit
 from panter.eval.pedPerkeo import PedPerkeo
 
 output_path = "../base"

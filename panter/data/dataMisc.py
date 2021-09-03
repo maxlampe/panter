@@ -1,0 +1,160 @@
+"""Module for handling Perkeo root files and creating histograms."""
+
+from __future__ import annotations
+
+import glob
+import pickle
+
+import numpy as np
+import pandas as pd
+
+from panter.data.dataHistPerkeo import HistPerkeo
+
+output_path = "../base"
+
+
+def ret_hist(
+    data: np.array(float),
+    bin_count: int = 1024,
+    low_lim: int = 0,
+    up_lim: int = 52000,
+):
+    """Create a histogram as pd.DataFrame from an input array."""
+
+    raw_bins = np.linspace(low_lim, up_lim, bin_count + 1)
+    use_bins = [np.array([-np.inf]), raw_bins, np.array([np.inf])]
+    use_bins = np.concatenate(use_bins)
+
+    hist, binedge = np.histogram(data, bins=use_bins)
+
+    bincent = []
+    for j in range(binedge.size - 1):
+        bincent.append(0.5 * (binedge[j] + binedge[j + 1]))
+
+    hist = hist[1:-1]
+    bincent = bincent[1:-1]
+
+    return pd.DataFrame({"x": bincent, "y": hist, "err": np.sqrt(np.abs(hist))})
+
+
+def filt_zeros(hist_df: pd.DataFrame, bdrop_nan: bool = True) -> pd.DataFrame:
+    """Taking a pandas data frame and removing all entries where "err" = 0."""
+
+    filt = hist_df["err"] != 0.0
+    hist_df = hist_df[filt]
+    if bdrop_nan:
+        hist_df = hist_df.dropna()
+
+    assert not hist_df["x"].isnull().values.any()
+    assert not hist_df["y"].isnull().values.any()
+    assert not hist_df["err"].isnull().values.any()
+
+    return hist_df
+
+
+def concat_hists(hist_array: np.array) -> HistPerkeo:
+    """Concatenate multiple histograms in an array by adding them up with error prop."""
+
+    hist_final = hist_array[0]
+    for hist in hist_array[1:]:
+        hist_final.addhist(hist)
+
+    return hist_final
+
+
+class FilePerkeo:
+    """Obj for writing/reading data from/into a general binary file."""
+
+    def __init__(self, filename: str):
+        self.filename = filename
+
+    def imp(self):
+        """Open the file and return content."""
+        with open(self.filename, "rb") as file:
+            imp_obj = pickle.load(file)
+
+        return imp_obj
+
+    # FIXME: Append doesn't append? Probs because import only expects one object
+    def dump(self, obj, out_dir: str = None, bapp: bool = False, btext: bool = False):
+        """Dump an python object into the file.
+
+        Parameters
+        ----------
+        obj
+        out_dir
+        bapp : bool
+            Append to file instead of writing over it. Doesn't work.
+            (default False)
+        btext : bool
+            Bool whether to dump obj as binary or text into file.
+            (default False)
+        """
+
+        if out_dir is None:
+            out_dir = output_path
+
+        opt = "a" if bapp else "w"
+        if not btext:
+            with open(f"{out_dir}/{self.filename}", opt + "b") as file:
+                pickle.dump(obj, file)
+        else:
+            with open(f"{out_dir}/{self.filename}", opt) as file:
+                file.write(obj)
+
+        return 0
+
+
+class DirPerkeo:
+    """Obj for extracting file name lists out of directory."""
+
+    def __init__(self, dirname: str, filetype: str = "root"):
+        self.dirname = dirname
+        self.filetype = filetype
+
+    def get_all(self, bsorted=True) -> list:
+        """Returns list of all files of given type in directory"""
+
+        if bsorted:
+            liste = sorted(glob.glob(self.dirname + "*." + self.filetype))
+        else:
+            liste = glob.glob(self.dirname + "*." + self.filetype)
+
+        return liste
+
+    def get_subset(self, liste: list(str)) -> list(str):
+        """Returns list of required files (full name) out of list in dir"""
+
+        retlist = []
+        for i in liste:
+            retlist.append(glob.glob(self.dirname + i)[0])
+
+        return retlist
+
+
+class FiltPerkeo:
+    """Obj for creating/setting filters for RootPerkeo Trees.
+
+    Attributes
+    ----------
+    active : bool
+        Status bool whether filter is active
+    type : str
+        Filter type for safety handling: 'bool', 'num' or special
+        type 'cyc'
+    low_lim, up_lim: float
+        Filter range for 'num' type filter
+    rightval
+        Value for 'bool' type filter to check quality for
+    index
+        index to be used, e.g. CoinTime[index]
+    """
+
+    def __init__(self, low_lim=None, up_lim=None, rightval=None, index=None, **kwargs):
+        self.active = kwargs["active"]
+        self.ftype = kwargs["ftype"]
+        self.fkey = kwargs["fkey"]
+        self.low_lim = low_lim
+        self.up_lim = up_lim
+        self.rightval = rightval
+        self.index = index

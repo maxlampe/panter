@@ -15,7 +15,10 @@ from scipy.stats import chi2
 
 from panter.config import conf_path
 from panter.config.evalFitSettings import FitSetting, gaus_expmod, gaus_simp, gaus_gen
-from panter.data.dataPerkeo import HistPerkeo, filt_zeros, RootPerkeo, FilePerkeo
+from panter.data.dataHistPerkeo import HistPerkeo
+from panter.data.dataMisc import FilePerkeo
+from panter.data.dataMisc import filt_zeros
+from panter.data.dataRootPerkeo import RootPerkeo
 from panter.eval.evalMisc import calc_weights
 
 output_path = "."

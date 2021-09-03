@@ -3,7 +3,7 @@
 import configparser
 
 from panter.config import conf_path
-from panter.data.dataPerkeo import RootPerkeo
+from panter.data.dataRootPerkeo import RootPerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 
 cnf = configparser.ConfigParser()

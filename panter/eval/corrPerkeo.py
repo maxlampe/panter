@@ -9,7 +9,9 @@ from panter.base.corrBase import CorrBase
 from panter.config import conf_path
 from panter.config.params import delt_pmt
 from panter.config.params import k_pmt_fix
-from panter.data.dataPerkeo import HistPerkeo, RootPerkeo, FilePerkeo
+from panter.data.dataHistPerkeo import HistPerkeo
+from panter.data.dataMisc import FilePerkeo
+from panter.data.dataRootPerkeo import RootPerkeo
 from panter.eval.evalFunctions import calc_acorr_ratedep
 from panter.eval.pedPerkeo import PedPerkeo
 

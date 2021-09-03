@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import panter.data.dataPerkeo as dP
+import panter.data.dataMisc as dP
 import panter.eval.evalMisc as eP
 from panter.base.mapPerkeo import MapPerkeo
 from panter.config import conf_path

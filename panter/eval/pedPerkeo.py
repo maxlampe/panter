@@ -7,7 +7,8 @@ import numpy as np
 
 from panter.config import conf_path
 from panter.config.evalFitSettings import gaus_simp
-from panter.data.dataPerkeo import RootPerkeo, HistPerkeo
+from panter.data.dataHistPerkeo import HistPerkeo
+from panter.data.dataRootPerkeo import RootPerkeo
 from panter.eval.evalFit import DoFit
 
 # import global analysis parameters

@@ -1,13 +1,14 @@
 """Trigger analysis"""
 
 import panter.config.evalFitSettings as eFS
-import panter.data.dataPerkeo as dP
+import panter.data.dataMisc as dP
 import panter.eval.evalMisc as eP
-from panter.data.dataloaderPerkeo import DLPerkeo, MeasPerkeo
+from panter.data.dataMeasPerkeo import MeasPerkeo
+from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
 
-dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-dataloader = DLPerkeo(dir)
+dir_path = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+dataloader = DLPerkeo(dir_path)
 dataloader.auto()
 hist_trigger = [None] * 2
 

@@ -6,7 +6,7 @@ import sys
 import numpy as np
 
 import panter.config.filesElecTest as fET
-from panter.data.dataPerkeo import DirPerkeo
+from panter.data.dataMisc import DirPerkeo
 
 
 def is_integer(number_string) -> bool:

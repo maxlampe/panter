@@ -1,6 +1,6 @@
 """Unit test for histogram creation using PERKEO data and applying filters."""
 
-import panter.data.dataPerkeo as dP
+import panter.data.dataMisc as dP
 from tests.unittestroot import UnitTestRoot
 
 

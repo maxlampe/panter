@@ -36,7 +36,7 @@ In _panter/applications/panter_example.py_ additional, but shorter examples can 
 
 ```python
 # Core data structure
-from panter.data.dataPerkeo import HistPerkeo, RootPerkeo
+from panter.data.dataMisc import HistPerkeo, RootPerkeo
 
 help(HistPerkeo)
 help(RootPerkeo)

@@ -3,7 +3,8 @@
 import numpy as np
 
 from panter.base.corrBase import CorrBase
-from panter.data.dataPerkeo import RootPerkeo, HistPerkeo
+from panter.data.dataHistPerkeo import HistPerkeo
+from panter.data.dataRootPerkeo import RootPerkeo
 
 
 class CorrSimple(CorrBase):

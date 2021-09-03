@@ -3,7 +3,7 @@
 import numpy as np
 
 from panter.config import conf_path
-from panter.data.dataPerkeo import FilePerkeo
+from panter.data.dataMisc import FilePerkeo
 
 
 class MapPerkeo:
