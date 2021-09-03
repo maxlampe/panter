@@ -1,4 +1,4 @@
-"""Module for evaluating imported Perkeo root data (RootPerkeo)."""
+""""""
 
 from __future__ import annotations
 
@@ -14,10 +14,11 @@ from lmfit import Model
 from lmfit.model import ModelResult
 
 from panter.data.dataPerkeo import HistPerkeo, filt_zeros, RootPerkeo, FilePerkeo
-import panter.config.evalFitSettings as eFS
+from panter.eval.evalMisc import calc_weights
+from panter.config.evalFitSettings import FitSetting, gaus_expmod, gaus_simp, gaus_gen
 from panter.config import conf_path
 
-output_path = "../base"
+output_path = "."
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
@@ -25,17 +26,6 @@ cnf.read(f"{conf_path}/evalRaw.ini")
 
 # global plot output bool (default is False)
 BPLOT = cnf["evalPerkeo"].getboolean("bplot")
-
-
-def calc_weights(sample: np.array) -> np.array:
-    """Function for calculating weights with 0 exception."""
-
-    weights = []
-    for ent in sample:
-        assert ent != 0.0, "ERROR: Empty bin in weights calculation."
-        weights.append(ent ** (-1))
-
-    return np.array(weights)
 
 
 class DoFit:
@@ -70,7 +60,7 @@ class DoFit:
 
     >>> histogram = dataSrc.hists[0].hist
     >>> fitclass = eP.DoFit(histogram)
-    >>> fitclass.setup(eFS.gaus_expmod)
+    >>> fitclass.setup(gaus_expmod)
     >>> fitclass.set_bool('boutput', True)
     >>> fitclass.fit()
     """
@@ -94,7 +84,7 @@ class DoFit:
         self._brecparams = None
         self._gof = None
 
-    def setup(self, fitsettings: eFS.FitSetting = eFS.gaus_simp):
+    def setup(self, fitsettings: FitSetting = gaus_simp):
         """Set attributes with FitSetting obj from evalFitSettings."""
 
         self._label = fitsettings.label
@@ -316,7 +306,7 @@ class DoFit:
 
         if self.bfit_residuals:
             fitclass = DoFit(residual_hist.hist)
-            fitclass.setup(eFS.gaus_simp)
+            fitclass.setup(gaus_simp)
             fitclass.set_fitparam("mu", valpar=0.0)
             fitclass.set_fitparam("sig", valpar=3.0)
             fitclass.set_fitparam("norm", valpar=20.0)
@@ -486,7 +476,7 @@ class DoFitData:
         ).sum() > 0, "ERROR: Wrong fitmodel/datatype input!"
 
         if self._datatype == self._valid_datatypes[0]:
-            self._fitsettings = eFS.gaus_expmod
+            self._fitsettings = gaus_expmod
             self._fitsettings.plot_labels = [
                 "SnSpec fit result",
                 "ADC [ch]",
@@ -498,7 +488,7 @@ class DoFitData:
             self._datatype == self._valid_datatypes[1]
             or self._datatype == self._valid_datatypes[3]
         ):
-            self._fitsettings = eFS.gaus_gen
+            self._fitsettings = gaus_gen
             self._fitsettings.plot_labels = [
                 "Gaussian fit result",
                 "ADC [ch]",
@@ -509,7 +499,7 @@ class DoFitData:
             self._datatype == self._valid_datatypes[2]
             or self._datatype == self._valid_datatypes[4]
         ):
-            self._fitsettings = eFS.gaus_gen
+            self._fitsettings = gaus_gen
             self._fitsettings.plot_labels = [
                 "Gaussian fit result",
                 "ADC [ch]",
@@ -639,47 +629,3 @@ class DoFitData:
         print("Write to log file", file.dump(obj=str(settings), bapp=True, btext=True))
 
         return 0
-
-
-def scan_fit(param, mod, fres, fdat, bplot, brefit=False):
-    # simple routine to take a finished fit, fix all parameters and vary one
-    # around its result to return Chi2 and optionally plot it as well
-
-    param_vals = np.linspace(
-        fres.params[param].value - 4.0 * fres.params[param].stderr,
-        fres.params[param].value + 4.0 * fres.params[param].stderr,
-        1000,
-    )
-    scanres = []
-    params = mod.make_params(**fres.params)
-    if not brefit:
-        params.vary = False
-    else:
-        params[param].vary = False
-
-    for i in param_vals:
-        params[param].value = i
-        res = mod.fit(fdat["y"], params, x=fdat["x"], weights=calc_weights(fdat["err"]))
-        scanres.append([i, res.chisqr])
-    scanres = np.array(scanres)
-
-    if bplot:
-        axes = plt.gca()
-        axes.set_xlabel(param + " [ ]")
-        axes.set_ylabel("Chi^2 [ ]")
-        axes.set_xlim([scanres[:, 0].min() * 0.99, scanres[:, 0].max() * 1.02])
-        axes.set_ylim(
-            [
-                2 * scanres[:, 1].min() - scanres[:, 1].max(),
-                2 * scanres[:, 1].max() - scanres[:, 1].min(),
-            ]
-        )
-        axes.grid(True)
-        plt.plot(scanres[:, 0], scanres[:, 1], ".", label="Scan data")
-        plt.axvline(fres.params["norm"].value, -1.0, 1.0, label="Fit result")
-        plt.legend(loc="best")
-        plt.title("Chi2 scan result")
-        plt.tight_layout()
-        plt.show()
-
-    return scanres

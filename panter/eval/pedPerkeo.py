@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from panter.data.dataPerkeo import RootPerkeo, HistPerkeo
-from panter.eval.evalPerkeo import DoFit
+from panter.eval.evalMisc import DoFit
 from panter.config.evalFitSettings import gaus_simp
 from panter.config import conf_path
 

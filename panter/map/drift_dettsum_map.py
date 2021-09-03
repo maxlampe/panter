@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import datetime
 import panter.data.dataPerkeo as dP
-import panter.eval.evalPerkeo as eP
+import panter.eval.evalMisc as eP
 from panter.base.mapPerkeo import MapPerkeo
 from panter.config.evalFitSettings import gaus_gen
 from panter.data.dataloaderPerkeo import DLPerkeo

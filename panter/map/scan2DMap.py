@@ -9,7 +9,7 @@ from panter.eval.pedPerkeo import PedPerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
 from panter.config.evalFitSettings import gaus_gen
-from panter.eval.evalPerkeo import DoFit
+from panter.eval.evalMisc import DoFit
 
 output_path = "../base"
 

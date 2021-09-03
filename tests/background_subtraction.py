@@ -5,7 +5,7 @@ import numpy as np
 from panter.config import conf_path
 from panter.data.dataloaderPerkeo import DLPerkeo, MeasPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
-import panter.eval.evalPerkeo as eP
+import panter.eval.evalMisc as eP
 import panter.config.evalFitSettings as eFS
 from tests.unittestroot import UnitTestRoot
 

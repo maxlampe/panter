@@ -1,7 +1,7 @@
 """Trigger analysis"""
 
 import panter.data.dataPerkeo as dP
-import panter.eval.evalPerkeo as eP
+import panter.eval.evalMisc as eP
 import panter.config.evalFitSettings as eFS
 from panter.data.dataloaderPerkeo import DLPerkeo, MeasPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
