@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import configparser
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
 from panter.config import conf_path
 
 # import global analysis parameters

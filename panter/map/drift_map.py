@@ -1,15 +1,16 @@
 """Calculate individual PMT drift map from Sn measurements."""
 
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 import panter.data.dataPerkeo as dP
 import panter.eval.evalMisc as eP
 from panter.base.mapPerkeo import MapPerkeo
+from panter.config import conf_path
 from panter.config.evalFitSettings import gaus_expmod
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
-from panter.config import conf_path
 
 output_path = "."
 

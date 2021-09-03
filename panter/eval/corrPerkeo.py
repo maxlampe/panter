@@ -1,16 +1,17 @@
 """Module for correcting PERKEO data."""
 
 import configparser
-import numpy as np
 import copy
 
-from panter.data.dataPerkeo import HistPerkeo, RootPerkeo, FilePerkeo
-from panter.eval.evalFunctions import calc_acorr_ratedep
+import numpy as np
+
 from panter.base.corrBase import CorrBase
-from panter.eval.pedPerkeo import PedPerkeo
 from panter.config import conf_path
 from panter.config.params import delt_pmt
 from panter.config.params import k_pmt_fix
+from panter.data.dataPerkeo import HistPerkeo, RootPerkeo, FilePerkeo
+from panter.eval.evalFunctions import calc_acorr_ratedep
+from panter.eval.pedPerkeo import PedPerkeo
 
 cnf = configparser.ConfigParser()
 cnf.read(f"{conf_path}/evalRaw.ini")

@@ -2,10 +2,11 @@
 
 import datetime
 import sys
+
 import numpy as np
 
-from panter.data.dataPerkeo import DirPerkeo
 import panter.config.filesElecTest as fET
+from panter.data.dataPerkeo import DirPerkeo
 
 
 def is_integer(number_string) -> bool:

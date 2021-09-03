@@ -1,8 +1,9 @@
 """Master class for studying different phenomena over time."""
 
 import numpy as np
-from panter.data.dataPerkeo import FilePerkeo
+
 from panter.config import conf_path
+from panter.data.dataPerkeo import FilePerkeo
 
 
 class MapPerkeo:

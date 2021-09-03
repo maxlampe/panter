@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from copy import deepcopy
 import configparser
+from copy import deepcopy
+from datetime import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from scipy.stats import chi2
 from lmfit import Model
 from lmfit.model import ModelResult
+from scipy.stats import chi2
 
+from panter.config import conf_path
+from panter.config.evalFitSettings import FitSetting, gaus_expmod, gaus_simp, gaus_gen
 from panter.data.dataPerkeo import HistPerkeo, filt_zeros, RootPerkeo, FilePerkeo
 from panter.eval.evalMisc import calc_weights
-from panter.config.evalFitSettings import FitSetting, gaus_expmod, gaus_simp, gaus_gen
-from panter.config import conf_path
 
 output_path = "."
 

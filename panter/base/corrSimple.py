@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from panter.data.dataPerkeo import RootPerkeo, HistPerkeo
 from panter.base.corrBase import CorrBase
+from panter.data.dataPerkeo import RootPerkeo, HistPerkeo
 
 
 class CorrSimple(CorrBase):

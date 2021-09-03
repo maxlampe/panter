@@ -1,17 +1,17 @@
 """Creating pedestal results over time"""
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as md
 import datetime
 
-import panter.data.dataPerkeo as dP
+import matplotlib.dates as md
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
-from panter.eval.pedPerkeo import PedPerkeo
+import panter.data.dataPerkeo as dP
 from panter.base.mapPerkeo import MapPerkeo
-from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.config import conf_path
+from panter.data.dataloaderPerkeo import DLPerkeo
+from panter.eval.pedPerkeo import PedPerkeo
 
 output_path = "."
 

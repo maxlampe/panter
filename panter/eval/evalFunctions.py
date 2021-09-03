@@ -1,9 +1,10 @@
 """Module for storing mathematical functions and distributions."""
 
+from math import factorial
+
 import numpy as np
 from scipy.special import erfc
 from scipy.stats import poisson
-from math import factorial
 
 
 def gaussian(x, mu, sig, norm: float = 1.0):

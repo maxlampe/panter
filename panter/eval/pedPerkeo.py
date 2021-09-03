@@ -1,13 +1,14 @@
 """Pedestal calculation class from data"""
 
 import configparser
-import numpy as np
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+from panter.config import conf_path
+from panter.config.evalFitSettings import gaus_simp
 from panter.data.dataPerkeo import RootPerkeo, HistPerkeo
 from panter.eval.evalFit import DoFit
-from panter.config.evalFitSettings import gaus_simp
-from panter.config import conf_path
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()

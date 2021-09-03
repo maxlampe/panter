@@ -2,9 +2,9 @@
 
 import configparser
 
+from panter.config import conf_path
 from panter.data.dataPerkeo import RootPerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
-from panter.config import conf_path
 
 cnf = configparser.ConfigParser()
 cnf.read(f"{conf_path}/evalRaw.ini")

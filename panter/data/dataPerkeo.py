@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-import sys
-import os
-import time
 import configparser
 import glob
+import os
 import pickle
+import sys
+import time
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import figure
 import uproot
+from matplotlib.pyplot import figure
+
 from panter.config import conf_path
 
 output_path = "../base"
