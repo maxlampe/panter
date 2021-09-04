@@ -16,13 +16,14 @@ Currently, even core features are still implemented and can be subject to change
 
 ### Installation
 
-Get the package from gitlab: https://github.com/maxlampe/panter
+Get the package from [GitHub](https://github.com/maxlampe/panter) and install it locally, as there is no pip release.
 
 Python version 3.8 or above required.
 
 ```bash
 git clone https://github.com/maxlampe/panter
 pip3 install -r requirements.txt
+python3 -m pip install -e path-to-panter-dir
 ```
 
 ### Getting started
@@ -38,37 +39,36 @@ In _panter/applications/panter_example.py_ additional, but shorter examples can 
 # Core data structure
 from panter.data.dataHistPerkeo import HistPerkeo
 from panter.data.dataRootPerkeo import RootPerkeo
-
 help(HistPerkeo)
 help(RootPerkeo)
+
 # Data loader
 from panter.data.dataloaderPerkeo import DLPerkeo
-
 help(DLPerkeo)
-# General Fitter and specific fitting analysis
-from panter.eval.evalFit import DoFit, DoFitData
 
+# General Fitter and specific fitting analysis
+from panter.eval.evalFit import DoFit
 help(DoFit)
-help(DoFitData)
+
 # Data reduction and correction class
 from panter.eval.corrPerkeo import CorrPerkeo
-
 help(CorrPerkeo)
 ```
 
 ### File structure
 
-1. Core classes are in _panter/core/_
-2. Config files, ini files and derived evaluation parameters are in _panter/config/_
-3. Applications based on core classes are in _panter/application/_
-4. Default output directory is _panter/output/_
-5. Unit tests and their base class are in _tests/_
+- Base classes are in _panter/base/_
+- Config files, ini files and derived evaluation parameters are in _panter/config/_
+- Data classes (e.g. ROOT file import, histogram and the data loader classes) are in _panter/data/_
+- Evaluation modules (e.g. fit and data correction classes) are in _panter/eval/_
+- Time and spacial map classes are in _panter/maps/_
+- Unit tests and their base class are in _tests/_
 
 ### Generated files
 
-Generated files from the Perkeo III '19/20 campaign can be found here:
-[GDrive](https://drive.google.com/drive/folders/1OAMSJ6GS1H43I2-rBBymWHGwYljm34oG?usp=sharing)
-
+Generated files from the Perkeo III '19/20 campaign can be found here 
+[Google-Drive](https://drive.google.com/drive/folders/1OAMSJ6GS1H43I2-rBBymWHGwYljm34oG?usp=sharing)
+and should also be placed into the config directory, should you not generate them yourself.
 ## Development
 
 ### Design decisions
@@ -82,7 +82,9 @@ Generated files from the Perkeo III '19/20 campaign can be found here:
 ### Unit tests
 
 All unit tests can be found in the _tests_ directory. Run _alltests.py_ for all of them.
-
+A working ROOT installation is required to run the unit tests, as the panter and root outputs
+are compared.
 
 ## License
+
 [MIT](https://choosealicense.com/licenses/mit/)
