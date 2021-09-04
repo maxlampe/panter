@@ -1,11 +1,11 @@
 """Trigger analysis"""
 
-import panter.config.evalFitSettings as eFS
-import panter.data.dataMisc as dP
-import panter.eval.evalMisc as eP
+from panter.config.evalFitSettings import trigger_func
 from panter.data.dataMeasPerkeo import MeasPerkeo
+from panter.data.dataRootPerkeo import RootPerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
+from panter.eval.evalFit import DoFit
 
 dir_path = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir_path)
@@ -17,7 +17,7 @@ def trigger_raw(meas: MeasPerkeo, det_main: int):
     """Calculate trigger function for one detector from raw data."""
 
     det_bac = 1 - det_main
-    data = dP.RootPerkeo(meas.file_list[0])
+    data = RootPerkeo(meas.file_list[0])
     data.info()
 
     data.set_filtdef()
@@ -170,8 +170,8 @@ for primary_detector in [0, 1]:
     hist_trigger[det_prim] = master_both
 
 for hist in hist_trigger:
-    fitclass = eP.DoFit(hist.hist)
-    fitclass.setup(eFS.trigger_func)
+    fitclass = DoFit(hist.hist)
+    fitclass.setup(trigger_func)
     fitclass.limit_range([500, 15e3])
     fitclass.set_fitparam(namekey="a", valpar=0.003)
     fitclass.set_fitparam(namekey="p", valpar=0.655)

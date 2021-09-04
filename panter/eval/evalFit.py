@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import configparser
+import os
 from copy import deepcopy
 from datetime import datetime
 
@@ -21,7 +22,7 @@ from panter.data.dataMisc import filt_zeros
 from panter.data.dataRootPerkeo import RootPerkeo
 from panter.eval.evalMisc import calc_weights
 
-output_path = "."
+output_path = os.getcwd()
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
@@ -62,7 +63,7 @@ class DoFit:
     this example. The fit model is an exponentially modified Gaussian.
 
     >>> histogram = dataSrc.hists[0].hist
-    >>> fitclass = eP.DoFit(histogram)
+    >>> fitclass = DoFit(histogram)
     >>> fitclass.setup(gaus_expmod)
     >>> fitclass.set_bool('boutput', True)
     >>> fitclass.fit()
@@ -429,7 +430,7 @@ class DoFitData:
     RootPerkeo class object (here dataSrc), which was generated outside
     of this example. The fit model is an exponentially modified Gaussian.
 
-    >>> fitdataclass = eP.DoFitData(dataSrc, 'DriftSn')
+    >>> fitdataclass = DoFitData(dataSrc, 'DriftSn')
     >>> fit_result = fitdataclass.fit()
     >>> fitdataclass.write_2log(outputFileDir + LOGFILE)
     """

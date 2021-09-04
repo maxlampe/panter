@@ -1,5 +1,7 @@
 """"""
 
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -11,7 +13,7 @@ from panter.eval.corrPerkeo import CorrPerkeo
 from panter.eval.evalFit import DoFit
 from panter.eval.pedPerkeo import PedPerkeo
 
-output_path = "../base"
+output_path = os.getcwd()
 
 
 class ScanMapClass:

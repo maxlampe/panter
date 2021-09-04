@@ -1,18 +1,20 @@
 """Calculate individual PMT drift map from Sn measurements."""
 
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import panter.data.dataMisc as dP
-import panter.eval.evalMisc as eP
 from panter.base.mapPerkeo import MapPerkeo
 from panter.config import conf_path
 from panter.config.evalFitSettings import gaus_expmod
+from panter.data.dataMisc import FilePerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
+from panter.eval.evalFit import DoFit
 
-output_path = "."
+output_path = os.getcwd()
 
 
 class DriftMapPerkeo(MapPerkeo):
@@ -82,7 +84,7 @@ class DriftMapPerkeo(MapPerkeo):
 
         if level == 0 and bimp:
             # try to import pmt factor map
-            impfile = dP.FilePerkeo(f"{conf_path}/{self._outfile[1]}")
+            impfile = FilePerkeo(f"{conf_path}/{self._outfile[1]}")
             self.maps[level], self.cache = impfile.imp()
             assert self.maps[level].shape[0] > 0, "ERROR: PMT factor map empty."
 
@@ -90,7 +92,7 @@ class DriftMapPerkeo(MapPerkeo):
 
         elif level == 1 and bimp:
             # try to import sn peak map
-            impfile = dP.FilePerkeo(f"{conf_path}/{self._outfile[0]}")
+            impfile = FilePerkeo(f"{conf_path}/{self._outfile[0]}")
             self.maps[level], self.cache = impfile.imp()
             assert self.maps[1].shape[0] > 0
 
@@ -149,7 +151,7 @@ class DriftMapPerkeo(MapPerkeo):
             mu_err = np.array([])
 
             for j in range(len(hists)):
-                dofitclass = eP.DoFit(hists[j].hist)
+                dofitclass = DoFit(hists[j].hist)
                 dofitclass.setup(fitsettings)
                 dofitclass.set_bool("boutput", False)
                 dofitclass.fit()

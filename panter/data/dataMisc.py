@@ -1,12 +1,13 @@
 """Module for handling Perkeo root files and creating histograms."""
 
 import glob
+import os
 import pickle
 
 import numpy as np
 import pandas as pd
 
-output_path = "../base"
+output_path = os.getcwd()
 
 
 def ret_hist(

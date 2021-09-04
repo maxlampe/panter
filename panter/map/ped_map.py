@@ -1,19 +1,21 @@
 """Creating pedestal results over time"""
 
 import datetime
+import os
 
 import matplotlib.dates as md
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import panter.data.dataMisc as dP
 from panter.base.mapPerkeo import MapPerkeo
 from panter.config import conf_path
+from panter.data.dataMisc import FilePerkeo
+from panter.data.dataRootPerkeo import RootPerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.pedPerkeo import PedPerkeo
 
-output_path = "."
+output_path = os.getcwd()
 
 
 class PedMapPerkeo(MapPerkeo):
@@ -79,7 +81,7 @@ class PedMapPerkeo(MapPerkeo):
 
         if level == 0 and bimp:
             # try to import pedestal map
-            impfile = dP.FilePerkeo(f"{conf_path}/{self._outfile}")
+            impfile = FilePerkeo(f"{conf_path}/{self._outfile}")
             self.maps[level], self.cache = impfile.imp()
             assert self.maps[level].shape[0] > 0, "ERROR: Pedestal map empty."
 
@@ -114,7 +116,7 @@ class PedMapPerkeo(MapPerkeo):
 
             time = meas.date_list[0]
 
-            data = dP.RootPerkeo(meas.file_list[0])
+            data = RootPerkeo(meas.file_list[0])
             pedtest = PedPerkeo(
                 dataclass=data,
                 bplot_res=False,

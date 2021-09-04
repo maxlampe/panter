@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import panter.config.evalFitSettings as eFS
+from panter.config.evalFitSettings import pol0
 from panter.data.dataHistPerkeo import HistPerkeo
 from panter.eval.evalFit import DoFit
 from tests.unittestroot import UnitTestRoot
@@ -46,7 +46,7 @@ class HistTestFit(UnitTestRoot):
         hpanter1.addhist(hpanter2, -0.5)
 
         fitclass = DoFit(hpanter1.hist)
-        fitclass.setup(eFS.pol0)
+        fitclass.setup(pol0)
         fitclass.limit_range(self.fit_par)
 
         fitres = fitclass.fit()

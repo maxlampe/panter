@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -9,7 +11,7 @@ from matplotlib.pyplot import figure
 
 from panter.data.dataMisc import ret_hist
 
-output_path = "../base"
+output_path = os.getcwd()
 
 bfound_root = True
 try:
@@ -42,7 +44,7 @@ class HistPerkeo:
     --------
     Create a histogram with any np.array of data and plot the result:
 
-    >>> histogram = dP.HistPerkeo(data=data_array, bin_count=10, low_lim=-10, up_lim=10)
+    >>> histogram = HistPerkeo(data=data_array, bin_count=10, low_lim=-10, up_lim=10)
     >>> histogram.plot_hist()
     """
 

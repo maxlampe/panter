@@ -88,7 +88,7 @@ class RootPerkeo:
     using default or custom filters (here DeltaPrevTriggerTime).
     Histograms are created only for 'active' PMTs in this example.
 
-    >>> data = dP.RootPerkeo("file.root")
+    >>> data = RootPerkeo("file.root")
     >>> data.info()
     >>> if True:
             data.auto()

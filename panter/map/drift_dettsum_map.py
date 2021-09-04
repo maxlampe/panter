@@ -1,21 +1,22 @@
 """Calculate DetSum drift map from Sn measurements."""
 
 import datetime
+import os
 
 import matplotlib.dates as md
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import panter.data.dataMisc as dP
-import panter.eval.evalMisc as eP
 from panter.base.mapPerkeo import MapPerkeo
 from panter.config import conf_path
 from panter.config.evalFitSettings import gaus_gen
+from panter.data.dataMisc import FilePerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
+from panter.eval.evalFit import DoFit
 
-output_path = "."
+output_path = os.getcwd()
 
 
 class DriftDetSumMapPerkeo(MapPerkeo):
@@ -85,7 +86,7 @@ class DriftDetSumMapPerkeo(MapPerkeo):
 
         if level == 0 and bimp:
             # try to import pmt factor map
-            impfile = dP.FilePerkeo(f"{conf_path}/{self._outfile[1]}")
+            impfile = FilePerkeo(f"{conf_path}/{self._outfile[1]}")
             self.maps[level], self.cache = impfile.imp()
             assert self.maps[level].shape[0] > 0, "ERROR: PMT factor map empty."
 
@@ -93,7 +94,7 @@ class DriftDetSumMapPerkeo(MapPerkeo):
 
         elif level == 1 and bimp:
             # try to import sn peak map
-            impfile = dP.FilePerkeo(f"{conf_path}/{self._outfile[0]}")
+            impfile = FilePerkeo(f"{conf_path}/{self._outfile[0]}")
             self.maps[level], self.cache = impfile.imp()
             assert self.maps[1].shape[0] > 0
 
@@ -150,7 +151,7 @@ class DriftDetSumMapPerkeo(MapPerkeo):
             mu_err = np.array([])
 
             for j in range(len(hists)):
-                dofitclass = eP.DoFit(hists[j].hist)
+                dofitclass = DoFit(hists[j].hist)
                 dofitclass.setup(fitsettings)
                 dofitclass.set_fitparam("mu", 10000.0)
                 dofitclass.set_bool("boutput", False)
@@ -299,7 +300,7 @@ def main(bexp_meas_list: bool = False, bimp_meas_list: bool = True):
     filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
 
     if bimp_meas_list:
-        impfile = dP.FilePerkeo(f"{conf_path}/{encoder_file_name}")
+        impfile = FilePerkeo(f"{conf_path}/{encoder_file_name}")
         only_encoder = impfile.imp()
     else:
         pos0 = filt_meas[:113]
@@ -309,7 +310,7 @@ def main(bexp_meas_list: bool = False, bimp_meas_list: bool = True):
         only_encoder = np.concatenate([pos0, pos1, pos2, pos3])
 
     if bexp_meas_list:
-        outfile = dP.FilePerkeo(encoder_file_name)
+        outfile = FilePerkeo(encoder_file_name)
         outfile.dump(only_encoder, conf_path)
 
     pdm = DriftDetSumMapPerkeo(only_encoder, bimp_detsum=False, bimp_sn=False)
