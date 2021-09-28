@@ -211,20 +211,13 @@ class CorrPerkeo(CorrBase):
             self._weight_arr = np.ones(data.no_pmts)
 
         for i in range(0, data.no_pmts):
-            # TODO: drift, scan and weights after ratedep!?
             if pedestals[i] is not None:
-                ampl_corr[i] = (
-                    (data.pmt_data[i] - pedestals[i][0])
-                    * drift_factors[i]
-                    * scan2d_factors[i]
-                    * self._weight_arr[i]
-                )
+                ampl_corr[i] = data.pmt_data[i] - pedestals[i][0]
             else:
                 ampl_corr[i] = None
 
         if self.corrections["RateDepElec"]:
             # FIXME: Think about this [1:]!
-            # TODO: RateDepElec AFTER all other corrections?
             dptt = data.dptt[1:]
             for i in range(0, data.no_pmts):
                 ampl_0 = ampl_corr[i][1:]
@@ -232,6 +225,13 @@ class CorrPerkeo(CorrBase):
                 ampl_corr[i] = calc_acorr_ratedep(
                     ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
                 )
+
+        for i in range(0, data.no_pmts):
+            ampl_corr[i] = (ampl_corr[i]
+                * drift_factors[i]
+                * scan2d_factors[i]
+                * self._weight_arr[i]
+            )
 
         ampl_corr = np.asarray(ampl_corr)
         if self._bonlynew:
