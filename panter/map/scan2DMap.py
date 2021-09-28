@@ -26,12 +26,14 @@ class ScanMapClass:
         detector: int = 0,
         mid_pos: np.array = np.array([170, 5770]),
         label: str = "unlabelled",
+        buse_2Dcorr: bool = False,
     ):
         self._scan_pos_arr = scan_pos_arr
         self._event_arr = event_arr
         self.detector = detector
         self._mid_pos = mid_pos
         self.label = label
+        self._buse_2Dcorr = buse_2Dcorr
 
         self._dataloader = DLPerkeo("")
         self._dataloader.fill(self._event_arr)
@@ -71,9 +73,12 @@ class ScanMapClass:
         corr_class = CorrPerkeo(
             meas, mode=1, ped_arr=ped[0], bgped_arr=ped[1], weight_arr=self._weights
         )
-        corr_class.set_all_corr(bactive=True)
+        corr_class.set_all_corr(bactive=False)
         corr_class.corrections["Drift"] = False
-        corr_class.corrections["Scan2D"] = False
+        corr_class.corrections["Scan2D"] = self._buse_2Dcorr
+        corr_class.corrections["ElecRateDep"] = True
+        corr_class.corrections["Pedestal"] = True
+        corr_class.corrections["DeadTime"] = True
         corr_class.corr(bstore=True, bwrite=False)
 
         histp = corr_class.histograms[0]
@@ -195,7 +200,6 @@ class ScanMapClass:
         fig, ax = plt.subplots(figsize=(8, 8))
         if brel_map:
             ax.imshow(data, cmap="plasma", vmin=0.95, vmax=1.05)
-            # ax.imshow(data, cmap="plasma")
         else:
             ax.imshow(data, cmap="plasma")
 
@@ -263,7 +267,7 @@ def main():
     )
 
     smc.calc_peak_positions()
-    """
+    """"""
     smc.calc_peak_positions(
         weights=np.array(
             [
@@ -286,10 +290,11 @@ def main():
             ]
         )
     )
-    """
+
 
     print(smc.calc_loss())
     smc.plot_scanmap()
+    smc.plot_scanmap(brel_map=False)
 
 
 if __name__ == "__main__":
