@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from panter.config.evalFitSettings import gaus_gen
-from panter.config.filesScanMaps import scan_200116_3
+from panter.config.filesScanMaps import scan_200116_3, scan_200117
 from panter.data.dataRootPerkeo import RootPerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
@@ -73,6 +73,7 @@ class ScanMapClass:
         )
         corr_class.set_all_corr(bactive=True)
         corr_class.corrections["Drift"] = False
+        corr_class.corrections["Scan2D"] = False
         corr_class.corr(bstore=True, bwrite=False)
 
         histp = corr_class.histograms[0]
@@ -193,10 +194,10 @@ class ScanMapClass:
 
         fig, ax = plt.subplots(figsize=(8, 8))
         if brel_map:
-            # ax.imshow(data, cmap="Wistia", vmin=0.94, vmax=1.06)
-            ax.imshow(data, cmap="Wistia")
+            ax.imshow(data, cmap="plasma", vmin=0.95, vmax=1.05)
+            # ax.imshow(data, cmap="plasma")
         else:
-            ax.imshow(data, cmap="Wistia")
+            ax.imshow(data, cmap="plasma")
 
         ax.set_xticks(np.arange(x.shape[0]))
         ax.set_yticks(np.arange(y.shape[0]))
@@ -255,25 +256,25 @@ class ScanMapClass:
 
 
 def main():
-    pos, evs = scan_200116_3()
+    pos, evs = scan_200117()
 
     smc = ScanMapClass(
-        scan_pos_arr=pos, event_arr=evs, detector=0, label=scan_200116_3.label
+        scan_pos_arr=pos, event_arr=evs, detector=0, label=scan_200117.label
     )
 
     smc.calc_peak_positions()
-    """  
+    """
     smc.calc_peak_positions(
         weights=np.array(
             [
-                0.989955,
-                0.980589,
-                0.941429,
-                0.959186,
-                1.007393,
-                1.005110,
-                1.008838,
-                1.005848,
+                1.004935,
+                0.996130,
+                0.953226,
+                0.974597,
+                1.001476,
+                0.991785,
+                1.000493,
+                0.992223,
                 1.0,
                 1.0,
                 1.0,

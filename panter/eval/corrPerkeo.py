@@ -117,9 +117,11 @@ class CorrPerkeo(CorrBase):
             "Pedestal": True,
             "RateDepElec": False,
             "DeadTime": True,
-            "Drift": True,
+            "Drift": False,
+            "Scan2D": True,
         }
         self._drift_map = None
+        self._scan2d_map = None
 
     def _calc_detsum(
         self, vals: np.array, start_it: int = 0
@@ -153,8 +155,21 @@ class CorrPerkeo(CorrBase):
 
         pedestals = [[0]] * data.no_pmts
         ampl_corr = [None] * data.no_pmts
-        drift_factors = [1.0] * data.no_pmts
+        drift_factors = np.ones(data.no_pmts)
+        scan2d_factors = np.ones(data.no_pmts)
         binvalid = False
+
+        if self.corrections["Scan2D"]:
+            impfile = FilePerkeo(conf_path + "/det_fac_2D_map.p")
+            self._scan2d_map, _ = impfile.imp()
+
+            time_stamps = self._scan2d_map["time"]
+            diff_time = np.abs(time_stamps - data.filedate)
+            nearest_2d = diff_time.idxmin()
+
+            scan2d_factors = self._scan2d_map["pmt_fac"][nearest_2d]
+            print(scan2d_factors)
+            print(type(scan2d_factors))
 
         if self.corrections["Drift"]:
             if self._bdetsum_drift:
@@ -164,8 +179,7 @@ class CorrPerkeo(CorrBase):
             self._drift_map, _ = impfile.imp()
 
             time_stamps = self._drift_map["time"]
-            curr_time = data.filedate
-            diff_time = np.abs(time_stamps - curr_time)
+            diff_time = np.abs(time_stamps - data.filedate)
             nearest_drift = diff_time.idxmin()
 
             if diff_time[nearest_drift] < 7200.0:
@@ -197,10 +211,12 @@ class CorrPerkeo(CorrBase):
             self._weight_arr = np.ones(data.no_pmts)
 
         for i in range(0, data.no_pmts):
+            # TODO: drift, scan and weights after ratedep!?
             if pedestals[i] is not None:
                 ampl_corr[i] = (
                     (data.pmt_data[i] - pedestals[i][0])
                     * drift_factors[i]
+                    * scan2d_factors[i]
                     * self._weight_arr[i]
                 )
             else:
@@ -208,6 +224,7 @@ class CorrPerkeo(CorrBase):
 
         if self.corrections["RateDepElec"]:
             # FIXME: Think about this [1:]!
+            # TODO: RateDepElec AFTER all other corrections?
             dptt = data.dptt[1:]
             for i in range(0, data.no_pmts):
                 ampl_0 = ampl_corr[i][1:]
