@@ -108,7 +108,6 @@ class ScanFac2DMap(MapPerkeo):
 
             self.maps[0] = self.maps[0].append(pmt_dict, ignore_index=True)
 
-
         if bfill_to_nearest:
             print(self.maps[0])
             self.maps[0] = self._fill_with_closest(self.maps[0])
