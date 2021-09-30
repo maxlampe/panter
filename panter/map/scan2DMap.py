@@ -76,7 +76,7 @@ class ScanMapClass:
         corr_class.set_all_corr(bactive=False)
         corr_class.corrections["Drift"] = False
         corr_class.corrections["Scan2D"] = self._buse_2Dcorr
-        corr_class.corrections["ElecRateDep"] = True
+        corr_class.corrections["RateDepElec"] = True
         corr_class.corrections["Pedestal"] = True
         corr_class.corrections["DeadTime"] = True
         corr_class.corr(bstore=True, bwrite=False)
@@ -290,7 +290,6 @@ def main():
             ]
         )
     )
-
 
     print(smc.calc_loss())
     smc.plot_scanmap()
