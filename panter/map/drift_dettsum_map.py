@@ -134,6 +134,7 @@ class DriftDetSumMapPerkeo(MapPerkeo):
             corr_class.corrections["DeadTime"] = True
             corr_class.corrections["Pedestal"] = True
             corr_class.corrections["RateDepElec"] = True
+            corr_class.corrections["Scan2D"] = True
 
             corr_class.corr(bstore=True, bwrite=False)
 
@@ -153,7 +154,7 @@ class DriftDetSumMapPerkeo(MapPerkeo):
             for j in range(len(hists)):
                 dofitclass = DoFit(hists[j].hist)
                 dofitclass.setup(fitsettings)
-                dofitclass.set_fitparam("mu", 10000.0)
+                dofitclass.set_fitparam("mu", 10700.0)
                 dofitclass.set_bool("boutput", False)
                 dofitclass.set_bool("bsave_fit", False)
                 dofitclass.plot_file = f"SnDrift_{j}_{meas.cyc_no}"
@@ -313,9 +314,9 @@ def main(bexp_meas_list: bool = False, bimp_meas_list: bool = True):
         outfile = FilePerkeo(encoder_file_name)
         outfile.dump(only_encoder, conf_path)
 
-    pdm = DriftDetSumMapPerkeo(only_encoder, bimp_detsum=False, bimp_sn=False)
+    pdm = DriftDetSumMapPerkeo(only_encoder, bimp_detsum=True, bimp_sn=False)
     pdm()
-    pdm.plot_sn_map()
+    # pdm.plot_sn_map()
     pdm.plot_detsum_map()
 
 
