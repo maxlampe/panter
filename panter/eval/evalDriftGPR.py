@@ -78,10 +78,8 @@ class GPRDrift:
         """"""
 
         self.gpr.eval()
-        x_eval = torch.tensor(x_eval, dtype=torch.float64)
-
         with torch.no_grad():
-            mean, cov = self.gpr(x_eval, full_cov=True, noiseless=False)
+            mean, cov = self.gpr(x_eval.double(), full_cov=True, noiseless=False)
         sd = cov.diag().sqrt()
 
         return mean, sd
@@ -177,4 +175,4 @@ def main(bcalc_anew: bool = False):
 
 
 if __name__ == "__main__":
-    main(bcalc_anew=False)
+    main(bcalc_anew=True)
