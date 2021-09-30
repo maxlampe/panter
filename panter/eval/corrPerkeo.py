@@ -14,6 +14,8 @@ from panter.data.dataMisc import FilePerkeo
 from panter.data.dataRootPerkeo import RootPerkeo
 from panter.eval.evalFunctions import calc_acorr_ratedep
 from panter.eval.pedPerkeo import PedPerkeo
+from panter.data.dataloaderPerkeo import DLPerkeo
+
 
 cnf = configparser.ConfigParser()
 cnf.read(f"{conf_path}/evalRaw.ini")
@@ -115,12 +117,13 @@ class CorrPerkeo(CorrBase):
         self._histpar_pmt = PMT_hist_par
         self.corrections = {
             "Pedestal": True,
-            "RateDepElec": False,
+            "RateDepElec": True,
             "DeadTime": True,
-            "Drift": False,
+            "Drift": True,
             "Scan2D": True,
         }
         self._drift_map = None
+        self._drift_gprs = [None] * 2
         self._scan2d_map = None
 
     def _calc_detsum(
@@ -167,34 +170,37 @@ class CorrPerkeo(CorrBase):
             diff_time = np.abs(time_stamps - data.filedate)
             nearest_2d = diff_time.idxmin()
 
+            # if diff_time[nearest_2d] < 7200.0:
+            #     print("ERROR: Last meas more than 2h away")
+            #     binvalid = True
+
             scan2d_factors = self._scan2d_map["pmt_fac"][nearest_2d]
-            print(scan2d_factors)
-            print(type(scan2d_factors))
 
         if self.corrections["Drift"]:
-            if self._bdetsum_drift:
-                impfile = FilePerkeo(conf_path + "/det_fac_map.p")
-            else:
-                impfile = FilePerkeo(conf_path + "/pmt_fac_map.p")
-            self._drift_map, _ = impfile.imp()
+            assert (
+                self._bdetsum_drift
+            ), "Error: Only drift det sum correction implemented at the moment."
 
-            time_stamps = self._drift_map["time"]
-            diff_time = np.abs(time_stamps - data.filedate)
-            nearest_drift = diff_time.idxmin()
+            # FIXME: do not do this here for each correction
+            from panter.eval.evalDriftGPR import GPRDrift
+            import torch
 
-            if diff_time[nearest_drift] < 7200.0:
-                print("ERROR: Last drift meas more than 2h away")
-                binvalid = True
+            for det in [0, 1]:
+                gpr_class = GPRDrift(detector=det)
+                gpr_class.load_model(file_name=f"{conf_path}/gpr_model_det{det}.plk")
+                self._drift_gprs[det] = gpr_class
 
-            if self._bdetsum_drift:
-                det_sum_fac = self._drift_map["pmt_fac"][nearest_drift]
-                drift_factors = np.asarray(
-                    [[det_sum_fac[0]] * 8, [det_sum_fac[1]] * 8]
-                ).flatten()
-            else:
-                drift_factors = self._drift_map["pmt_fac"][nearest_drift]
-            print(drift_factors)
-            print(type(drift_factors))
+            time_stamp = data.filedate
+            time_stamp = self._drift_gprs[0].dataclass.timestamp_to_data(time_stamp)
+
+            det_sum_fac = [
+                self._drift_gprs[0](torch.tensor(time_stamp))[0],
+                self._drift_gprs[1](torch.tensor(time_stamp))[0],
+            ]
+
+            drift_factors = np.asarray(
+                [[det_sum_fac[0]] * 8, [det_sum_fac[1]] * 8]
+            ).flatten()
 
         if self.corrections["Pedestal"]:
             if self._ped_arr is None:
@@ -227,7 +233,8 @@ class CorrPerkeo(CorrBase):
                 )
 
         for i in range(0, data.no_pmts):
-            ampl_corr[i] = (ampl_corr[i]
+            ampl_corr[i] = (
+                ampl_corr[i]
                 * drift_factors[i]
                 * scan2d_factors[i]
                 * self._weight_arr[i]
@@ -442,3 +449,40 @@ class CorrPerkeo(CorrBase):
         self.histograms = np.asarray(self.histograms)
 
         return 0
+
+
+def main():
+    data_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+    dataloader = DLPerkeo(data_dir)
+    dataloader.auto()
+    filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])[100:200:10]
+
+    corr_class = CorrPerkeo(filt_meas, mode=0)
+    corr_class.set_all_corr(bactive=False)
+    corr_class.corrections["Drift"] = False
+    corr_class.corrections["Scan2D"] = True
+    corr_class.corrections["RateDepElec"] = True
+    corr_class.corrections["Pedestal"] = True
+    corr_class.corrections["DeadTime"] = True
+
+    corr_class.addition_filters.append(
+        {
+            "tree": "data",
+            "fkey": "Detector",
+            "active": True,
+            "ftype": "bool",
+            "rightval": 0,
+        }
+    )
+
+    corr_class.corr(bstore=True, bwrite=False, bconcat=True)
+
+    histp = corr_class.histograms[0]
+    test = histp[1][0]
+
+    test.plot_hist()
+    print(test.stats)
+
+
+if __name__ == "__main__":
+    main()
