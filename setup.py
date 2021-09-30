@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="panter",
-    version="0.0.3",
+    version="0.0.4",
     author="Max Lamparth",
     author_email="max.lamparth@tum.de",
     description="panter - Perkeo ANalysis Tool for Evaluation and Reduction",
