@@ -314,9 +314,9 @@ def main(bexp_meas_list: bool = False, bimp_meas_list: bool = True):
         outfile = FilePerkeo(encoder_file_name)
         outfile.dump(only_encoder, conf_path)
 
-    pdm = DriftDetSumMapPerkeo(only_encoder, bimp_detsum=True, bimp_sn=False)
+    pdm = DriftDetSumMapPerkeo(only_encoder, bimp_detsum=True, bimp_sn=True)
     pdm()
-    # pdm.plot_sn_map()
+    pdm.plot_sn_map()
     pdm.plot_detsum_map()
 
 
