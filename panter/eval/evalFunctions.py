@@ -4,7 +4,7 @@ from math import factorial
 
 import numpy as np
 from scipy.special import erfc
-from scipy.stats import poisson
+from scipy.stats import poisson, skewnorm
 
 
 def gaussian(x, mu, sig, norm: float = 1.0):
@@ -224,3 +224,20 @@ def calc_acorr_ratedep(
 def trigger_func(x: float, a: float, p: float):
     """Effective trigger model function according to [Mun06]"""
     return 1.0 - (1.0 - p) ** (a * x) * (1.0 + (a * p * x) / (1.0 - p))
+
+
+def tof_peaks(
+        x: float,
+        a: float = 4.,
+        loc: float = 1.,
+        scale: float = 1.,
+        shift: float = 0.,
+        const_bg: float = 0.
+):
+    """Simple E-ToF model for skewed double peak structure with relative shift and non-zero bg."""
+
+    x = np.array(x, dtype=float)
+    p1 = skewnorm.pdf(x, a=a, loc=loc, scale=scale)
+    p2 = skewnorm.pdf(-(x + shift), a=a, loc=loc, scale=scale)
+
+    return p1 + p2 + const_bg
