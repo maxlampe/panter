@@ -3,6 +3,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import datetime
+import os
+import matplotlib.dates as md
 
 import torch
 import pyro
@@ -14,6 +17,8 @@ from panter.map.drift_dettsum_map import DriftDetSumMapPerkeo
 
 assert pyro.__version__.startswith("1.7.0")
 pyro.set_rng_seed(0)
+plt.rcParams.update({"font.size": 12})
+output_path = os.getcwd()
 
 
 class GPRDriftData:
@@ -78,10 +83,8 @@ class GPRDrift:
         """"""
 
         self.gpr.eval()
-        x_eval = torch.tensor(x_eval, dtype=torch.float64)
-
         with torch.no_grad():
-            mean, cov = self.gpr(x_eval, full_cov=True, noiseless=False)
+            mean, cov = self.gpr(x_eval.double(), full_cov=True, noiseless=False)
         sd = cov.diag().sqrt()
 
         return mean, sd
@@ -100,27 +103,49 @@ class GPRDrift:
             optimizer.step()
             self.losses.append(loss.item())
 
-    def plot_results(self, n_test: int = 500):
+    def plot_results(self, n_test: int = 500, t_range=None, y_lim=None, bsave=False):
         """"""
 
-        plt.figure(figsize=(12, 6))
+        fig, ax = plt.subplots(figsize=(10, 6))
         x_data = self.data["time"]
         y_data = self.data[f"det{self._det}"]
-        plt.plot(x_data.numpy(), y_data.numpy(), "kx")
         x_test = torch.linspace(
             x_data.numpy().min(), x_data.numpy().max(), n_test, dtype=torch.float64
         )
-
+        x_plot = self.dataclass.data_to_timestamp(x_test.numpy())
         mean, sd = self(x_test)
 
-        plt.plot(x_test.numpy(), mean.numpy(), "r", lw=2)  # plot the mean
-        plt.fill_between(
-            x_test.numpy(),  # plot the two-sigma uncertainty about the mean
+        xfmt = md.DateFormatter("%m-%d\n%H:%M")
+        ax.xaxis.set_major_formatter(xfmt)
+        dates_plot = [datetime.datetime.fromtimestamp(t) for t in x_plot]
+        x_data_plot = [
+            datetime.datetime.fromtimestamp(t)
+            for t in self.dataclass.data_to_timestamp(x_data.numpy())
+        ]
+
+        ax.plot(x_data_plot, y_data.numpy(), "kx", label="Drift data")
+        ax.plot(dates_plot, mean.numpy(), "r", lw=2, label="GPR")  # plot the mean
+        ax.fill_between(
+            dates_plot,  # plot the two-sigma uncertainty about the mean
             (mean - 2.0 * sd).numpy(),
             (mean + 2.0 * sd).numpy(),
             color="C0",
             alpha=0.3,
+            label="GPR +- 2\u03C3",
         )
+        if t_range is not None:
+            t_range = self.dataclass.data_to_timestamp(t_range)
+            t_range = [datetime.datetime.fromtimestamp(t) for t in t_range]
+            ax.set_xlim(t_range)
+        if y_lim is not None:
+            ax.set_ylim(y_lim)
+
+        ax.set_title("Drift correction upstream detector", fontsize=18)
+        ax.set(xlabel="Time [D - M ]", ylabel="Drift factor [ ]")
+        ax.legend()
+        plt.tight_layout()
+        if bsave:
+            plt.savefig(output_path + "/" + "drift_gpr.png", dpi=300)
         plt.show()
 
     def plot_losses(self):
@@ -161,6 +186,7 @@ class GPRDrift:
 
 def main(bcalc_anew: bool = False):
 
+    # for det in [0, 1]:
     for det in [0, 1]:
         gpr_class = GPRDrift(detector=det)
 
@@ -171,7 +197,7 @@ def main(bcalc_anew: bool = False):
         else:
             gpr_class.load_model(file_name=f"{conf_path}/gpr_model_det{det}.plk")
 
-        gpr_class.plot_results()
+        gpr_class.plot_results(t_range=[0.1, 1.0], bsave=True)
         res = gpr_class(torch.tensor([0.1, 0.3, 0.8]))
         print(res)
 

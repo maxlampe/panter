@@ -173,7 +173,8 @@ class ScanMapClass:
     ):
         """Make a 2D plot of the scan map results."""
 
-        det_label = f"Scan {self.label} \n Detector: {self.detector}/1\n"
+        # det_label = f"Scan {self.label} \n Detector: {self.detector}/1\n"
+        det_label = f"Scan {self.label} Detector: {self.detector}/1"
 
         x = np.unique(self._scan_pos_arr.T[0])
         y = np.unique(self._scan_pos_arr.T[1])
@@ -195,32 +196,37 @@ class ScanMapClass:
             if brel_map:
                 data[indy][indx] = f"{peak_map[i]/peak_map[self._mid_ind]:.4f}"
             else:
-                data[indy][indx] = f"{peak_map[i]:.0f}"
+                data[indy][indx] = f"{int(peak_map[i])}"
 
         fig, ax = plt.subplots(figsize=(8, 8))
         if brel_map:
-            ax.imshow(data, cmap="plasma", vmin=0.95, vmax=1.05)
+            ims = ax.imshow(data, cmap="plasma", vmin=0.996, vmax=1.026)
         else:
-            ax.imshow(data, cmap="plasma")
+            # ims = ax.imshow(data, cmap="plasma", vmin=10590.0, vmax=11000.0)
+            ims = ax.imshow(data, cmap="plasma")
 
         ax.set_xticks(np.arange(x.shape[0]))
         ax.set_yticks(np.arange(y.shape[0]))
         ax.set_xticklabels(x)
         ax.set_yticklabels(y)
 
-        string = "Weights:\n"
-        string = det_label + "\n" + string
-        w_rng = [self.detector * 8, len(self._weights) - 8 * (1 - self.detector)]
-        for i in range(w_rng[0], w_rng[1]):
-            string += f"pmt{i}/15: {self._weights[i]:.4f}\n"
-        plt.text(0.02, 0.3, string, fontsize=10, transform=plt.gcf().transFigure)
+        # string = "Weights:\n"
+        # string = det_label + "\n" + string
+        # w_rng = [self.detector * 8, len(self._weights) - 8 * (1 - self.detector)]
+        # for i in range(w_rng[0], w_rng[1]):
+        #     string += f"pmt{i}/15: {self._weights[i]:.4f}\n"
+        # plt.text(0.02, 0.3, string, fontsize=10, transform=plt.gcf().transFigure)
         plt.setp(ax.get_xticklabels(), ha="left")
 
         for i in range(y.shape[0]):
             for j in range(x.shape[0]):
                 ax.text(j, i, data[i, j], ha="center", va="center", color="black")
 
-        ax.set_title(f"Scan_map - avg_dev: {self.avg_dev:.0f}, loss: {self.loss:.0f}")
+        ax.set_title(
+            f"{det_label} - uniformity: {self.avg_dev:.0f}, symmetry loss: {self.loss:.0f}"
+        )
+        ax.set(xlabel="hor encoder position [ch]", ylabel="vert encoder position [ch]")
+        fig.colorbar(ims)
         fig.tight_layout()
 
         if bsavefig:
@@ -263,37 +269,41 @@ def main():
     pos, evs = scan_200117()
 
     smc = ScanMapClass(
-        scan_pos_arr=pos, event_arr=evs, detector=0, label=scan_200117.label
+        scan_pos_arr=pos,
+        event_arr=evs,
+        detector=0,
+        label=scan_200117.label,
+        buse_2Dcorr=False,
     )
 
     smc.calc_peak_positions()
     """"""
-    smc.calc_peak_positions(
-        weights=np.array(
-            [
-                1.004935,
-                0.996130,
-                0.953226,
-                0.974597,
-                1.001476,
-                0.991785,
-                1.000493,
-                0.992223,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-                1.0,
-            ]
-        )
-    )
+    # smc.calc_peak_positions(
+    #     weights=np.array(
+    #         [
+    #             1.004935,
+    #             0.996130,
+    #             0.953226,
+    #             0.974597,
+    #             1.001476,
+    #             0.991785,
+    #             1.000493,
+    #             0.992223,
+    #             1.0,
+    #             1.0,
+    #             1.0,
+    #             1.0,
+    #             1.0,
+    #             1.0,
+    #             1.0,
+    #             1.0,
+    #         ]
+    #     )
+    # )
 
     print(smc.calc_loss())
     smc.plot_scanmap()
-    smc.plot_scanmap(brel_map=False)
+    # smc.plot_scanmap(brel_map=False)
 
 
 if __name__ == "__main__":

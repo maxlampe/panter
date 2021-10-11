@@ -12,6 +12,7 @@ from matplotlib.pyplot import figure
 from panter.data.dataMisc import ret_hist
 
 output_path = os.getcwd()
+plt.rcParams.update({"font.size": 12})
 
 bfound_root = True
 try:

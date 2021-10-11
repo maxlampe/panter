@@ -455,11 +455,11 @@ def main():
     data_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
     dataloader = DLPerkeo(data_dir)
     dataloader.auto()
-    filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])[100:200:10]
+    filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])[-120:-80]
 
     corr_class = CorrPerkeo(filt_meas, mode=0)
     corr_class.set_all_corr(bactive=False)
-    corr_class.corrections["Drift"] = False
+    corr_class.corrections["Drift"] = True
     corr_class.corrections["Scan2D"] = True
     corr_class.corrections["RateDepElec"] = True
     corr_class.corrections["Pedestal"] = True
@@ -480,7 +480,12 @@ def main():
     histp = corr_class.histograms[0]
     test = histp[1][0]
 
-    test.plot_hist()
+    test.plot_hist(
+        title="Beta spectrum",
+        xlabel="Energy [ch]",
+        ylabel="Counts [ ]",
+        # rng=[0.0, 40e3, -30.0, 2200.0],
+    )
     print(test.stats)
 
 
