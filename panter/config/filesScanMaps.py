@@ -21,8 +21,8 @@ class ScanFiles:
         measp_type: int = 1,
         measp_src: int = 3,
     ):
-        self._dir_sig_files = dir_sig_files
-        self._dir_bg_files = dir_bg_files
+        self.dir_sig_files = dir_sig_files
+        self.dir_bg_files = dir_bg_files
         self.label = label
         self._measp_type = measp_type
         self._measp_src = measp_src
@@ -34,18 +34,18 @@ class ScanFiles:
         self.events = None
 
     def __call__(self):
-        if self._dir_sig_files[-1:] != "/":
-            self._dir_sig_files = self._dir_sig_files + "/"
-        if self._dir_bg_files is None:
-            self._dir_bg_files = self._dir_sig_files
-        if self._dir_bg_files[-1:] != "/":
-            self._dir_bg_files = self._dir_bg_files + "/"
+        if self.dir_sig_files[-1:] != "/":
+            self.dir_sig_files = self.dir_sig_files + "/"
+        if self.dir_bg_files is None:
+            self.dir_bg_files = self.dir_sig_files
+        if self.dir_bg_files[-1:] != "/":
+            self.dir_bg_files = self.dir_bg_files + "/"
 
         ev_list = []
         for ind, sig_file in enumerate(self._sig_files):
             curr_ev = [self._measp_type, self._measp_src]
-            curr_sig_file = self._dir_sig_files + sig_file
-            curr_bg_file = self._dir_bg_files + self._bg_files[ind]
+            curr_sig_file = self.dir_sig_files + sig_file
+            curr_bg_file = self.dir_bg_files + self._bg_files[ind]
             curr_ev.append(list([curr_sig_file, curr_bg_file]))
 
             if self._cyc_numbers is not None:
