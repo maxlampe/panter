@@ -1,7 +1,8 @@
 """Calculate individual PMT drift map from Sn measurements."""
 
 import os
-
+import datetime
+import matplotlib.dates as md
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -118,7 +119,7 @@ class DriftMapPerkeo(MapPerkeo):
         """Calculate peak position from Sn drift measurements"""
 
         for i, meas in enumerate(self._fmeas):
-            if i in [61, 109, 294, 411, 625]:
+            if i in [61, 109, 294, 411, 625, 383]:
                 continue
 
             print(f"Meas No: {i}")
@@ -134,6 +135,7 @@ class DriftMapPerkeo(MapPerkeo):
             corr_class.corrections["DeadTime"] = True
             corr_class.corrections["Pedestal"] = True
             corr_class.corrections["RateDepElec"] = True
+            corr_class.corrections["Scan2D"] = True
 
             corr_class.corr(bstore=True, bwrite=False)
 
@@ -190,11 +192,15 @@ class DriftMapPerkeo(MapPerkeo):
 
         for index, sn_meas in self.maps[1].iterrows():
 
-            factors = (self.cache / sn_meas["peak_list"]).to_numpy()
-            print(factors)
-            rchi2_filter = sn_meas["rchi2"] > self._rch2_limit
-            factors[rchi2_filter] = None
-            print(factors)
+            try:
+                factors = (self.cache / sn_meas["peak_list"]).to_numpy()
+                print(factors)
+                rchi2_filter = sn_meas["rchi2"] > self._rch2_limit
+                factors[rchi2_filter] = None
+                print(factors)
+            except TypeError:
+                factors = None
+
             pmt_dict = {
                 "time": sn_meas["time"],
                 "pmt_fac": factors,
@@ -219,19 +225,24 @@ class DriftMapPerkeo(MapPerkeo):
         axs.flat[0].set(xlabel="Time [s]", ylabel="EMG peak pos [ch]")
         axs.flat[1].set(xlabel="Time [s]", ylabel="EMG peak pos [ch]")
 
+        xfmt = md.DateFormatter("%m-%d\n%H:%M")
+        axs[0].xaxis.set_major_formatter(xfmt)
+        axs[1].xaxis.set_major_formatter(xfmt)
+
         peak_df = self.maps[1]["peak_list"].apply(pd.Series)
         err_df = self.maps[1]["err_list"].apply(pd.Series)
+        dates_plot = [datetime.datetime.fromtimestamp(t) for t in self.maps[0]["time"]]
 
         for PMT in range(8):
             axs[0].errorbar(
-                self.maps[1]["time"],
+                dates_plot,
                 peak_df[PMT],
                 yerr=err_df[PMT],
                 fmt=".",
                 label=f"PMT{PMT}",
             )
             axs[1].errorbar(
-                self.maps[1]["time"],
+                dates_plot,
                 peak_df[PMT + 8],
                 yerr=err_df[PMT + 8],
                 fmt=".",
@@ -254,17 +265,22 @@ class DriftMapPerkeo(MapPerkeo):
         axs.flat[0].set(xlabel="Time [s]", ylabel="Correction factor [ ]")
         axs.flat[1].set(xlabel="Time [s]", ylabel="Correction factor [ ]")
 
+        xfmt = md.DateFormatter("%m-%d\n%H:%M")
+        axs[0].xaxis.set_major_formatter(xfmt)
+        axs[1].xaxis.set_major_formatter(xfmt)
+
         pmt_fac = self.maps[0]["pmt_fac"].apply(pd.Series)
+        dates_plot = [datetime.datetime.fromtimestamp(t) for t in self.maps[0]["time"]]
 
         for PMT in range(8):
             axs[0].plot(
-                self.maps[0]["time"],
+                dates_plot,
                 pmt_fac[PMT],
                 ".",
                 label=f"PMT{PMT}",
             )
             axs[1].plot(
-                self.maps[0]["time"],
+                dates_plot,
                 pmt_fac[PMT + 8],
                 ".",
                 label=f"PMT{PMT + 8}",
@@ -278,13 +294,29 @@ class DriftMapPerkeo(MapPerkeo):
         return 0
 
 
-file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-dataloader = DLPerkeo(file_dir)
-dataloader.auto()
-filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
-# filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
+def main(bimp_meas_list: bool = True):
+    encoder_file_name = "drift_encoder_meas.p"
 
-pdm = DriftMapPerkeo(filt_meas, bimp_pmt=False, bimp_sn=False)
-pdm()
-# pdm.plot_sn_map()
-pdm.plot_pmt_map()
+    file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+    dataloader = DLPerkeo(file_dir)
+    dataloader.auto()
+    filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 3])
+
+    if bimp_meas_list:
+        impfile = FilePerkeo(f"{conf_path}/{encoder_file_name}")
+        only_encoder = impfile.imp()
+    else:
+        pos0 = filt_meas[:113]
+        pos1 = filt_meas[114:351:2]
+        pos2 = filt_meas[353:630:4]
+        pos3 = filt_meas[354:631:4]
+        only_encoder = np.concatenate([pos0, pos1, pos2, pos3])
+
+    pdm = DriftMapPerkeo(only_encoder, bimp_pmt=False, bimp_sn=True)
+    pdm()
+    pdm.plot_sn_map()
+    pdm.plot_pmt_map()
+
+
+if __name__ == "__main__":
+    main()
