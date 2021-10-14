@@ -356,6 +356,9 @@ class DoFit:
         )
 
         axs.flat[1].set(xlabel=self.plot_labels[1], ylabel="Residuals [x]")
+        res_max = (residuals_data + self._fitdata["err"]).max()
+        res_min = (residuals_data - self._fitdata["err"]).min()
+        axs.flat[1].set_ylim([res_min, res_max])
         axs[1].errorbar(
             self._data["x"],
             all_residuals,
