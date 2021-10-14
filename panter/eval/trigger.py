@@ -10,6 +10,7 @@ from panter.eval.evalFit import DoFit
 dir_path = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir_path)
 dataloader.auto()
+filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])
 hist_trigger = [None] * 2
 
 
@@ -152,7 +153,7 @@ for primary_detector in [0, 1]:
     det_prim = primary_detector
     det_sec = 1 - det_prim
     for i in range(5):
-        meas = dataloader[100 + i]
+        meas = filt_meas[100 + i]
 
         if False:
             hist_both, hist_onlysec = trigger_corr(meas, det_prim)
