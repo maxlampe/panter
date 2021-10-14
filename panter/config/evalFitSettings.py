@@ -219,3 +219,20 @@ charge_spec.param_limit = {
     "mu": [0.0, np.inf],
     "norm": [0.0, np.inf],
 }
+
+
+etof_peaks = FitSetting()
+etof_peaks.label = "etof_peaks"
+etof_peaks.fitfunc = eF.tof_peaks
+etof_peaks.initvals = {
+    "a": 5.0,
+    "loc": 3.0,
+    "scale": 4.0,
+    "shift": 1.0,
+    "const_bg": 0.0,
+    "norm_p": 8e3,
+    "norm_n": 8e3,
+}
+etof_peaks.paramvary = [True] * len(etof_peaks.initvals)
+etof_peaks.fitrange = [-10.0, 10.0]
+etof_peaks.booldict["blimfit"] = True
