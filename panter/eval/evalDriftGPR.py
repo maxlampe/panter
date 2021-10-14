@@ -89,7 +89,7 @@ class GPRDrift:
 
         return mean, sd
 
-    def train(self, n_steps: int = 5000):
+    def train(self, n_steps: int = 7000):
         """"""
 
         self.gpr.train()
@@ -140,7 +140,7 @@ class GPRDrift:
         if y_lim is not None:
             ax.set_ylim(y_lim)
 
-        ax.set_title("Drift correction upstream detector", fontsize=18)
+        ax.set_title("Drift correction", fontsize=18)
         ax.set(xlabel="Time [D - M ]", ylabel="Drift factor [ ]")
         ax.legend()
         plt.tight_layout()
@@ -186,7 +186,6 @@ class GPRDrift:
 
 def main(bcalc_anew: bool = False):
 
-    # for det in [0, 1]:
     for det in [0, 1]:
         gpr_class = GPRDrift(detector=det)
 
@@ -197,10 +196,10 @@ def main(bcalc_anew: bool = False):
         else:
             gpr_class.load_model(file_name=f"{conf_path}/gpr_model_det{det}.plk")
 
-        gpr_class.plot_results(t_range=[0.1, 1.0], bsave=True)
+        gpr_class.plot_results(t_range=[0.0, 1.0], bsave=False)
         res = gpr_class(torch.tensor([0.1, 0.3, 0.8]))
         print(res)
 
 
 if __name__ == "__main__":
-    main(bcalc_anew=False)
+    main(bcalc_anew=True)
