@@ -227,17 +227,19 @@ def trigger_func(x: float, a: float, p: float):
 
 
 def tof_peaks(
-        x: float,
-        a: float = 4.,
-        loc: float = 1.,
-        scale: float = 1.,
-        shift: float = 0.,
-        const_bg: float = 0.
+    x: float,
+    a: float = 4.0,
+    loc: float = 1.0,
+    scale: float = 1.0,
+    shift: float = 0.0,
+    const_bg: float = 0.0,
+    norm_p: float = 1.0,
+    norm_n: float = 1.0,
 ):
-    """Simple E-ToF model for skewed double peak structure with relative shift and non-zero bg."""
+    """Simple E-ToF model for skewed double peak with relative shift and non-zero bg."""
 
     x = np.array(x, dtype=float)
-    p1 = skewnorm.pdf(x, a=a, loc=loc, scale=scale)
-    p2 = skewnorm.pdf(-(x + shift), a=a, loc=loc, scale=scale)
+    p1 = norm_p * skewnorm.pdf(x, a=a, loc=loc, scale=scale)
+    p2 = norm_n * skewnorm.pdf(-(x + shift), a=a, loc=loc, scale=scale)
 
     return p1 + p2 + const_bg
