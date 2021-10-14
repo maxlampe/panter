@@ -146,9 +146,9 @@ class ScanFac2DMap(MapPerkeo):
             )
             axs[1].plot(
                 dates_plot,
-                pmt_fac[PMT + 7],
+                pmt_fac[PMT + 8],
                 "-x",
-                label=f"PMT{PMT + 7}",
+                label=f"PMT{PMT + 8}",
             )
         axs[0].legend()
         axs[1].legend()
