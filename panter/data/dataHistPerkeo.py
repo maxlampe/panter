@@ -56,21 +56,30 @@ class HistPerkeo:
         low_lim: int = 0,
         up_lim: int = 52000,
     ):
+        assert low_lim <= up_lim, "Error: lower limit bigger than upper limit."
+
         self._data = np.asarray(data)
         if self._data.shape != ():
+            self.n_events = self._data.shape[0]
+            self.mean = self._data.mean()
+            self.stdv = self._data.std()
             self.stats = {
-                "mean": self._data.mean(),
-                "std": self._data.std(),
-                "noevents": self._data.shape[0],
+                "mean": self.mean,
+                "std": self.stdv,
+                "noevents": self.n_events,
             }
         self.parameters = {"bin_count": bin_count, "low_lim": low_lim, "up_lim": up_lim}
         self.bin_count = bin_count
         self.up_lim = up_lim
         self.low_lim = low_lim
+        self.bin_width = (self.up_lim - self.low_lim) / self.bin_count
+
         if self._data.shape != ():
             self.hist = ret_hist(self._data, **self.parameters)
         else:
             self.hist = None
+
+        self.integral = (self.hist["y"] * self.bin_width).sum()
 
     def _calc_stats(self):
         """Calculate mean and biased variance of histogram based on bin content."""
@@ -80,7 +89,13 @@ class HistPerkeo:
         var = ((self.hist["x"] - self.mean) ** 2 * self.hist["y"]).sum() / self.n_events
         self.stdv = np.sqrt(var)
 
-        return 0
+        self.stats = {
+            "mean": self.mean,
+            "std": self.stdv,
+            "noevents": self.n_events,
+        }
+
+        self.integral = (self.hist["y"] * self.bin_width).sum()
 
     def plot_hist(
         self,
@@ -118,8 +133,6 @@ class HistPerkeo:
             plt.savefig(f"{output_path}/{filename}.png", dpi=300)
         plt.show()
 
-        return 0
-
     def addhist(self, hist_p: HistPerkeo, fac: float = 1.0):
         """Add another histogram to existing one with multiplicand."""
 
@@ -135,8 +148,6 @@ class HistPerkeo:
         # Changes input ret_hist like in Root
         self.hist = newhist
         self._calc_stats()
-
-        return 0
 
     def divbyhist(self, hist_p: HistPerkeo):
         """Divide by another histogram."""
@@ -163,8 +174,6 @@ class HistPerkeo:
         self.hist = newhist
         self._calc_stats()
 
-        return 0
-
     def scal(self, fac: float):
         """Scale histogram by a factor."""
 
@@ -178,8 +187,6 @@ class HistPerkeo:
         # Changes input ret_hist like in Root
         self.hist = newhist
         self._calc_stats()
-
-        return 0
 
     def ret_asnumpyhist(self):
         """Return histogram in np.histogram format from current histogram.
