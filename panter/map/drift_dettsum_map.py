@@ -18,6 +18,12 @@ from panter.eval.evalFit import DoFit
 
 output_path = os.getcwd()
 
+# PMT13 breaks down between date1 and date2
+date1 = datetime.datetime(2020, 1, 12, 15, 0)
+stamp1 = datetime.datetime.timestamp(date1)
+date2 = datetime.datetime(2020, 1, 14, 21, 0)
+stamp2 = datetime.datetime.timestamp(date2)
+
 
 class DriftDetSumMapPerkeo(MapPerkeo):
     """Class for creating and handling of DetSum drift correction factors.
@@ -76,10 +82,12 @@ class DriftDetSumMapPerkeo(MapPerkeo):
         fmeas: np.array = np.asarray([]),
         bimp_detsum: bool = True,
         bimp_sn: bool = False,
+        bfilt_bad_times: bool = True,
     ):
         super().__init__(fmeas=fmeas, level=2, bimport=[bimp_detsum, bimp_sn])
         self._outfile = ["sn_detsum_peak_map.p", "det_fac_map.p"]
         self._rch2_limit = 1.5
+        self._bfilt_bad_times = bfilt_bad_times
 
     def _get_level(self, level: int = 0, bimp: bool = True) -> bool:
         """Try to import and/or calculate given level. Return True/False"""
@@ -121,13 +129,14 @@ class DriftDetSumMapPerkeo(MapPerkeo):
 
         for i, meas in enumerate(self._fmeas):
 
-            print(f"Meas No: {i} - {meas.cyc_no}")
+            print(f"Meas No: {i}/{self._fmeas.shape[0]} - cycle {meas.cyc_no}")
             if i % 100 == 0 and i > 0:
                 self._write_map2file(map_ind=1, fname=self._outfile[0])
 
             time = meas.date_list[0]
-            # if time > 2.5787e9:
-            #    continue
+            if self._bfilt_bad_times:
+                if stamp2 > time > stamp1:
+                    continue
 
             corr_class = CorrPerkeo(dataloader=meas, mode=1)
             corr_class.set_all_corr(bactive=False)
@@ -281,7 +290,7 @@ class DriftDetSumMapPerkeo(MapPerkeo):
                 dates_plot,
                 pmt_fac[DET + 1],
                 ".",
-                label=f"DET{DET + 1}",
+                label=f"Det{DET + 1}",
             )
         axs[0].legend()
         axs[1].legend()
@@ -314,7 +323,7 @@ def main(bexp_meas_list: bool = False, bimp_meas_list: bool = True):
         outfile = FilePerkeo(encoder_file_name)
         outfile.dump(only_encoder, conf_path)
 
-    pdm = DriftDetSumMapPerkeo(only_encoder, bimp_detsum=True, bimp_sn=True)
+    pdm = DriftDetSumMapPerkeo(only_encoder, bimp_detsum=False, bimp_sn=True)
     pdm()
     pdm.plot_sn_map()
     pdm.plot_detsum_map()
