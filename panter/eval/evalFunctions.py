@@ -26,7 +26,7 @@ def doublegaussian(x, mu1, sig1, norm1, mu2, sig2, norm2):
 def f_p0(x, c0):
     """Polynomial of 0th order"""
     x = np.array(x, dtype=float)
-    return c0
+    return x * 0. + c0
 
 
 def f_p1(x, c0, c1):
