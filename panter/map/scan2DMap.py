@@ -222,8 +222,9 @@ class ScanMapClass:
             for j in range(x.shape[0]):
                 ax.text(j, i, data[i, j], ha="center", va="center", color="black")
 
+        symm_loss = self.loss - self.avg_dev
         ax.set_title(
-            f"{det_label} - uniformity: {self.avg_dev:.0f}, symmetry loss: {self.loss:.0f}"
+            f"{det_label} - uniformity term: {self.avg_dev:.0f}, symmetry term: {symm_loss:.0f}"
         )
         ax.set(xlabel="hor encoder position [ch]", ylabel="vert encoder position [ch]")
         fig.colorbar(ims)
