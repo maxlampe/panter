@@ -103,7 +103,9 @@ class GPRDrift:
             optimizer.step()
             self.losses.append(loss.item())
 
-    def plot_results(self, n_test: int = 500, t_range=None, y_lim=None, bsave=False):
+    def plot_results(
+        self, n_test: int = 500, t_range=None, y_lim=None, bsave=False, file_tag=None
+    ):
         """"""
 
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -123,13 +125,16 @@ class GPRDrift:
             for t in self.dataclass.data_to_timestamp(x_data.numpy())
         ]
 
-        ax.plot(x_data_plot, y_data.numpy(), "kx", label="Drift data")
-        ax.plot(dates_plot, mean.numpy(), "r", lw=2, label="GPR")  # plot the mean
+        # ax.plot(x_data_plot, y_data.numpy(), "kx", label="Drift data")
+        # ax.plot(dates_plot, mean.numpy(), "r", lw=2, label="GPR")
+        ax.plot(x_data_plot, y_data.numpy(), "x", c="#0C0887", label="Drift data")
+        ax.plot(dates_plot, mean.numpy(), c="#FF220C", lw=2, label="GPR")
         ax.fill_between(
             dates_plot,  # plot the two-sigma uncertainty about the mean
             (mean - 2.0 * sd).numpy(),
             (mean + 2.0 * sd).numpy(),
-            color="C0",
+            # color="C0",
+            color="#FDC328",
             alpha=0.3,
             label="GPR +- 2\u03C3",
         )
@@ -145,7 +150,11 @@ class GPRDrift:
         ax.legend()
         plt.tight_layout()
         if bsave:
-            plt.savefig(output_path + "/" + "drift_gpr.png", dpi=300)
+            if file_tag is None:
+                file_tag = ""
+            else:
+                file_tag = "_" + file_tag
+            plt.savefig(output_path + "/" + f"drift_gpr{file_tag}.png", dpi=300)
         plt.show()
 
     def plot_losses(self):
@@ -196,7 +205,7 @@ def main(bcalc_anew: bool = False):
         else:
             gpr_class.load_model(file_name=f"{conf_path}/gpr_model_det{det}.plk")
 
-        gpr_class.plot_results(t_range=[0.0, 1.0], bsave=False)
+        gpr_class.plot_results(t_range=[0.0, 1.0], bsave=True, file_tag=f"det{det}")
         res = gpr_class(torch.tensor([0.1, 0.3, 0.8]))
         print(res)
 
