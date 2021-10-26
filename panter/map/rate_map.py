@@ -42,14 +42,7 @@ class RateMap(MapPerkeo):
             return True
         else:
             self.maps[0] = pd.DataFrame(
-                columns=[
-                    "time",
-                    "r_0",
-                    "r_0_err",
-                    "r_1",
-                    "r_1_err",
-                    "pmt_rates"
-                ]
+                columns=["time", "r_0", "r_0_err", "r_1", "r_1_err", "pmt_rates"]
             )
             self._calc_fits()
 
@@ -76,7 +69,7 @@ class RateMap(MapPerkeo):
                 "r_0_err": rates[1],
                 "r_1": rates[2],
                 "r_1_err": rates[3],
-                "pmt_rates": pmt_rates
+                "pmt_rates": pmt_rates,
             }
             self.maps[0] = self.maps[0].append(meas_dict, ignore_index=True)
 
@@ -143,7 +136,10 @@ class RateMap(MapPerkeo):
                 #     ".",
                 #     label=f"PMT{8 * i + j}",
                 # )
-            axs.flat[i + 2].set(xlabel="Time [ ]", ylabel=f"SMOOTHED PMT_hist integral / (all_events * time) [ ]")
+            axs.flat[i + 2].set(
+                xlabel="Time [ ]",
+                ylabel=f"SMOOTHED PMT_hist integral / (all_events * time) [ ]",
+            )
             axs.flat[i + 2].legend()
 
         if bsave:
