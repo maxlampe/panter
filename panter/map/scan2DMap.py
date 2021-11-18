@@ -198,7 +198,7 @@ class ScanMapClass:
             else:
                 data[indy][indx] = f"{int(peak_map[i])}"
 
-        fig, ax = plt.subplots(figsize=(8, 8))
+        fig, ax = plt.subplots(figsize=(9, 9))
         if brel_map:
             ims = ax.imshow(data, cmap="plasma", vmin=0.996, vmax=1.026)
         else:
@@ -220,7 +220,20 @@ class ScanMapClass:
 
         for i in range(y.shape[0]):
             for j in range(x.shape[0]):
-                ax.text(j, i, data[i, j], ha="center", va="center", color="black")
+                ax.text(
+                    j,
+                    i,
+                    data[i, j],
+                    ha="center",
+                    va="center",
+                    color="black",
+                    bbox={
+                        "edgecolor": "white",
+                        "facecolor": "white",
+                        "alpha": 0.7,
+                        "pad": 1.5,
+                    },
+                )
 
         symm_loss = self.loss - self.avg_dev
         ax.set_title(
@@ -279,31 +292,32 @@ def main():
 
     smc.calc_peak_positions()
     """"""
-    # smc.calc_peak_positions(
-    #     weights=np.array(
-    #         [
-    #             1.004935,
-    #             0.996130,
-    #             0.953226,
-    #             0.974597,
-    #             1.001476,
-    #             0.991785,
-    #             1.000493,
-    #             0.992223,
-    #             1.0,
-    #             1.0,
-    #             1.0,
-    #             1.0,
-    #             1.0,
-    #             1.0,
-    #             1.0,
-    #             1.0,
-    #         ]
-    #     )
-    # )
+    smc.calc_peak_positions(
+        weights=np.array(
+            [
+                1.008433,
+                0.999707,
+                0.955058,
+                0.98363 ,
+                0.99772 ,
+                0.989287,
+                0.998192,
+                0.987019,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+            ]
+        )
+    )
+    # {'x_opt': array([1.008433, 0.999707, 0.955058, 0.98363 , 0.99772 , 0.989287, 0.998192, 0.987019]), 'y_opt': (6300.757845958976, 6944.021863459121)}
 
     print(smc.calc_loss())
-    smc.plot_scanmap()
+    smc.plot_scanmap(bsavefig=True, filename="MapOpt")
     # smc.plot_scanmap(brel_map=False)
 
 
