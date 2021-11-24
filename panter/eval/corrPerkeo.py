@@ -59,6 +59,10 @@ class CorrPerkeo(CorrBase):
     pmt_sum_selection: list
         List of pmt indices for which pmts should be summed up in spectra creation.
         Requires mode=0, as everything else would make no sense.
+    custom_sum_hist_par: dict
+        Custom histogram parameters for DetSum histograms.
+    custom_pmt_hist_par: dict
+        Custom histogram parameters individual PMT histograms.
 
     Attributes
     ----------
@@ -101,6 +105,8 @@ class CorrPerkeo(CorrBase):
         bgped_arr=None,
         weight_arr=None,
         pmt_sum_selection=None,
+        custom_sum_hist_par=None,
+        custom_pmt_hist_par=None,
     ):
         super().__init__(dataloader=dataloader, bonlynew=bonlynew)
         self._bdetsum_drift = bdetsum_drift
@@ -113,8 +119,15 @@ class CorrPerkeo(CorrBase):
         if self._pmt_sum_selection is not None:
             assert self._mode == 0, "ERROR: Wrong mode for custom pmt sum selection."
 
-        self._histpar_sum = SUM_hist_par
-        self._histpar_pmt = PMT_hist_par
+        if custom_sum_hist_par is None:
+            self._histpar_sum = SUM_hist_par
+        else:
+            self._histpar_sum = custom_sum_hist_par
+        if custom_pmt_hist_par is None:
+            self._histpar_pmt = PMT_hist_par
+        else:
+            self._histpar_pmt = custom_pmt_hist_par
+
         self.corrections = {
             "Pedestal": True,
             "RateDepElec": True,
@@ -382,7 +395,7 @@ class CorrPerkeo(CorrBase):
             src_name = "PerkeoHist"
             if src == 5:
                 src_name = "Beam"
-            if (np.array([0, 1, 2, 3, 4]) == src).sum() < 0:
+            if (np.array([0, 1, 2, 3, 4]) == src).sum() > 0:
                 src_name = f"Src{src}"
 
             if tp == 0:
@@ -393,7 +406,7 @@ class CorrPerkeo(CorrBase):
                 [hist_o, hist_n] = self._corr_nobg(files)
 
             if bwrite:
-                filename = f"{src_name}_{cyc_no}_{corr}.root"
+                filename = f"{src_name}_{cyc_no}_{corr}"
                 if self._mode == 0:
                     hist_n[0].write2root(histname=f"DetSumTot", filename=filename)
                     if not self._bonlynew:
