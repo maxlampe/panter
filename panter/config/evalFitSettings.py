@@ -236,3 +236,9 @@ etof_peaks.initvals = {
 etof_peaks.paramvary = [True] * len(etof_peaks.initvals)
 etof_peaks.fitrange = [-10.0, 10.0]
 etof_peaks.booldict["blimfit"] = True
+
+exp_dec = FitSetting()
+exp_dec.label = "exp_dec"
+exp_dec.fitfunc = eF.exp_dec
+exp_dec.initvals = {"a": 11000.0, "k": 200.0, "x0": 0.0}
+exp_dec.paramvary = [True] * len(exp_dec.initvals)
