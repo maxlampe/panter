@@ -128,6 +128,7 @@ class CorrPerkeo(CorrBase):
         else:
             self._histpar_pmt = custom_pmt_hist_par
 
+        # TODO: Add check for valid corrections when setting them
         self.corrections = {
             "Pedestal": True,
             "RateDepElec": True,
@@ -448,6 +449,7 @@ class CorrPerkeo(CorrBase):
 
             if bconcat:
                 # TODO: Implement concatenation for all modes
+                # TODO: Add error handling
                 if self._mode == 0:
                     if self.hist_concat is None:
                         if hist_n is not None:
