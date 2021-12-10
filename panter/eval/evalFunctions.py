@@ -55,7 +55,7 @@ def fermi_step(x, k, c):
     return fermi
 
 
-def exp_dec(x, a, k, x0 = 0.):
+def exp_dec(x, a, k, x0=0.0):
     """Exponential decay function."""
     x = np.array(x, dtype=float)
     return a * np.exp(-(x - x0) / k)
