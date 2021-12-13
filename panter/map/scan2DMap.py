@@ -56,14 +56,14 @@ class ScanMapClass:
         self._pedestals = []
         for ind, meas in enumerate(self._meas):
             data_sig = RootPerkeo(meas.file_list[0])
-            ped_sid = PedPerkeo(
+            ped_sig = PedPerkeo(
                 dataclass=data_sig,
             ).ret_pedestals()
             data_bg = RootPerkeo(meas.file_list[1])
             ped_bd = PedPerkeo(
                 dataclass=data_bg,
             ).ret_pedestals()
-            self._pedestals.append([ped_sid, ped_bd])
+            self._pedestals.append([ped_sig, ped_bd])
 
     def _calc_single_peak(self, meas, ped=None, brec: bool = True):
         """"""
