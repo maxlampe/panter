@@ -71,7 +71,13 @@ class ScanMapClass:
             self._pedestals.append([ped_sig, ped_bd])
 
     def _calc_single_peak(
-        self, meas, ped=None, brec: bool = True, mu_init_val=None, fit_range=None, bplot_fits: bool = False
+        self,
+        meas,
+        ped=None,
+        brec: bool = True,
+        mu_init_val=None,
+        fit_range=None,
+        bplot_fits: bool = False,
     ):
         """"""
 
@@ -132,6 +138,7 @@ class ScanMapClass:
         weights: np.array = None,
         mu_init_val: float = None,
         fit_range: list = None,
+        bplot_fits: bool = False
     ):
         """Calculate Sn peaks for all positions"""
 
@@ -148,7 +155,11 @@ class ScanMapClass:
         for ind, meas in enumerate(self._meas):
             ped = self._pedestals[ind]
             peak, peak_err = self._calc_single_peak(
-                meas, ped, mu_init_val=mu_init_val, fit_range=fit_range, bplot_fits=True
+                meas,
+                ped,
+                mu_init_val=mu_init_val,
+                fit_range=fit_range,
+                bplot_fits=bplot_fits,
             )
             self._peak_pos_map.append(peak)
             self._peak_pos_err_map.append(peak_err)
