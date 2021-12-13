@@ -27,6 +27,8 @@ class ScanMapClass:
         mid_pos: np.array = np.array([170, 5770]),
         label: str = "unlabelled",
         buse_2Dcorr: bool = False,
+        mu_init_val: float = None,
+        fit_range: list = None,
     ):
         self._scan_pos_arr = scan_pos_arr
         self._event_arr = event_arr
@@ -34,6 +36,8 @@ class ScanMapClass:
         self._mid_pos = mid_pos
         self.label = label
         self._buse_2Dcorr = buse_2Dcorr
+        self._mu_init = mu_init_val
+        self._fit_range = fit_range
 
         self._dataloader = DLPerkeo("")
         self._dataloader.fill(self._event_arr)
@@ -43,6 +47,7 @@ class ScanMapClass:
         self._weights = None
         self._num_pmt = 16
         self._peak_pos_map = None
+        self._peak_pos_err_map = None
         self.avg_dev = None
         self.loss = None
 
@@ -65,9 +70,13 @@ class ScanMapClass:
             ).ret_pedestals()
             self._pedestals.append([ped_sig, ped_bd])
 
-    def _calc_single_peak(self, meas, ped=None, brec: bool = True):
+    def _calc_single_peak(
+        self, meas, ped=None, brec: bool = True, mu_init_val=None, fit_range=None, bplot_fits: bool = False
+    ):
         """"""
 
+        if mu_init_val is None:
+            mu_init_val = self._mu_init
         if ped is None:
             ped = [None, None]
         corr_class = CorrPerkeo(
@@ -86,31 +95,44 @@ class ScanMapClass:
 
         fitclass = DoFit(test.hist)
         fitclass.setup(gaus_gen)
-        fitclass.set_bool("boutput", False)
-        # fitclass.limit_range([8000,12000])
-        fitclass.set_fitparam("mu", 10500.0)
+        fitclass.set_bool("boutput", bplot_fits)
+        if fit_range is not None:
+            fitclass.limit_range(fit_range)
+        else:
+            if self._fit_range is not None:
+                fitclass.limit_range(self._fit_range)
+        fitclass.set_fitparam("mu", mu_init_val)
         fitclass.fit()
 
         try:
             peak = fitclass.ret_results().params["mu"].value
+            peak_err = fitclass.ret_results().params["mu"].stderr
         except AttributeError:
             if brec:
                 print("Trying refit with higher mu val")
-                fitclass.set_fitparam("mu", 11000.0)
+                fitclass.set_fitparam("mu", mu_init_val * 1.05)
                 fitclass.fit()
                 try:
                     peak = fitclass.ret_results().params["mu"].value
+                    peak_err = fitclass.ret_results().params["mu"].stderr
                 except AttributeError:
                     print(meas)
                     print(self._weights)
                     test.plot_hist()
                     peak = None
+                    peak_err = None
             else:
                 peak = None
+                peak_err = None
 
-        return peak
+        return peak, peak_err
 
-    def calc_peak_positions(self, weights: np.array = None):
+    def calc_peak_positions(
+        self,
+        weights: np.array = None,
+        mu_init_val: float = None,
+        fit_range: list = None,
+    ):
         """Calculate Sn peaks for all positions"""
 
         if self._pedestals is None:
@@ -121,13 +143,22 @@ class ScanMapClass:
             self._weights = np.ones(self._num_pmt)
 
         self._peak_pos_map = []
+        self._peak_pos_err_map = []
 
         for ind, meas in enumerate(self._meas):
             ped = self._pedestals[ind]
-            peak = self._calc_single_peak(meas, ped)
+            peak, peak_err = self._calc_single_peak(
+                meas, ped, mu_init_val=mu_init_val, fit_range=fit_range, bplot_fits=True
+            )
             self._peak_pos_map.append(peak)
+            self._peak_pos_err_map.append(peak_err)
 
         self._peak_pos_map = np.asarray(self._peak_pos_map)
+        self._peak_pos_err_map = np.asarray(self._peak_pos_err_map)
+
+    def ret_peak_map(self):
+        """Returns calculated array of peak pos values and theier fit errors."""
+        return self._peak_pos_map, self._peak_pos_err_map
 
     def calc_loss(self, bsymm_loss: bool = True, beta_symm_loss: float = 0.5):
         """Calculate average deviation and loss over map"""
@@ -137,7 +168,7 @@ class ScanMapClass:
         loss = 0.0
         try:
             for peak in self._peak_pos_map:
-                avg_dev += (peak - self._center_peak) ** 2
+                avg_dev += (peak - self._center_peak[0]) ** 2
             avg_dev = avg_dev / self._peak_pos_map.shape[0]
 
             if bsymm_loss:
@@ -193,10 +224,13 @@ class ScanMapClass:
             indx = mappingx[indx]
             indy = self._scan_pos_arr[i][1]
             indy = mappingy[indy]
-            if brel_map:
-                data[indy][indx] = f"{peak_map[i]/peak_map[self._mid_ind]:.4f}"
-            else:
-                data[indy][indx] = f"{int(peak_map[i])}"
+            try:
+                if brel_map:
+                    data[indy][indx] = f"{peak_map[i]/peak_map[self._mid_ind]:.4f}"
+                else:
+                    data[indy][indx] = f"{int(peak_map[i])}"
+            except TypeError:
+                pass
 
         fig, ax = plt.subplots(figsize=(9, 9))
         if brel_map:
@@ -235,10 +269,14 @@ class ScanMapClass:
                     },
                 )
 
-        symm_loss = self.loss - self.avg_dev
-        ax.set_title(
-            f"{det_label} - uniformity term: {self.avg_dev:.0f}, symmetry term: {symm_loss:.0f}"
-        )
+        try:
+            symm_loss = self.loss - self.avg_dev
+            ax.set_title(
+                f"{det_label} - uniformity term: {self.avg_dev:.0f}, symmetry term: {symm_loss:.0f}"
+            )
+        except TypeError:
+            pass
+
         ax.set(xlabel="hor encoder position [ch]", ylabel="vert encoder position [ch]")
         fig.colorbar(ims)
         fig.tight_layout()
@@ -287,7 +325,9 @@ def main():
         event_arr=evs,
         detector=0,
         label=scan_200117.label,
-        buse_2Dcorr=False,
+        buse_2Dcorr=True,
+        # mu_init_val=31000.,
+        # fit_range=[30000., 32000.],
     )
 
     smc.calc_peak_positions()
@@ -317,8 +357,8 @@ def main():
     # {'x_opt': array([1.008433, 0.999707, 0.955058, 0.98363 , 0.99772 , 0.989287, 0.998192, 0.987019]), 'y_opt': (6300.757845958976, 6944.021863459121)}
 
     print(smc.calc_loss())
-    smc.plot_scanmap(bsavefig=True, filename="MapOpt")
-    # smc.plot_scanmap(brel_map=False)
+    smc.plot_scanmap(bsavefig=False, filename="MapOpt")
+    smc.plot_scanmap(brel_map=False)
 
 
 if __name__ == "__main__":
