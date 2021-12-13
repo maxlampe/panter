@@ -331,7 +331,7 @@ def main():
     )
 
     smc.calc_peak_positions()
-    """"""
+    """
     smc.calc_peak_positions(
         weights=np.array(
             [
@@ -354,6 +354,7 @@ def main():
             ]
         )
     )
+    """
     # {'x_opt': array([1.008433, 0.999707, 0.955058, 0.98363 , 0.99772 , 0.989287, 0.998192, 0.987019]), 'y_opt': (6300.757845958976, 6944.021863459121)}
 
     print(smc.calc_loss())
