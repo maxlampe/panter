@@ -310,7 +310,11 @@ class ScanMapClass:
             dev += (all_pos_arr.T[dim] - target_pos[dim]) ** 2
         dev = np.sqrt(dev)
 
-        assert dev.min() < 50.0, "ERROR: Could not find (vague) target position."
+        if dev.min() < 50.0:
+            print(
+                f"Warning: Could not find target position {target_pos}."
+                + f"Min. distance found is {dev.min()}"
+            )
         mid_ind = np.argmin(dev)
 
         return mid_ind
