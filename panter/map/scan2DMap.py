@@ -82,7 +82,10 @@ class ScanMapClass:
         """"""
 
         if mu_init_val is None:
-            mu_init_val = self._mu_init
+            if self._mu_init is not None:
+                mu_init_val = self._mu_init
+            else:
+                mu_init_val = 10500.0
         if ped is None:
             ped = [None, None]
         corr_class = CorrPerkeo(
@@ -138,7 +141,7 @@ class ScanMapClass:
         weights: np.array = None,
         mu_init_val: float = None,
         fit_range: list = None,
-        bplot_fits: bool = False
+        bplot_fits: bool = False,
     ):
         """Calculate Sn peaks for all positions"""
 
@@ -374,7 +377,7 @@ def main():
 
     print(smc.calc_loss())
     smc.plot_scanmap(bsavefig=False, filename="MapOpt")
-    smc.plot_scanmap(brel_map=False)
+    smc.plot_scanmap(brel_map=True)
 
 
 if __name__ == "__main__":
