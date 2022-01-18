@@ -313,7 +313,7 @@ class ScanMapClass:
             dev += (all_pos_arr.T[dim] - target_pos[dim]) ** 2
         dev = np.sqrt(dev)
 
-        if dev.min() < 50.0:
+        if dev.min() > 50.0:
             print(
                 f"Warning: Could not find target position {target_pos}."
                 + f"Min. distance found is {dev.min()}"
