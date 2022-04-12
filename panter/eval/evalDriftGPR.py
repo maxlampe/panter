@@ -34,6 +34,7 @@ class GPRDriftData:
         self.x, self.y0, self.y1 = self._preprocess_data()
 
     def __call__(self, *args, **kwargs):
+        # return {"time": self.x[1:], "det0": self.y0[1:], "det1": self.y1[1:]}
         return {"time": self.x, "det0": self.y0, "det1": self.y1}
 
     def _preprocess_data(self):
