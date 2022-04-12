@@ -175,7 +175,7 @@ class GPRDrift:
         """"""
 
         pyro.clear_param_store()
-        kernel = gp.kernels.Matern52(
+        kernel = gp.kernels.Matern32(
             input_dim=1,
             variance=torch.tensor(1.0),
             lengthscale=torch.tensor(0.01),
@@ -185,6 +185,7 @@ class GPRDrift:
             y=y_train,
             kernel=kernel,
             noise=torch.tensor(1.0),
+            mean_function=lambda x: torch.tensor(1.0),
         )
 
         gpr.kernel.lengthscale = pyro.nn.PyroSample(dist.LogNormal(0.0, 1.0))
