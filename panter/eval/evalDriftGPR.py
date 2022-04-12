@@ -34,6 +34,7 @@ class GPRDriftData:
         self.x, self.y0, self.y1 = self._preprocess_data()
 
     def __call__(self, *args, **kwargs):
+        # return {"time": self.x[1:], "det0": self.y0[1:], "det1": self.y1[1:]}
         return {"time": self.x, "det0": self.y0, "det1": self.y1}
 
     def _preprocess_data(self):
@@ -112,7 +113,7 @@ class GPRDrift:
         x_data = self.data["time"]
         y_data = self.data[f"det{self._det}"]
         x_test = torch.linspace(
-            x_data.numpy().min(), x_data.numpy().max(), n_test, dtype=torch.float64
+            x_data.numpy().min() - 0.03, x_data.numpy().max() + 0.03, n_test, dtype=torch.float64
         )
         x_plot = self.dataclass.data_to_timestamp(x_test.numpy())
         mean, sd = self(x_test)
@@ -141,12 +142,13 @@ class GPRDrift:
         if t_range is not None:
             t_range = self.dataclass.data_to_timestamp(t_range)
             t_range = [datetime.datetime.fromtimestamp(t) for t in t_range]
-            ax.set_xlim(t_range)
+            # ax.set_xlim(t_range)
         if y_lim is not None:
             ax.set_ylim(y_lim)
 
-        ax.set_title("Drift correction", fontsize=18)
-        ax.set(xlabel="Time [D - M ]", ylabel="Drift factor [ ]")
+        # ax.set_title("Drift correction", fontsize=18)
+        # ax.set(xlabel="Time [M - D / T]", ylabel="Drift factor [a.u.]")
+        ax.set(xlabel="Time t [M - D / T]", ylabel="Correction c_T [a.u.]")
         ax.legend()
         plt.tight_layout()
         if bsave:
@@ -175,7 +177,7 @@ class GPRDrift:
         """"""
 
         pyro.clear_param_store()
-        kernel = gp.kernels.Matern52(
+        kernel = gp.kernels.Matern32(
             input_dim=1,
             variance=torch.tensor(1.0),
             lengthscale=torch.tensor(0.01),
@@ -185,6 +187,7 @@ class GPRDrift:
             y=y_train,
             kernel=kernel,
             noise=torch.tensor(1.0),
+            mean_function=lambda x: torch.tensor(1.0),
         )
 
         gpr.kernel.lengthscale = pyro.nn.PyroSample(dist.LogNormal(0.0, 1.0))

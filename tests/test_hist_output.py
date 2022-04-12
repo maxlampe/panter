@@ -1,20 +1,20 @@
-"""Unit test for histogram writing to root files with errors. Based on histogram.py"""
+"""Unit test for histogram writing to root files with errors. Based on test_histogram.py"""
 
 import subprocess
-
+import os
 import numpy as np
 import uproot
 
 from panter.data.dataHistPerkeo import HistPerkeo
-from tests import tests_path
 from tests.unittestroot import UnitTestRoot
+tests_path = os.path.dirname(os.path.realpath(__file__))
 
 
 class HistTestOut(UnitTestRoot):
     """Unit test class for histogram writing test with errors.
 
-    Inherited from base class UnitTestRoot and same as histogram.py with output.
-    Uses same root macro as histogram.py
+    Inherited from base class UnitTestRoot and same as test_histogram.py with output.
+    Uses same root macro as test_histogram.py
 
     Parameters
     ----------
@@ -63,11 +63,14 @@ class HistTestOut(UnitTestRoot):
         return np.asarray(result)
 
 
-def do_histtestout() -> bool:
+def test_histtestout() -> bool:
     """Run this unit test with hard coded, default parameters."""
 
     file = "sample.txt"
     par = [5, 0, 15]
 
     test = HistTestOut(txtfile=file, params=par)
-    return test.test(False)
+    res = test.test(False)
+    assert res
+
+    return res

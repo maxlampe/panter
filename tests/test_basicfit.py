@@ -60,11 +60,14 @@ class HistTestFit(UnitTestRoot):
         return np.asarray(panter_fitres)
 
 
-def do_histtestfit() -> bool:
+def test_histtestfit() -> bool:
     """Run this unit test with hard coded, default parameters."""
 
     file = "sample.txt"
     par = [5, 0, 15, 0, 15]
 
     test = HistTestFit(txtfile=file, params=par)
-    return test.test(brel_dev=False, bprint=True)
+    res = test.test(brel_dev=False, bprint=True)
+    assert res
+
+    return res

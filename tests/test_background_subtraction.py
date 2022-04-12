@@ -101,7 +101,7 @@ class BackgroundFitTest(UnitTestRoot):
         return no_passed == len(self.batch)
 
 
-def do_backgroundfittest() -> bool:
+def test_backgroundfittest() -> bool:
     """Run this unit test with hard coded, default parameters."""
 
     cnf = configparser.ConfigParser()
@@ -116,8 +116,10 @@ def do_backgroundfittest() -> bool:
     par = [histsum_par[0], histsum_par[1], histsum_par[2], 48000, 51500]
 
     test = BackgroundFitTest(dirname=dirname, params=par)
+    res = test.test()
+    assert res
 
-    return test.test()
+    return res
 
 
 # do_backgroundfittest()

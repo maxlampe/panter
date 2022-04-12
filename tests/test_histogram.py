@@ -43,11 +43,16 @@ class HistTestBasic(UnitTestRoot):
         return hpanter1.hist.to_numpy().flatten()
 
 
-def do_histtestbasic() -> bool:
+def test_histtestbasic() -> bool:
     """Run this unit test with hard coded, default parameters."""
 
     file = "sample.txt"
     par = [5, 0, 15]
 
     test = HistTestBasic(txtfile=file, params=par)
-    return test.test(False)
+    res = test.test(False)
+    assert res
+
+    return res
+
+

@@ -21,9 +21,9 @@ int background_subtraction(const char* Sfile, const char* Outfile, int hpar0 = 1
     const char* detsumS = "(PMT[0][1] - PMT[0][0] + PMT[1][1] - PMT[1][0] + PMT[2][1] - PMT[2][0] + PMT[3][1] - PMT[3][0] + PMT[4][1] - PMT[4][0] + PMT[5][1] - PMT[5][0] + PMT[6][1] - PMT[6][0] + PMT[7][1] - PMT[7][0])>>histSig";
     const char* detsumB = "(PMT[0][1] - PMT[0][0] + PMT[1][1] - PMT[1][0] + PMT[2][1] - PMT[2][0] + PMT[3][1] - PMT[3][0] + PMT[4][1] - PMT[4][0] + PMT[5][1] - PMT[5][0] + PMT[6][1] - PMT[6][0] + PMT[7][1] - PMT[7][0])>>histBg";
 
-    dataTree->Draw(detsumS, "DeltaTriggerTime >= 380e3 && DeltaTriggerTime < 650e3");
-    dataTree->Draw(detsumB, "DeltaTriggerTime >= 1150e3 && DeltaTriggerTime < 1200e3");
-    histBg->Scale(-5.4);
+    dataTree->Draw(detsumS, "DeltaTriggerTime >= 380e3 && DeltaTriggerTime < 600e3");
+    dataTree->Draw(detsumB, "DeltaTriggerTime >= 0 && DeltaTriggerTime < 70e3");
+    histBg->Scale(-(600. - 380.)/ 70.);
     histSig->Add(histBg);
 
     //Detector 1
@@ -36,9 +36,9 @@ int background_subtraction(const char* Sfile, const char* Outfile, int hpar0 = 1
     const char* detsumS1 = "(PMT[8][1] - PMT[8][0] + PMT[9][1] - PMT[9][0] + PMT[10][1] - PMT[10][0] + PMT[11][1] - PMT[11][0] + PMT[12][1] - PMT[12][0] + PMT[13][1] - PMT[13][0] + PMT[14][1] - PMT[14][0] + PMT[15][1] - PMT[15][0])>>histSig1";
     const char* detsumB1 = "(PMT[8][1] - PMT[8][0] + PMT[9][1] - PMT[9][0] + PMT[10][1] - PMT[10][0] + PMT[11][1] - PMT[11][0] + PMT[12][1] - PMT[12][0] + PMT[13][1] - PMT[13][0] + PMT[14][1] - PMT[14][0] + PMT[15][1] - PMT[15][0])>>histBg1";
 
-    dataTree->Draw(detsumS1, "DeltaTriggerTime >= 380e3 && DeltaTriggerTime < 650e3");
-    dataTree->Draw(detsumB1, "DeltaTriggerTime >= 1150e3 && DeltaTriggerTime < 1200e3");
-    histBg1->Scale(-5.4);
+    dataTree->Draw(detsumS1, "DeltaTriggerTime >= 380e3 && DeltaTriggerTime < 600e3");
+    dataTree->Draw(detsumB1, "DeltaTriggerTime >= 0 && DeltaTriggerTime < 70e3");
+    histBg1->Scale(-(600. - 380.)/ 70.);
     histSig1->Add(histBg1);
 
     // Fitting

@@ -12,6 +12,7 @@ from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
 from panter.eval.evalFit import DoFit
 from panter.eval.pedPerkeo import PedPerkeo
+from panter.config import conf_path
 
 output_path = os.getcwd()
 
@@ -27,6 +28,7 @@ class ScanMapClass:
         mid_pos: np.array = np.array([170, 5770]),
         label: str = "unlabelled",
         buse_2Dcorr: bool = False,
+        buse_sim_loss: bool = True,
         mu_init_val: float = None,
         fit_range: list = None,
     ):
@@ -36,6 +38,7 @@ class ScanMapClass:
         self._mid_pos = mid_pos
         self.label = label
         self._buse_2Dcorr = buse_2Dcorr
+        self._buse_sim_loss = buse_sim_loss
         self._mu_init = mu_init_val
         self._fit_range = fit_range
 
@@ -52,8 +55,14 @@ class ScanMapClass:
         self.loss = None
 
         # Calculate middle peak positions for weights=np.ones(16)
+        # ToDo: do not use bcorr for initial peak for consistency? probs no
         self._mid_ind = self._find_closest_ind(self._scan_pos_arr, self._mid_pos)
         self._center_peak = self._calc_single_peak(self._meas[self._mid_ind])
+
+        if self._buse_sim_loss:
+            sim_results = np.loadtxt(conf_path + "/scan_sim_target_sn.txt")
+            self._sim_pos = sim_results[:, :2]
+            self._sim_targets = sim_results[:, 2]
 
     def _calc_pedestals(self):
         """Calculate pedestals for all files to be reused"""
@@ -82,7 +91,10 @@ class ScanMapClass:
         """"""
 
         if mu_init_val is None:
-            mu_init_val = self._mu_init
+            if self._mu_init is not None:
+                mu_init_val = self._mu_init
+            else:
+                mu_init_val = 10500.0
         if ped is None:
             ped = [None, None]
         corr_class = CorrPerkeo(
@@ -138,7 +150,7 @@ class ScanMapClass:
         weights: np.array = None,
         mu_init_val: float = None,
         fit_range: list = None,
-        bplot_fits: bool = False
+        bplot_fits: bool = False,
     ):
         """Calculate Sn peaks for all positions"""
 
@@ -172,6 +184,23 @@ class ScanMapClass:
         return self._peak_pos_map, self._peak_pos_err_map
 
     def calc_loss(self, bsymm_loss: bool = True, beta_symm_loss: float = 0.5):
+        if self._buse_sim_loss:
+            loss = self.calc_sim_loss()
+        else:
+            loss = self.calc_symm_loss(bsymm_loss, beta_symm_loss)
+
+        return loss
+
+    def calc_sim_loss(self):
+        """Calculate MSE deviation from simulation results."""
+
+        scaled_peaks = self._sim_targets * self._center_peak[0]
+        loss = ((scaled_peaks - self._peak_pos_map) ** 2).sum()
+        loss = loss / self._peak_pos_map.shape[0]
+
+        return loss, loss
+
+    def calc_symm_loss(self, bsymm_loss: bool = True, beta_symm_loss: float = 0.5):
         """Calculate average deviation and loss over map"""
 
         assert self._peak_pos_map is not None, "ERROR: Map is empty."
@@ -237,7 +266,7 @@ class ScanMapClass:
             indy = mappingy[indy]
             try:
                 if brel_map:
-                    data[indy][indx] = f"{peak_map[i]/peak_map[self._mid_ind]:.4f}"
+                    data[indy][indx] = f"{peak_map[i]/peak_map[self._mid_ind]:.3f}"
                 else:
                     data[indy][indx] = f"{int(peak_map[i])}"
             except TypeError:
@@ -282,13 +311,13 @@ class ScanMapClass:
 
         try:
             symm_loss = self.loss - self.avg_dev
-            ax.set_title(
-                f"{det_label} - uniformity term: {self.avg_dev:.0f}, symmetry term: {symm_loss:.0f}"
-            )
+            # ax.set_title(
+            #     f"{det_label} - uniformity term: {self.avg_dev:.0f}, symmetry term: {symm_loss:.0f}"
+            # )
         except TypeError:
             pass
 
-        ax.set(xlabel="hor encoder position [ch]", ylabel="vert encoder position [ch]")
+        ax.set(xlabel="horizontal position [a.u.]", ylabel="vertical position [a.u.]")
         fig.colorbar(ims)
         fig.tight_layout()
 
@@ -310,7 +339,7 @@ class ScanMapClass:
             dev += (all_pos_arr.T[dim] - target_pos[dim]) ** 2
         dev = np.sqrt(dev)
 
-        if dev.min() < 50.0:
+        if dev.min() > 50.0:
             print(
                 f"Warning: Could not find target position {target_pos}."
                 + f"Min. distance found is {dev.min()}"
@@ -340,7 +369,8 @@ def main():
         event_arr=evs,
         detector=0,
         label=scan_200117.label,
-        buse_2Dcorr=True,
+        buse_2Dcorr=False,
+        buse_sim_loss=False,
         # mu_init_val=31000.,
         # fit_range=[30000., 32000.],
     )
@@ -353,8 +383,8 @@ def main():
                 1.008433,
                 0.999707,
                 0.955058,
-                0.98363,
-                0.99772,
+                0.98363 ,
+                0.99772 ,
                 0.989287,
                 0.998192,
                 0.987019,
@@ -370,11 +400,12 @@ def main():
         )
     )
     """
+
     # {'x_opt': array([1.008433, 0.999707, 0.955058, 0.98363 , 0.99772 , 0.989287, 0.998192, 0.987019]), 'y_opt': (6300.757845958976, 6944.021863459121)}
 
     print(smc.calc_loss())
-    smc.plot_scanmap(bsavefig=False, filename="MapOpt")
-    smc.plot_scanmap(brel_map=False)
+    smc.plot_scanmap(bsavefig=True, filename="MapUnOpt")
+    smc.plot_scanmap(brel_map=True)
 
 
 if __name__ == "__main__":
