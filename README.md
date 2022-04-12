@@ -81,7 +81,11 @@ and should also be placed into the config directory, should you not generate the
 
 ### Unit tests
 
-All unit tests can be found in the _tests_ directory. Run _alltests.py_ for all of them.
+All unit tests can be found in the _tests_ directory and executed with _pytest_.
+```
+cd tests/
+python3 -m pytest .
+```
 A working ROOT installation is required to run the unit tests, as the panter and root outputs
 are compared.
 

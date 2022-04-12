@@ -60,7 +60,7 @@ class HistTestFilter(UnitTestRoot):
         return hpanter1.hist.to_numpy().flatten()
 
 
-def do_histtestfilter() -> bool:
+def test_histtestfilter() -> bool:
     """Run this unit test with hard coded, default parameters."""
 
     dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
@@ -82,5 +82,7 @@ def do_histtestfilter() -> bool:
             f"FAILURE: Unit test not passed. Result with and without filter: "
             + f"{restult_wo_filter} / {restult_wi_filter}"
         )
+
+    assert passed
 
     return passed
