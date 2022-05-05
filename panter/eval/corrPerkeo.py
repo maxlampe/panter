@@ -184,9 +184,9 @@ class CorrPerkeo(CorrBase):
             diff_time = np.abs(time_stamps - data.filedate)
             nearest_2d = diff_time.idxmin()
 
-            # if diff_time[nearest_2d] < 7200.0:
-            #     print("ERROR: Last meas more than 2h away")
-            #     binvalid = True
+            if diff_time[nearest_2d] < 7200.0:
+                print("ERROR: Last meas more than 2h away")
+                binvalid = True
 
             scan2d_factors = self._scan2d_map["pmt_fac"][nearest_2d]
 
