@@ -12,8 +12,8 @@ def gaussian(x, mu, sig, norm: float = 1.0):
     x = np.array(x, dtype=float)
     return (
         norm
-        * (1 / (np.sqrt(2 * np.pi * sig ** 2)))
-        * np.exp(-((x - mu) ** 2.0) / (2 * sig ** 2.0))
+        * (1 / (np.sqrt(2 * np.pi * sig**2)))
+        * np.exp(-((x - mu) ** 2.0) / (2 * sig**2.0))
     )
 
 
@@ -38,13 +38,13 @@ def f_p1(x, c0, c1):
 def f_p2(x, c0, c1, c2):
     """Polynomial of 2nd order"""
     x = np.array(x, dtype=float)
-    return f_p1(x, c0, c1) + c2 * x ** 2
+    return f_p1(x, c0, c1) + c2 * x**2
 
 
 def f_p3(x, c0, c1, c2, c3):
     """Polynomial of 3rd order"""
     x = np.array(x, dtype=float)
-    return f_p2(x, c0, c1, c2) + c3 * x ** 3
+    return f_p2(x, c0, c1, c2) + c3 * x**3
 
 
 def fermi_step(x, k, c):
@@ -93,7 +93,7 @@ def appr_erfc(x):
 
     a_const = 0.140012
     exp_comp = np.exp(
-        -(x ** 2) * (4.0 / np.pi + a_const * x ** 2) / (1 + a_const * x ** 2)
+        -(x**2) * (4.0 / np.pi + a_const * x**2) / (1 + a_const * x**2)
     )
 
     return np.sign(x) * np.sqrt(1 - exp_comp)
@@ -192,8 +192,8 @@ def charge_spec(
     sum = 0.0
     for k in range(k_max):
         mu_k = k * mu + q0
-        sig_k = np.sqrt(k * sig ** 2 + sig0 ** 2)
-        pois_term = lam ** k * np.exp(-lam) / factorial(k)
+        sig_k = np.sqrt(k * sig**2 + sig0**2)
+        pois_term = lam**k * np.exp(-lam) / factorial(k)
         gauss_term = (1 - w) * gaussian(x, mu=mu_k, sig=sig_k)
         emg_term = w * exmodgaus(
             x, h=(np.sqrt(2.0 / np.pi) / sig_k), mu=mu_k, sig=sig_k, tau=c0

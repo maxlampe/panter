@@ -76,7 +76,7 @@ class DLPerkeo:
         return length
 
     def add_meas(self, event: MeasPerkeo):
-        """"Add measurement manually to the list with vague validity check."""
+        """Add measurement manually to the list with vague validity check."""
 
         self._measurements.append(event)
 

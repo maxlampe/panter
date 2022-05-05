@@ -179,7 +179,7 @@ class DriftMapPerkeo(MapPerkeo):
         peak_df = peak_df[rchi2_filter]
         err_df = err_df[rchi2_filter]
 
-        self.cache = (peak_df / err_df ** 2).sum() / (1.0 / err_df ** 2).sum()
+        self.cache = (peak_df / err_df**2).sum() / (1.0 / err_df**2).sum()
 
         assert (
             self._write_map2file(map_ind=1, fname=self._outfile[0]) == 0
