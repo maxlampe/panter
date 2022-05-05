@@ -449,7 +449,6 @@ class CorrPerkeo(CorrBase):
 
             if bconcat:
                 # TODO: Implement concatenation for all modes
-                # TODO: Add error handling
                 if self._mode == 0:
                     if self.hist_concat is None:
                         if hist_n is not None:
@@ -457,6 +456,10 @@ class CorrPerkeo(CorrBase):
                     if self.hist_concat is not None:
                         if hist_n is not None:
                             self.hist_concat.addhist(hist_n[0])
+                else:
+                    raise NotImplementedError(
+                        f"Concatenation not implemented for mode {self._mode}"
+                    )
 
             if bstore:
                 self.histograms.append(np.asarray([hist_o, hist_n]))
