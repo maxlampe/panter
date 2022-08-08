@@ -174,6 +174,30 @@ class HistPerkeo:
         self.hist = newhist
         self._calc_stats()
 
+    def multbyhist(self, hist_p: HistPerkeo):
+        """Multiply by another histogram."""
+
+        assert self.parameters == hist_p.parameters, "ERROR: Binning does not match."
+
+        # filt = hist_p.hist["y"] != 0.0
+        # hist_p.hist = hist_p.hist[filt]
+        # self.hist = self.hist[filt]
+
+        newhist = pd.DataFrame(
+            {
+                "x": self.hist["x"],
+                "y": (self.hist["y"] * hist_p.hist["y"]),
+                "err": np.sqrt(
+                    (self.hist["err"] * hist_p.hist["y"]) ** 2
+                    + (self.hist["y"] * hist_p.hist["err"]) ** 2
+                ),
+            }
+        )
+
+        # Changes input ret_hist like in Root
+        self.hist = newhist
+        self._calc_stats()
+
     def scal(self, fac: float):
         """Scale histogram by a factor."""
 
