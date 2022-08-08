@@ -396,7 +396,7 @@ class DoFit:
         if self._booldict["bsave_fit"]:
             if self.plot_file is None:
                 self.plot_file = "Fit_res"
-            plt.savefig(output_path + "/" + self.plot_file + ".png", dpi=300)
+            plt.savefig(output_path + "/" + self.plot_file + ".pdf", dpi=300)
 
         if self._booldict["boutput"]:
             plt.show()
