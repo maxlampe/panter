@@ -4,6 +4,7 @@ import configparser
 import copy
 
 import numpy as np
+import torch
 
 from panter.base.corrBase import CorrBase
 from panter.config import conf_path
@@ -56,6 +57,8 @@ class CorrPerkeo(CorrBase):
         Array of pedestal values to be used for bg data (works only for MeasP type 1).
     weight_arr: np.array
         Array of individual PMT weights to multiply each event for each PMT.
+    shift_arr: np.array
+        Array of individual PMT shift subtracted AFTER all corrections.
     pmt_sum_selection: list
         List of pmt indices for which pmts should be summed up in spectra creation.
         Requires mode=0, as everything else would make no sense.
@@ -104,6 +107,7 @@ class CorrPerkeo(CorrBase):
         ped_arr=None,
         bgped_arr=None,
         weight_arr=None,
+        shift_arr=None,
         pmt_sum_selection=None,
         custom_sum_hist_par=None,
         custom_pmt_hist_par=None,
@@ -113,6 +117,7 @@ class CorrPerkeo(CorrBase):
         self._ped_arr = ped_arr
         self._bgped_arr = bgped_arr
         self._weight_arr = weight_arr
+        self._shift_arr = shift_arr
         self._mode = mode
         self._pmt_sum_selection = pmt_sum_selection
 
@@ -186,7 +191,7 @@ class CorrPerkeo(CorrBase):
 
             if diff_time[nearest_2d] < 7200.0:
                 print("ERROR: Last meas more than 2h away")
-                binvalid = True
+                binvalid = False
 
             scan2d_factors = self._scan2d_map["pmt_fac"][nearest_2d]
 
@@ -195,9 +200,8 @@ class CorrPerkeo(CorrBase):
                 self._bdetsum_drift
             ), "Error: Only drift det sum correction implemented at the moment."
 
-            # FIXME: do not do this here for each correction
+            # FIXME
             from panter.eval.evalDriftGPR import GPRDrift
-            import torch
 
             for det in [0, 1]:
                 gpr_class = GPRDrift(detector=det)
@@ -230,6 +234,9 @@ class CorrPerkeo(CorrBase):
         if self._weight_arr is None:
             self._weight_arr = np.ones(data.no_pmts)
 
+        if self._shift_arr is None:
+            self._shift_arr = np.zeros(data.no_pmts)
+
         for i in range(0, data.no_pmts):
             if pedestals[i] is not None:
                 ampl_corr[i] = data.pmt_data[i] - pedestals[i][0]
@@ -237,7 +244,7 @@ class CorrPerkeo(CorrBase):
                 ampl_corr[i] = None
 
         if self.corrections["RateDepElec"]:
-            # FIXME: Think about this [1:]!
+            # FIXME: Think about this [1:]! Should be ok though.
             dptt = data.dptt[1:]
             for i in range(0, data.no_pmts):
                 ampl_0 = ampl_corr[i][1:]
@@ -252,7 +259,7 @@ class CorrPerkeo(CorrBase):
                 * drift_factors[i]
                 * scan2d_factors[i]
                 * self._weight_arr[i]
-            )
+            ) - self._shift_arr[i]
 
         ampl_corr = np.asarray(ampl_corr)
         if self._bonlynew:
@@ -382,7 +389,7 @@ class CorrPerkeo(CorrBase):
         try:
             self._dataloader.shape
         except AttributeError:
-            self._dataloader = [self._dataloader]
+            self._dataloader = np.array([self._dataloader])
 
         for meas in self._dataloader:
             tp = meas.tp
@@ -473,7 +480,7 @@ def main():
     data_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
     dataloader = DLPerkeo(data_dir)
     dataloader.auto()
-    filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])[-120:-80]
+    filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])[-119]  # [-120:-80]
 
     corr_class = CorrPerkeo(filt_meas, mode=0)
     corr_class.set_all_corr(bactive=False)
