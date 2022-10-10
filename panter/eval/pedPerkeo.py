@@ -163,6 +163,9 @@ class PedPerkeo:
                                 mu_start + 7.0 * sig_start,
                             ]
                             fitclass.plotrange["x"] = plot_xr
+                            fitclass.plot_labels = ["", "Energy [ch]", "Counts [ ]"]
+                            # fitclass.plot_file = f"Ped{ind_hist}"
+                            # fitclass.set_bool("bsave_fit", True)
                         fitclass.fit()
 
                 if fitclass.ret_results() is not None:
