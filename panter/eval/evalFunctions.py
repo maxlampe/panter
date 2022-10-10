@@ -223,7 +223,11 @@ def calc_acorr_ratedep(
 
 def trigger_func(x: float, a: float, p: float):
     """Effective trigger model function according to [Mun06]"""
-    return 1.0 - (1.0 - p) ** (a * x) * (1.0 + (a * p * x) / (1.0 - p))
+
+    val = 1.0 - (1.0 - p) ** (a * x) * (1.0 + (a * p * x) / (1.0 - p))
+    val = np.array(val)
+    val[val < 0.] = 0.
+    return val
 
 
 def tof_peaks(
