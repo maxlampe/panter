@@ -129,6 +129,7 @@ class RootPerkeo:
 
         self.pmt_data = None
         self.dptt = None
+        self.coindiff = None
         self.val_rtime = None
         self.chop_freq = None
         self.dt_fac = None
@@ -252,6 +253,10 @@ class RootPerkeo:
                     if self.bverbose:
                         print("Doing DeltaPrevTriggerTime filter manually.")
                     arr = self.dptt
+                elif filt.fkey == "CoinTimeDiff" and not self._bDPTT:
+                    if self.bverbose:
+                        print("Doing CoinTimeDiff filter manually.")
+                    arr = self.coindiff
                 else:
                     arr = self.file["dataTree"].array(filt.fkey)
 
@@ -441,6 +446,18 @@ class RootPerkeo:
 
         return 0
 
+    def gen_coindiff(self):
+        """Filter dptt data according to calculated filters."""
+
+        coindiff_data = self.coindiff
+        coindiff_filt = []
+        for i, val in enumerate(coindiff_data):
+            if self._ev_valid[i] == 1:
+                coindiff_filt.append(val)
+        self.coindiff = np.array(coindiff_filt)
+
+        return 0
+
     def ret_array_by_key(self, key: str) -> np.array:
         """Generate array from data according to calc filter arrays by keyword."""
 
@@ -508,6 +525,11 @@ class RootPerkeo:
             if self.bverbose:
                 print("DPTT doesnt exist. Is calculated.")
             self.calc_dptt()
+
+        ct0 = np.array(self.file["dataTree"].array("CoinTime").T[0], dtype=float)
+        ct1 = np.array(self.file["dataTree"].array("CoinTime").T[1], dtype=float)
+        self.coindiff = np.abs(ct0 - ct1)
+
         if set_mode == 0:
             self.set_filtdef()
         else:
@@ -517,6 +539,7 @@ class RootPerkeo:
         self.calc_times()
         self.gen_pmtdata()
         self.gen_dptt()
+        self.gen_coindiff()
         self.calc_stats()
 
     def ret_actpmt(self) -> list:
