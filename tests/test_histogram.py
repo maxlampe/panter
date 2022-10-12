@@ -54,5 +54,3 @@ def test_histtestbasic() -> bool:
     assert res
 
     return res
-
-

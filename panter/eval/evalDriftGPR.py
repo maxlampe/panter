@@ -113,7 +113,10 @@ class GPRDrift:
         x_data = self.data["time"]
         y_data = self.data[f"det{self._det}"]
         x_test = torch.linspace(
-            x_data.numpy().min() - 0.03, x_data.numpy().max() + 0.03, n_test, dtype=torch.float64
+            x_data.numpy().min() - 0.03,
+            x_data.numpy().max() + 0.03,
+            n_test,
+            dtype=torch.float64,
         )
         x_plot = self.dataclass.data_to_timestamp(x_test.numpy())
         mean, sd = self(x_test)

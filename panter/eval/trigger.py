@@ -1,7 +1,10 @@
 """Trigger analysis"""
 
+import pandas as pd
+import numpy as np
 from panter.config.evalFitSettings import trigger_func
 from panter.data.dataMeasPerkeo import MeasPerkeo
+from panter.data.dataHistPerkeo import HistPerkeo
 from panter.data.dataRootPerkeo import RootPerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.corrPerkeo import CorrPerkeo
@@ -10,8 +13,43 @@ from panter.eval.evalFit import DoFit
 dir_path = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
 dataloader = DLPerkeo(dir_path)
 dataloader.auto()
-filt_meas = dataloader.ret_filt_meas(["tp", "src"], [0, 5])
+filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [0, 5, 70084])
 hist_trigger = [None] * 2
+
+
+def calc_trigger(P01: HistPerkeo, P1: HistPerkeo):
+    """Calculate trigger function from separate HistPerkeo."""
+
+    assert P01.parameters == P1.parameters, "ERROR: Binning does not match."
+
+    filt = P01.hist["y"] != 0.0
+    P01.hist = P01.hist[filt]
+    P1.hist = P1.hist[filt]
+    filt = P1.hist["y"] != 0.0
+    P01.hist = P01.hist[filt]
+    P1.hist = P1.hist[filt]
+
+    y01 = P01.hist["y"]
+    y1 = P1.hist["y"]
+    y01_err = P01.hist["err"]
+    y1_err = P1.hist["err"]
+
+    newhist = pd.DataFrame(
+        {
+            "x": P01.hist["x"],
+            "y": (y01 / (y01 + y1)),
+            "err": np.sqrt(
+                (y01_err * y1 / (y01 + y1) ** 2) ** 2
+                + (y1_err * y01 / (y01 + y1) ** 2) ** 2
+            ),
+        }
+    )
+
+    trigger_hist = HistPerkeo(np.array([]))
+    trigger_hist.hist = newhist
+    trigger_hist.plot_hist()
+
+    return trigger_hist
 
 
 def trigger_raw(meas: MeasPerkeo, det_main: int):
@@ -68,7 +106,7 @@ def trigger_raw(meas: MeasPerkeo, det_main: int):
     data.gen_hist([])
 
     hist_b = data.hist_sums
-    hist_onlybac[det_main].addhist(hist_b[det_main])
+    # hist_onlybac[det_main].addhist(hist_b[det_main])
 
     return [hist_b, hist_onlybac]
 
@@ -77,10 +115,13 @@ def trigger_corr(meas: MeasPerkeo, det_main: int):
     """Calculate trigger function for one detector from corrected data."""
 
     det_bac = 1 - det_main
+    # Set to data type without background subtraction
+    # meas.tp = 2
     corr_class = CorrPerkeo(dataloader=meas, mode=1)
     corr_class.set_all_corr(bactive=False)
     corr_class.corrections["Pedestal"] = True
-    corr_class.corrections["RateDepElec"] = True
+    corr_class.corrections["DeadTime"] = True
+    corr_class.corrections["RateDepElec"] = False
     corr_class.addition_filters.append(
         {
             "tree": "data",
@@ -104,7 +145,7 @@ def trigger_corr(meas: MeasPerkeo, det_main: int):
         }
     )
     corr_class.corr(bstore=True, bwrite=False)
-    hist_onlybac = corr_class.histograms[0][0]
+    hist_onlybac = corr_class.histograms[0][1]
 
     corr_class.clear()
 
@@ -141,8 +182,8 @@ def trigger_corr(meas: MeasPerkeo, det_main: int):
     )
     corr_class.corr(bstore=True, bwrite=False)
 
-    hist_b = corr_class.histograms[0][0]
-    hist_onlybac[det_main].addhist(hist_b[det_main])
+    hist_b = corr_class.histograms[0][1]
+    # hist_onlybac[det_main].addhist(hist_b[det_main])
 
     return [hist_b, hist_onlybac]
 
@@ -152,10 +193,11 @@ for primary_detector in [0, 1]:
     master_onlysec = None
     det_prim = primary_detector
     det_sec = 1 - det_prim
-    for i in range(5):
-        meas = filt_meas[100 + i]
+    for i in range(1):
+        # meas = filt_meas[100 + i]
+        meas = filt_meas[i]
 
-        if False:
+        if True:
             hist_both, hist_onlysec = trigger_corr(meas, det_prim)
         else:
             hist_both, hist_onlysec = trigger_raw(meas, det_prim)
@@ -167,19 +209,24 @@ for primary_detector in [0, 1]:
             master_onlysec.addhist(hist_onlysec[det_prim])
             master_both.addhist(hist_both[det_prim])
 
-    master_both.divbyhist(master_onlysec)
-    hist_trigger[det_prim] = master_both
+    # master_both.divbyhist(master_onlysec)
+    # hist_trigger[det_prim] = master_both
+    hist_trigger[det_prim] = calc_trigger(master_both, master_onlysec)
 
-for hist in hist_trigger:
+for h_ind, hist in enumerate(hist_trigger):
     fitclass = DoFit(hist.hist)
     fitclass.setup(trigger_func)
-    fitclass.limit_range([500, 15e3])
+    fitclass.limit_range([500, 14.5e3])
     fitclass.set_fitparam(namekey="a", valpar=0.003)
-    fitclass.set_fitparam(namekey="p", valpar=0.655)
+    fitclass.set_fitparam(namekey="p", valpar=0.55)
+    fitclass.set_limit_fitparam(namekey="a", para_range=[0.0001, 0.009])
+    fitclass.set_limit_fitparam(namekey="p", para_range=[0.01, 0.99])
     fitclass.set_bool("boutput", True)
+    # fitclass.set_bool("bsave_fit", True)
+    fitclass.plot_file = f"trigger{h_ind}"
     fitclass.plotrange["x"] = [0, 15e3]
-    fitclass.plotrange["y"] = [-0.2, 1.2]
-    fitclass.plot_labels = ["Trigger Det", "ADC [ch]", "Trigger prob. [ ]"]
+    fitclass.plotrange["y"] = [-0.2, 1.4]
+    fitclass.plot_labels = ["", "ADC [ch]", "Trigger prob. [ ]"]
     fitclass.fit()
 
 """
