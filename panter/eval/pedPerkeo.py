@@ -54,6 +54,7 @@ class PedPerkeo:
         bnaive_filt: bool = False,
         range_detsum: list = None,
         range_dtt: list = None,
+        custom_hist_par: dict = None,
     ):
         self._dataclass = dataclass
         self._bplot_fit = bplot_fit
@@ -64,11 +65,14 @@ class PedPerkeo:
 
         if self._dataclass.no_pmts is None:
             self._dataclass.auto()
-        self._ped_hist_par = {
-            "bin_count": int(cnf["dataPerkeo"]["PED_hist_counts"]),
-            "low_lim": int(cnf["dataPerkeo"]["PED_hist_min"]),
-            "up_lim": int(cnf["dataPerkeo"]["PED_hist_max"]),
-        }
+        if custom_hist_par is None:
+            self._ped_hist_par = {
+                "bin_count": int(cnf["dataPerkeo"]["PED_hist_counts"]),
+                "low_lim": int(cnf["dataPerkeo"]["PED_hist_min"]),
+                "up_lim": int(cnf["dataPerkeo"]["PED_hist_max"]),
+            }
+        else:
+            self._ped_hist_par = custom_hist_par
         self._pedvalues = np.asarray(self.calc_ped())
         self.ped_hists = None
         if bplot_res:
