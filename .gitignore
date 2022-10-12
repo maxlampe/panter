@@ -10,4 +10,8 @@
 /venv/
 *.pdf
 /.idea/
-
+*.egg-info
+*.xcf
+*.txt
+*.fit
+*.plk
