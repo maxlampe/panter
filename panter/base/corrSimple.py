@@ -86,10 +86,14 @@ class CorrSimple(CorrBase):
         hist_new = hist_of_branch
 
         if self.corrections["DeadTime"]:
+            datacop = RootPerkeo(data.filename)
+            datacop.set_filtdef()
+            datacop.auto()
+
             for hist in range(len(hist_new)):
                 if not self._bonlynew:
-                    hist_old[hist].scal(data.dt_fac)
-                hist_new[hist].scal(data.dt_fac)
+                    hist_old[hist].scal(datacop.dt_fac)
+                hist_new[hist].scal(datacop.dt_fac)
 
         return [[hist_old, hist_new], data.cy_valid_no, binvalid]
 

@@ -92,7 +92,7 @@ class CorrBase:
 
         return 0
 
-    def _filt_data(self, data: RootPerkeo, bbeam=False, key=""):
+    def _filt_data(self, data: RootPerkeo, bbeam=False, key="", withauto: bool = True):
         """Filter data set."""
 
         if bbeam:
@@ -108,15 +108,18 @@ class CorrBase:
             if len(self.addition_filters) != 0:
                 for entry in self.addition_filters:
                     data.set_filt(**entry)
-            data.auto(1)
+            if withauto:
+                data.auto(1)
         else:
             if len(self.addition_filters) != 0:
                 data.set_filtdef()
                 for entry in self.addition_filters:
                     data.set_filt(**entry)
-                data.auto(1)
+                if withauto:
+                    data.auto(1)
             else:
-                data.auto()
+                if withauto:
+                    data.auto()
 
     def _calc_corr(self, data: RootPerkeo):
         """Calculate corrected amplitude for each event and file."""
