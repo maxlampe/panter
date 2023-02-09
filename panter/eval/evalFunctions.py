@@ -226,7 +226,7 @@ def trigger_func(x: float, a: float, p: float):
 
     val = 1.0 - (1.0 - p) ** (a * x) * (1.0 + (a * p * x) / (1.0 - p))
     val = np.array(val)
-    val[val < 0.] = 0.
+    val[val < 0.0] = 0.0
     return val
 
 
