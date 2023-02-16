@@ -188,46 +188,51 @@ def trigger_corr(meas: MeasPerkeo, det_main: int):
     return [hist_b, hist_onlybac]
 
 
-for primary_detector in [0, 1]:
-    master_both = None
-    master_onlysec = None
-    det_prim = primary_detector
-    det_sec = 1 - det_prim
-    for i in range(1):
-        # meas = filt_meas[100 + i]
-        meas = filt_meas[i]
+def main():
+    for primary_detector in [0, 1]:
+        master_both = None
+        master_onlysec = None
+        det_prim = primary_detector
+        det_sec = 1 - det_prim
+        for i in range(1):
+            # meas = filt_meas[100 + i]
+            meas = filt_meas[i]
 
-        if True:
-            hist_both, hist_onlysec = trigger_corr(meas, det_prim)
-        else:
-            hist_both, hist_onlysec = trigger_raw(meas, det_prim)
+            if True:
+                hist_both, hist_onlysec = trigger_corr(meas, det_prim)
+            else:
+                hist_both, hist_onlysec = trigger_raw(meas, det_prim)
 
-        if i == 0:
-            master_onlysec = hist_onlysec[det_prim]
-            master_both = hist_both[det_prim]
-        else:
-            master_onlysec.addhist(hist_onlysec[det_prim])
-            master_both.addhist(hist_both[det_prim])
+            if i == 0:
+                master_onlysec = hist_onlysec[det_prim]
+                master_both = hist_both[det_prim]
+            else:
+                master_onlysec.addhist(hist_onlysec[det_prim])
+                master_both.addhist(hist_both[det_prim])
 
-    # master_both.divbyhist(master_onlysec)
-    # hist_trigger[det_prim] = master_both
-    hist_trigger[det_prim] = calc_trigger(master_both, master_onlysec)
+        # master_both.divbyhist(master_onlysec)
+        # hist_trigger[det_prim] = master_both
+        hist_trigger[det_prim] = calc_trigger(master_both, master_onlysec)
 
-for h_ind, hist in enumerate(hist_trigger):
-    fitclass = DoFit(hist.hist)
-    fitclass.setup(trigger_func)
-    fitclass.limit_range([500, 14.5e3])
-    fitclass.set_fitparam(namekey="a", valpar=0.003)
-    fitclass.set_fitparam(namekey="p", valpar=0.55)
-    fitclass.set_limit_fitparam(namekey="a", para_range=[0.0001, 0.009])
-    fitclass.set_limit_fitparam(namekey="p", para_range=[0.01, 0.99])
-    fitclass.set_bool("boutput", True)
-    # fitclass.set_bool("bsave_fit", True)
-    fitclass.plot_file = f"trigger{h_ind}"
-    fitclass.plotrange["x"] = [0, 15e3]
-    fitclass.plotrange["y"] = [-0.2, 1.4]
-    fitclass.plot_labels = ["", "ADC [ch]", "Trigger prob. [ ]"]
-    fitclass.fit()
+    for h_ind, hist in enumerate(hist_trigger):
+        fitclass = DoFit(hist.hist)
+        fitclass.setup(trigger_func)
+        fitclass.limit_range([500, 14.5e3])
+        fitclass.set_fitparam(namekey="a", valpar=0.003)
+        fitclass.set_fitparam(namekey="p", valpar=0.55)
+        fitclass.set_limit_fitparam(namekey="a", para_range=[0.0001, 0.009])
+        fitclass.set_limit_fitparam(namekey="p", para_range=[0.01, 0.99])
+        fitclass.set_bool("boutput", True)
+        # fitclass.set_bool("bsave_fit", True)
+        fitclass.plot_file = f"trigger{h_ind}"
+        fitclass.plotrange["x"] = [0, 15e3]
+        fitclass.plotrange["y"] = [-0.2, 1.4]
+        fitclass.plot_labels = ["", "ADC [ch]", "Trigger prob. [ ]"]
+        fitclass.fit()
+
+
+if __name__ == "__main__":
+    main()
 
 """
 Raw:

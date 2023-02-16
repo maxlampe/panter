@@ -216,7 +216,7 @@ class HistPerkeo:
         """Norm histogram to sum up to 1"""
 
         self._calc_stats()
-        self.scal(1./self.integral)
+        self.scal(1.0 / self.integral)
 
     def ret_asnumpyhist(self):
         """Return histogram in np.histogram format from current histogram.

@@ -670,9 +670,7 @@ def main():
     data.auto(1)
     # data.auto4corr(1, np.zeros((16, 6)))
     data.gen_hist([])
-    data.hist_sums[0].plot_hist(
-        rng=[0., 35e3, 0., 4e3]
-    )
+    data.hist_sums[0].plot_hist(rng=[0.0, 35e3, 0.0, 4e3])
 
 
 if __name__ == "__main__":

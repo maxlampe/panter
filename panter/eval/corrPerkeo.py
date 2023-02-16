@@ -175,7 +175,7 @@ class CorrPerkeo(CorrBase):
     def _calc_corr(self, data: RootPerkeo, buse_bgped: bool = False):
         """Calculate corrected amplitude for each event and file."""
 
-        #FIXME!
+        # FIXME!
         data.no_pmts = 16
         pedestals = [[0]] * data.no_pmts
         ampl_corr = [None] * data.no_pmts
