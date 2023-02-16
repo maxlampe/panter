@@ -111,12 +111,13 @@ def trigger_raw(meas: MeasPerkeo, det_main: int):
     return [hist_b, hist_onlybac]
 
 
-def trigger_corr(meas: MeasPerkeo, det_main: int):
+def trigger_corr(meas: MeasPerkeo, det_main: int, busebg: bool = True):
     """Calculate trigger function for one detector from corrected data."""
 
     det_bac = 1 - det_main
     # Set to data type without background subtraction
-    # meas.tp = 2
+    if not busebg:
+        meas.tp = 2
     corr_class = CorrPerkeo(dataloader=meas, mode=1)
     corr_class.set_all_corr(bactive=False)
     corr_class.corrections["Pedestal"] = True
