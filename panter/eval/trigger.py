@@ -47,7 +47,9 @@ def calc_trigger(P01: HistPerkeo, P1: HistPerkeo):
 
     trigger_hist = HistPerkeo(np.array([]))
     trigger_hist.hist = newhist
-    trigger_hist.plot_hist()
+    # Calls class method to calculate stats for histogram
+    trigger_hist.scal(1.0)
+    # trigger_hist.plot_hist()
 
     return trigger_hist
 
