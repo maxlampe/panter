@@ -104,6 +104,8 @@ class HistPerkeo:
         xlabel: str = "",
         ylabel: str = "",
         bsavefig: bool = False,
+        bxlog: bool = False,
+        bylog: bool = False,
         filename: str = "",
     ):
         """Plot histogram."""
@@ -119,13 +121,21 @@ class HistPerkeo:
         plt.ylabel(ylabel)
         plt.xlabel(xlabel)
         plt.annotate(
-            f"Mean = {self.stats['mean']:0.2f}\n" f"StDv = {self.stats['std']:0.2f}",
+            (
+                f"n_ev = {self.stats['noevents']:0.1f}\n"
+                + f"Mean = {self.stats['mean']:0.2f}\n"
+                + f"StDv = {self.stats['std']:0.2f}"
+            ),
             xy=(0.05, 0.95),
             xycoords="axes fraction",
             ha="left",
             va="top",
             bbox=dict(boxstyle="round", fc="1"),
         )
+        if bylog:
+            plt.yscale("log")
+        if bxlog:
+            plt.xscale("log")
 
         if bsavefig:
             if filename == "":
