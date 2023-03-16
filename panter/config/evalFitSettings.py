@@ -242,3 +242,17 @@ exp_dec.label = "exp_dec"
 exp_dec.fitfunc = eF.exp_dec
 exp_dec.initvals = {"a": 11000.0, "k": 200.0, "x0": 0.0}
 exp_dec.paramvary = [True] * len(exp_dec.initvals)
+
+exp_dec2 = FitSetting()
+exp_dec2.label = "exp_dec2"
+exp_dec2.fitfunc = eF.exp_dec2
+exp_dec2.initvals = {
+    "a0": 1000.0,
+    "k0": 900.0,
+    "x0": 0.0,
+    "a1": 1000.0,
+    "k1": 5000.0,
+    "x1": -9000.0,
+    "b": 0.0,
+}
+exp_dec2.paramvary = [True] * len(exp_dec2.initvals)

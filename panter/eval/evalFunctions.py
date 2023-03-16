@@ -61,6 +61,12 @@ def exp_dec(x, a, k, x0=0.0):
     return a * np.exp(-(x - x0) / k)
 
 
+def exp_dec2(x, a0, k0, a1, k1, x0=0.0, x1=0.0, b=0.0):
+    """Exponential decay function."""
+    x = np.array(x, dtype=float)
+    return b + exp_dec(x, a0, k0, x0) + exp_dec(x, a1, k1, x1)
+
+
 def exp_sat(x, a, k1, c1):
     """Exponential saturation function."""
     return a - exp_dec(x, c1, k1)
