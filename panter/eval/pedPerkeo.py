@@ -135,7 +135,9 @@ class PedPerkeo:
                     fitclass.set_bool("boutput", False)
 
                     if i == 0:
-                        fitclass.set_fitparam(namekey="mu", valpar=0.0)
+                        mu_init = histogram["x"][np.argmax(histogram["y"])]
+                        fitclass.set_fitparam(namekey="mu", valpar=mu_init)
+                        fitclass.set_fitparam(namekey="sig", valpar=30.0)
                         if self._bnaive_filt:
                             fitclass.limit_range([-np.inf, 500.0])
                         fitclass.fit()
