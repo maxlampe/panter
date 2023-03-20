@@ -1,27 +1,20 @@
 """"""
 
 from __future__ import annotations
-
 import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.pyplot import figure
 
+from matplotlib.pyplot import figure
+from panter.base.histBase import HistBase
 from panter.data.dataMisc import ret_hist
 
 output_path = os.getcwd()
 plt.rcParams.update({"font.size": 12})
 
-bfound_root = True
-try:
-    from ROOT import TFile, TH1F
-except ModuleNotFoundError:
-    bfound_root = False
 
-
-class HistPerkeo:
+class HistPerkeo(HistBase):
     """Histogram object for use with PERKEO data.
 
     Takes data and histogram parameters to create a histogram with
@@ -57,8 +50,8 @@ class HistPerkeo:
         up_lim: int = 52000,
     ):
         assert low_lim <= up_lim, "Error: lower limit bigger than upper limit."
+        super().__init__(data=data)
 
-        self._data = np.asarray(data)
         if self._data.shape != ():
             self.n_events = self._data.shape[0]
             self.mean = self._data.mean()
@@ -69,10 +62,7 @@ class HistPerkeo:
                 "noevents": self.n_events,
             }
         self.parameters = {"bin_count": bin_count, "low_lim": low_lim, "up_lim": up_lim}
-        self.bin_count = bin_count
-        self.up_lim = up_lim
-        self.low_lim = low_lim
-        self.bin_width = (self.up_lim - self.low_lim) / self.bin_count
+        self.bin_width = (up_lim - low_lim) / bin_count
 
         if self._data.shape != ():
             self.hist = ret_hist(self._data, **self.parameters)
@@ -222,12 +212,6 @@ class HistPerkeo:
         self.hist = newhist
         self._calc_stats()
 
-    def norm_hist(self):
-        """Norm histogram to sum up to 1"""
-
-        self._calc_stats()
-        self.scal(1.0 / self.integral)
-
     def ret_asnumpyhist(self):
         """Return histogram in np.histogram format from current histogram.
 
@@ -239,12 +223,17 @@ class HistPerkeo:
 
         return self.hist["y"].values, binedge
 
+    def ret_data(self):
+        """Return original input data"""
+        return self._data
+
     def write2root(
         self, histname: str, filename: str, out_dir: str = None, bupdate: bool = False
     ):
         """Write the histogram into a root file."""
 
-        assert bfound_root, "ERROR: Could not find ROOT package."
+        assert self._bfound_root, "ERROR: Could not find ROOT package."
+        from ROOT import TFile, TH1F
 
         if out_dir is None:
             out_dir = output_path
