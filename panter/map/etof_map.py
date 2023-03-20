@@ -20,6 +20,7 @@ output_path = os.getcwd()
 plt.rcParams.update({"font.size": 12})
 
 
+# TODO: redo with eToFPerkeo Class!
 class EToFMap(MapPerkeo):
     """"""
 

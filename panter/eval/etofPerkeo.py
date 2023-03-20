@@ -88,7 +88,7 @@ class EToFPerkeo:
         """"""
 
         self.tof_hist.plot_hist(
-            rng=[-25.0, 25.0, 0.0,  self.tof_hist.hist["y"].max() * 1.3],
+            rng=[-25.0, 25.0, 0.0, self.tof_hist.hist["y"].max() * 1.3],
             title=f"eToF - Src{self._measp[0].src} Cyc{self._measp[0].cyc_no}",
             xlabel="eToF [10ns]",
             ylabel="Counts [ ]",
@@ -130,7 +130,7 @@ def main():
         )[[0]]
         # filt_meas[0].tp = 2
 
-    etof = EToFPerkeo(filt_meas, bplot_res=True, range_detsum=[0., 7000.])
+    etof = EToFPerkeo(filt_meas, bplot_res=True, range_detsum=[0.0, 7000.0])
 
 
 if __name__ == "__main__":
