@@ -511,9 +511,18 @@ class RootPerkeo:
             "mean": n_mean,
             "sig": n_sig,
             "maxval": n_norm,
-            "active": n_pmt,
             "sig2D": n_sig2d,
             "norm2D": n_norm2d,
+            "mode": self.mode,
+            "no_tadc": self._tadc,
+            "no_pmts": self.no_pmts,
+            "pmts_act": n_pmt,
+            "no_ev": self._ev_no,
+            "no_ev_val": self._ev_valid_no,
+            "no_cyc": self._cy_no,
+            "no_cyc_val": self.cy_valid_no,
+            "dt_fac": self.dt_fac,
+            "rtime_val": self.val_rtime,
         }
 
         return 0
