@@ -111,9 +111,10 @@ class RootPerkeo:
     >>> dtt = 0.01 * data.ret_array_by_key("DeltaTriggerTime") # [mus]
     """
 
-    def __init__(self, filename: str, bverbose: bool = False):
+    def __init__(self, filename: str, bverbose: bool = False, bfull_adc: bool = False):
         self.filename = filename
         self.bverbose = bverbose
+        self.bfull_adc = bfull_adc
 
         self.filedate = os.path.getmtime(filename)
         self.file = uproot.open(self.filename)
@@ -134,6 +135,9 @@ class RootPerkeo:
         self.cache_cyclefilter = None
 
         self.pmt_data = None
+        self.data_pmt_tran = None
+        self._peds = None
+        self._rdep_diff = None
         self.dptt = None
         self.coindiff = None
         self.val_rtime = None
@@ -438,6 +442,9 @@ class RootPerkeo:
         else:
             self.pmt_data = data_pmt_tran[self._tadc] - data_pmt_tran[0]
 
+        if self.bfull_adc:
+            self.data_pmt_tran = data_pmt_tran
+
         return 0
 
     def filt_pmtdata(self, valid_ev_old: np.array):
@@ -446,21 +453,40 @@ class RootPerkeo:
         self._ev_valid = np.asarray(self._ev_valid, dtype=bool)[valid_ev_old]
         self.pmt_data = self.pmt_data[:, self._ev_valid]
 
-    def corr_pmtdata(self, peds: np.array):
+    def corr_pmtdata(self):
         """Correct PMT data with pedestals and rate dependency."""
 
         # Correct pedestal
         for i in range(0, self.no_pmts):
-            self.pmt_data[i] = self.pmt_data[i] - peds[i][0]
+            self.pmt_data[i] = self.pmt_data[i] - self._peds[i][0]
 
+        rdep_diff = []
         for i in range(0, self.no_pmts):
             ampl_0 = self.pmt_data[i][1:]
             ampl_1 = self.pmt_data[i][:-1]
             test = calc_acorr_ratedep(
                 ampl_0, ampl_1, self.dptt[1:], delta=delt_pmt[i], k=k_pmt_fix[i]
             )
+            rdep_diff.append(test - self.pmt_data[i][1:])
             # FIXME: Think about this. Worst case: One event should be irrelevant.
             self.pmt_data[i][1:] = test
+        self._rdep_diff = rdep_diff
+
+    def ret_corr_allmode(self, i_start: int = 0, i_stop: int = 32):
+        """"""
+
+        assert self.bfull_adc, "AllMODE data note stored. Use bfull_adc=True"
+
+        pmt_data_man = self.data_pmt_tran[i_stop] - self.data_pmt_tran[i_start]
+        # Correct with corrections used for regular data
+        for i in range(0, self.no_pmts):
+            pmt_data_man[i] = pmt_data_man[i] - self._peds[i][0]
+            pmt_data_man[i, 1:] = pmt_data_man[i, 1:] + self._rdep_diff[i]
+
+        # Filter with most recent filter used for regular data
+        pmt_data_man = pmt_data_man[:, self._ev_valid]
+
+        return pmt_data_man
 
     def gen_dptt_coindiff(self):
         """Filter dptt data according to calculated filters."""
@@ -594,6 +620,7 @@ class RootPerkeo:
         """Splits generation of PMT data and filterting over functions for RateDep."""
 
         assert peds is not None, "Needs pedestal values for rate dep."
+        self._peds = peds
 
         self.calc_missing_branches()
         # store custom filters
@@ -606,7 +633,7 @@ class RootPerkeo:
         # gen pmt data as before
         self.gen_pmtdata()
         # do pedestal and ratedep correction
-        self.corr_pmtdata(peds)
+        self.corr_pmtdata()
         # load cached custom filtersand recalculate valud cycecs/events
         valid_ev_old = copy.deepcopy(self._ev_valid)
         self.uncache_filter()
