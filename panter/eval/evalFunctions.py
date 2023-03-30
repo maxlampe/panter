@@ -153,6 +153,13 @@ def exmodgaus(x, h, mu, sig, tau):
     return exp_func_k * exp_func * err_func
 
 
+def skewgaus(x, mu, sig, a, norm, off):
+    """Exponentially modified gaussian distribution."""
+
+    x = np.array(x, dtype=float)
+    return norm * skewnorm.pdf(x, a=a, loc=mu, scale=sig) + off
+
+
 def charge_spec(
     x: float,
     a: float,
