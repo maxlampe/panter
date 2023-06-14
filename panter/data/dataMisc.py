@@ -34,6 +34,55 @@ def ret_hist(
     return pd.DataFrame({"x": bincent, "y": hist, "err": np.sqrt(np.abs(hist))})
 
 
+def ret_hist2d(
+    data: np.array,
+    bin_count=None,
+    low_lim=None,
+    up_lim=None,
+):
+    """Create a 2D histogram as dict from a 2D input array."""
+
+    if up_lim is None:
+        up_lim = [52000.0, 52000.0]
+    if low_lim is None:
+        low_lim = [0.0, 0.0]
+    if bin_count is None:
+        bin_count = [1024, 1024]
+    assert data.shape[0] == 2, f"Wrong data dimension. {data.shape[0]} != 2"
+    raw_binsx = np.linspace(low_lim[0], up_lim[0], bin_count[0] + 1)
+    raw_binsy = np.linspace(low_lim[1], up_lim[1], bin_count[1] + 1)
+
+    use_binsx = [np.array([-np.inf]), raw_binsx, np.array([np.inf])]
+    use_binsx = np.concatenate(use_binsx)
+    use_binsy = [np.array([-np.inf]), raw_binsy, np.array([np.inf])]
+    use_binsy = np.concatenate(use_binsy)
+
+    hist, binedgex, binedgey = np.histogram2d(
+        data[0], data[1], bins=(use_binsx, use_binsy)
+    )
+    bincentx = []
+    for j in range(binedgex.size - 1):
+        bincentx.append(0.5 * (binedgex[j] + binedgex[j + 1]))
+
+    bincenty = []
+    for j in range(binedgey.size - 1):
+        bincenty.append(0.5 * (binedgey[j] + binedgey[j + 1]))
+
+    # For cartesian convention
+    hist = hist.T
+    # remove over- and underflow bins
+    res = {
+        "x": bincentx[1:-1],
+        "y": bincenty[1:-1],
+        "x_edges": binedgex[1:-1],
+        "y_edges": binedgey[1:-1],
+        "z": hist[1:-1, 1:-1],
+        "err": np.sqrt(np.abs(hist))[1:-1, 1:-1],
+    }
+
+    return res
+
+
 def filt_zeros(hist_df: pd.DataFrame, bdrop_nan: bool = True) -> pd.DataFrame:
     """Taking a pandas data frame and removing all entries where "err" = 0."""
 

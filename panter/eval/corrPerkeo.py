@@ -13,9 +13,9 @@ from panter.config.params import k_pmt_fix
 from panter.data.dataHistPerkeo import HistPerkeo
 from panter.data.dataMisc import FilePerkeo
 from panter.data.dataRootPerkeo import RootPerkeo
+from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.eval.evalFunctions import calc_acorr_ratedep
 from panter.eval.pedPerkeo import PedPerkeo
-from panter.data.dataloaderPerkeo import DLPerkeo
 
 
 cnf = configparser.ConfigParser()
@@ -175,6 +175,8 @@ class CorrPerkeo(CorrBase):
     def _calc_corr(self, data: RootPerkeo, buse_bgped: bool = False):
         """Calculate corrected amplitude for each event and file."""
 
+        # FIXME!
+        data.no_pmts = 16
         pedestals = [[0]] * data.no_pmts
         ampl_corr = [None] * data.no_pmts
         drift_factors = np.ones(data.no_pmts)
@@ -191,17 +193,18 @@ class CorrPerkeo(CorrBase):
 
             if diff_time[nearest_2d] < 7200.0:
                 print("ERROR: Last meas more than 2h away")
+                # FIXME: Disabled Safety check!
                 binvalid = False
 
             scan2d_factors = self._scan2d_map["pmt_fac"][nearest_2d]
 
         if self.corrections["Drift"]:
+            # FIXME: gives cirular import error up top
+            from panter.eval.evalDriftGPR import GPRDrift
+
             assert (
                 self._bdetsum_drift
             ), "Error: Only drift det sum correction implemented at the moment."
-
-            # FIXME
-            from panter.eval.evalDriftGPR import GPRDrift
 
             for det in [0, 1]:
                 gpr_class = GPRDrift(detector=det)
@@ -222,7 +225,7 @@ class CorrPerkeo(CorrBase):
 
         if self.corrections["Pedestal"]:
             if self._ped_arr is None:
-                datacop = copy.copy(data)
+                datacop = RootPerkeo(data.filename)
                 datacop.set_filtdef()
                 pedestals = PedPerkeo(datacop).ret_pedestals()
             else:
@@ -237,25 +240,27 @@ class CorrPerkeo(CorrBase):
         if self._shift_arr is None:
             self._shift_arr = np.zeros(data.no_pmts)
 
-        for i in range(0, data.no_pmts):
-            if pedestals[i] is not None:
-                ampl_corr[i] = data.pmt_data[i] - pedestals[i][0]
-            else:
-                ampl_corr[i] = None
-
-        if self.corrections["RateDepElec"]:
-            # FIXME: Think about this [1:]! Should be ok though.
-            dptt = data.dptt[1:]
-            for i in range(0, data.no_pmts):
-                ampl_0 = ampl_corr[i][1:]
-                ampl_1 = ampl_corr[i][:-1]
-                ampl_corr[i] = calc_acorr_ratedep(
-                    ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
-                )
+        # for i in range(0, data.no_pmts):
+        #     if pedestals[i] is not None:
+        #         ampl_corr[i] = data.pmt_data[i] - pedestals[i][0]
+        #     else:
+        #         ampl_corr[i] = None
+        #
+        # if self.corrections["RateDepElec"]:
+        #     # FIXME: Think about this [1:]! Should be ok though.
+        #     dptt = data.dptt[1:]
+        #     for i in range(0, data.no_pmts):
+        #         ampl_0 = ampl_corr[i][1:]
+        #         ampl_1 = ampl_corr[i][:-1]
+        #         ampl_corr[i] = calc_acorr_ratedep(
+        #             ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
+        #         )
+        # FIXME: Pass option to disable rate dep
+        data.auto4corr(1, pedestals)
 
         for i in range(0, data.no_pmts):
             ampl_corr[i] = (
-                ampl_corr[i]
+                data.pmt_data[i]
                 * drift_factors[i]
                 * scan2d_factors[i]
                 * self._weight_arr[i]
@@ -270,10 +275,14 @@ class CorrPerkeo(CorrBase):
         hist_new = self._calc_detsum(ampl_corr)
 
         if self.corrections["DeadTime"]:
+            datacop = RootPerkeo(data.filename)
+            datacop.set_filtdef()
+            datacop.auto()
+
             for hist in range(len(hist_new)):
                 if not self._bonlynew:
-                    hist_old[hist].scal(data.dt_fac)
-                hist_new[hist].scal(data.dt_fac)
+                    hist_old[hist].scal(datacop.dt_fac)
+                hist_new[hist].scal(datacop.dt_fac)
 
         return [[hist_old, hist_new], data.cy_valid_no, binvalid]
 
@@ -283,7 +292,7 @@ class CorrPerkeo(CorrBase):
         res = []
         data_sg = RootPerkeo(ev_file[0])
 
-        self._filt_data(data_sg)
+        self._filt_data(data_sg, withauto=False)
         r, s, i = self._calc_corr(data_sg)
         if i:
             return [None, None]
@@ -306,7 +315,7 @@ class CorrPerkeo(CorrBase):
         data_dict = {"sg": data_sg, "bg": data_bg}
 
         for (key, data) in data_dict.items():
-            self._filt_data(data, bbeam=True, key=key)
+            self._filt_data(data, bbeam=True, key=key, withauto=False)
             r, s, i = self._calc_corr(data)
             if i:
                 return [None, None]
@@ -338,7 +347,7 @@ class CorrPerkeo(CorrBase):
 
         for ind, file_name in enumerate(ev_files):
             data = RootPerkeo(file_name)
-            self._filt_data(data)
+            self._filt_data(data, withauto=False)
 
             if ind == 1:
                 r, s, i = self._calc_corr(data, buse_bgped=True)
@@ -509,7 +518,7 @@ def main():
         title="Beta spectrum",
         xlabel="Energy [ch]",
         ylabel="Counts [ ]",
-        # rng=[0.0, 40e3, -30.0, 2200.0],
+        rng=[0.0, 50e3, -30.0, 3500.0],
     )
     print(test.stats)
 

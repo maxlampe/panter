@@ -111,6 +111,13 @@ gaus_expmod.param_limit = {
     "tau": [0.0001, 100000000.0],
 }
 
+gaus_skew = FitSetting()
+gaus_skew.label = "gaus_skew"
+gaus_skew.fitfunc = eF.skewgaus
+gaus_skew.initvals = {"a": 4.0, "mu": 750.0, "sig": 300.0, "off": 1.0, "norm": 1000.}
+gaus_skew.paramvary = [True] * len(gaus_skew.initvals)
+
+
 gaus_DoGG = FitSetting()
 gaus_DoGG.label = "gaus_DoGG"
 gaus_DoGG.fitfunc = eF.doublegaussian
@@ -242,3 +249,17 @@ exp_dec.label = "exp_dec"
 exp_dec.fitfunc = eF.exp_dec
 exp_dec.initvals = {"a": 11000.0, "k": 200.0, "x0": 0.0}
 exp_dec.paramvary = [True] * len(exp_dec.initvals)
+
+exp_dec2 = FitSetting()
+exp_dec2.label = "exp_dec2"
+exp_dec2.fitfunc = eF.exp_dec2
+exp_dec2.initvals = {
+    "a0": 1000.0,
+    "k0": 900.0,
+    "x0": 0.0,
+    "a1": 1000.0,
+    "k1": 5000.0,
+    "x1": -9000.0,
+    "b": 0.0,
+}
+exp_dec2.paramvary = [True] * len(exp_dec2.initvals)
