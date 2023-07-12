@@ -234,6 +234,13 @@ def calc_acorr_ratedep(
     return A_meas + exp_dec(t_1, A_1 * delta, k)
 
 
+def calc_acorr_qdc(A_meas: float, m: float, c: float, del_t: float = 18.0):
+    """Calculate true ADC value by correcting for QDC non-linearity"""
+
+    A_meas = np.array(A_meas, dtype=float)
+    return A_meas - (c + m * A_meas) * del_t
+
+
 def trigger_func(x: float, a: float, p: float):
     """Effective trigger model function according to [Mun06]"""
 

@@ -12,11 +12,11 @@ import numpy as np
 import uproot
 
 from panter.config import conf_path
-from panter.config.params import delt_pmt
+from panter.config.params import delt_pmt, qdc_grad_m, qdc_grad_c
 from panter.config.params import k_pmt_fix
 from panter.data.dataHistPerkeo import HistPerkeo
 from panter.data.dataMisc import FiltPerkeo
-from panter.eval.evalFunctions import calc_acorr_ratedep
+from panter.eval.evalFunctions import calc_acorr_ratedep, calc_acorr_qdc
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
@@ -158,6 +158,7 @@ class RootPerkeo:
             "low_lim": int(cnf["dataPerkeo"]["SUM_hist_min"]),
             "up_lim": int(cnf["dataPerkeo"]["SUM_hist_max"]),
         }
+        self.allmode_cut = 10000
 
     def info(self, ball=False):
         """Print (Valid) Events, Cycles, content of branches/trees"""
@@ -329,9 +330,6 @@ class RootPerkeo:
                 self._ev_no,
             )
 
-        # FIXME!
-        # assert self._ev_valid_no > 0, "ERROR: No events left. This wouldn't leave data."
-
         return 0
 
     def calc_filt(self):
@@ -442,8 +440,14 @@ class RootPerkeo:
         else:
             self.pmt_data = data_pmt_tran[self._tadc] - data_pmt_tran[0]
 
+        # self.pmt_data = np.array(self.pmt_data, dtype=float)
+        self.pmt_data = self.pmt_data.astype("float64")
+
         if self.bfull_adc:
-            self.data_pmt_tran = data_pmt_tran
+            # self.data_pmt_tran = np.array(data_pmt_tran, dtype=float)
+            self.data_pmt_tran = data_pmt_tran[:, :, : self.allmode_cut].astype(
+                "float64"
+            )
 
         return 0
 
@@ -453,38 +457,69 @@ class RootPerkeo:
         self._ev_valid = np.asarray(self._ev_valid, dtype=bool)[valid_ev_old]
         self.pmt_data = self.pmt_data[:, self._ev_valid]
 
-    def corr_pmtdata(self):
+    def corr_pmtdata(self, corr_dict: dict):
         """Correct PMT data with pedestals and rate dependency."""
 
-        # Correct pedestal
-        for i in range(0, self.no_pmts):
-            self.pmt_data[i] = self.pmt_data[i] - self._peds[i][0]
+        # Do pedestal correction
+        if corr_dict["Pedestal"]:
+            for i in range(0, self.no_pmts):
+                self.pmt_data[i] = self.pmt_data[i] - self._peds[i][0]
 
-        rdep_diff = []
-        for i in range(0, self.no_pmts):
-            ampl_0 = self.pmt_data[i][1:]
-            ampl_1 = self.pmt_data[i][:-1]
-            test = calc_acorr_ratedep(
-                ampl_0, ampl_1, self.dptt[1:], delta=delt_pmt[i], k=k_pmt_fix[i]
-            )
-            rdep_diff.append(test - self.pmt_data[i][1:])
-            # FIXME: Think about this. Worst case: One event should be irrelevant.
-            self.pmt_data[i][1:] = test
-        self._rdep_diff = rdep_diff
+        # Do rate dependency correction
+        if corr_dict["RateDepElec"]:
+            rdep_diff = []
+            for i in range(0, self.no_pmts):
+                ampl_0 = self.pmt_data[i][1:]
+                ampl_1 = self.pmt_data[i][:-1]
+                test = calc_acorr_ratedep(
+                    ampl_0, ampl_1, self.dptt[1:], delta=delt_pmt[i], k=k_pmt_fix[i]
+                )
+                rdep_diff.append(test - self.pmt_data[i][1:])
+                # Not correcting first event should make sense
+                self.pmt_data[i][1:] = test
+            self._rdep_diff = rdep_diff
 
-    def ret_corr_allmode(self, i_start: int = 0, i_stop: int = 32):
+        # Do QDC correction (treat all as non-delayed charge)
+        if corr_dict["QDC"]:
+            for i in range(0, self.no_pmts):
+                m = qdc_grad_m[i]
+                c = qdc_grad_c[i]
+                qdc_corr = calc_acorr_qdc(self.pmt_data[i], m, c)
+                self.pmt_data[i] += qdc_corr
+
+    def ret_corr_allmode(
+        self, i_start: list = None, i_stop: list = None, bfilt: bool = True
+    ):
         """"""
-
+        # FIXME: Needs modualr corrections too!
         assert self.bfull_adc, "AllMODE data note stored. Use bfull_adc=True"
+        if i_start is None:
+            i_start = [0] * self.no_pmts
+        if i_stop is None:
+            i_stop = [32] * self.no_pmts
 
-        pmt_data_man = self.data_pmt_tran[i_stop] - self.data_pmt_tran[i_start]
+        pmt_data_man = np.zeros(self.data_pmt_tran.shape[1:])
         # Correct with corrections used for regular data
         for i in range(0, self.no_pmts):
-            pmt_data_man[i] = pmt_data_man[i] - self._peds[i][0]
-            pmt_data_man[i, 1:] = pmt_data_man[i, 1:] + self._rdep_diff[i]
+            pmt_data_man[i] = (
+                self.data_pmt_tran[i_stop[i], i]
+                - self.data_pmt_tran[i_start[i], i]
+                - self._peds[i][0]
+            )
+            pmt_data_man[i, 1:] = (
+                pmt_data_man[i, 1:] + self._rdep_diff[i][: (self.allmode_cut - 1)]
+            )
+
+        # OLD
+        # pmt_data_man = self.data_pmt_tran[-1] - self.data_pmt_tran[0]
+        # # Correct with corrections used for regular data
+        # for i in range(0, self.no_pmts):
+        #     pmt_data_man[i] = pmt_data_man[i] - self._peds[i][0]
+        #     pmt_data_man[i, 1:] = pmt_data_man[i, 1:] + self._rdep_diff[i]
 
         # Filter with most recent filter used for regular data
-        pmt_data_man = pmt_data_man[:, self._ev_valid]
+        if bfilt:
+            pmt_data_man = pmt_data_man[:, self._ev_valid[: self.allmode_cut]]
 
         return pmt_data_man
 
@@ -593,6 +628,10 @@ class RootPerkeo:
         self.datafilter = self.cache_datafilter
         self.cyclefilter = self.cache_cyclefilter
 
+    def ret_ev_valid(self):
+        """Return bool array for all events based on last used filters."""
+        return self._ev_valid
+
     def auto(self, set_mode: int = 0):
         """Run functions in correct order to get PMT data out of file.
 
@@ -616,10 +655,24 @@ class RootPerkeo:
         self.gen_dptt_coindiff()
         self.calc_stats()
 
-    def auto4corr(self, set_mode: int = 0, peds: np.array = None):
+    def auto4corr(self, set_mode: int = 0, peds: np.array = None, corr_dict: dict = {}):
         """Splits generation of PMT data and filterting over functions for RateDep."""
 
-        assert peds is not None, "Needs pedestal values for rate dep."
+        valid_corr = [
+            "Pedestal",
+            "RateDepElec",
+            "QDC",
+        ]
+        corrs = {
+            "Pedestal": False,
+            "RateDepElec": False,
+            "QDC": False,
+        }
+        for key in corr_dict:
+            assert key in valid_corr, f"Invalid/unknown key {key}"
+            corrs[key] = corr_dict[key]
+        if corrs["Pedestal"]:
+            assert peds is not None, "Needs pedestal values for rate dep."
         self._peds = peds
 
         self.calc_missing_branches()
@@ -633,7 +686,7 @@ class RootPerkeo:
         # gen pmt data as before
         self.gen_pmtdata()
         # do pedestal and ratedep correction
-        self.corr_pmtdata()
+        self.corr_pmtdata(corrs)
         # load cached custom filtersand recalculate valud cycecs/events
         valid_ev_old = copy.deepcopy(self._ev_valid)
         self.uncache_filter()
@@ -703,8 +756,13 @@ def main():
         low_lim=380000,
         up_lim=600000,
     )
-    data.auto(1)
-    # data.auto4corr(1, np.zeros((16, 6)))
+    # data.auto(1)
+    corrections = {
+        "Pedestal": True,
+        "RateDepElec": True,
+        "QDC": False,
+    }
+    data.auto4corr(1, np.zeros((16, 6)), corrections)
     data.gen_hist([])
     data.hist_sums[0].plot_hist(rng=[0.0, 35e3, 0.0, 4e3])
 

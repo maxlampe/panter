@@ -108,6 +108,7 @@ class CorrPerkeo(CorrBase):
         bgped_arr=None,
         weight_arr=None,
         shift_arr=None,
+        ped_shift_arr=None,
         pmt_sum_selection=None,
         custom_sum_hist_par=None,
         custom_pmt_hist_par=None,
@@ -118,6 +119,7 @@ class CorrPerkeo(CorrBase):
         self._bgped_arr = bgped_arr
         self._weight_arr = weight_arr
         self._shift_arr = shift_arr
+        self._ped_shift_arr = ped_shift_arr
         self._mode = mode
         self._pmt_sum_selection = pmt_sum_selection
 
@@ -133,14 +135,22 @@ class CorrPerkeo(CorrBase):
         else:
             self._histpar_pmt = custom_pmt_hist_par
 
-        # TODO: Add check for valid corrections when setting them
         self.corrections = {
             "Pedestal": True,
             "RateDepElec": True,
             "DeadTime": True,
             "Drift": True,
             "Scan2D": True,
+            "QDC": False,
         }
+        self._valid_corr = [
+            "Pedestal",
+            "RateDepElec",
+            "DeadTime",
+            "Drift",
+            "Scan2D",
+            "QDC",
+        ]
         self._drift_map = None
         self._drift_gprs = [None] * 2
         self._scan2d_map = None
@@ -174,6 +184,9 @@ class CorrPerkeo(CorrBase):
 
     def _calc_corr(self, data: RootPerkeo, buse_bgped: bool = False):
         """Calculate corrected amplitude for each event and file."""
+
+        for key in self.corrections:
+            assert key in self._valid_corr, f"Invalid/unknown key {key}"
 
         # FIXME!
         data.no_pmts = 16
@@ -240,23 +253,17 @@ class CorrPerkeo(CorrBase):
         if self._shift_arr is None:
             self._shift_arr = np.zeros(data.no_pmts)
 
-        # for i in range(0, data.no_pmts):
-        #     if pedestals[i] is not None:
-        #         ampl_corr[i] = data.pmt_data[i] - pedestals[i][0]
-        #     else:
-        #         ampl_corr[i] = None
-        #
-        # if self.corrections["RateDepElec"]:
-        #     # FIXME: Think about this [1:]! Should be ok though.
-        #     dptt = data.dptt[1:]
-        #     for i in range(0, data.no_pmts):
-        #         ampl_0 = ampl_corr[i][1:]
-        #         ampl_1 = ampl_corr[i][:-1]
-        #         ampl_corr[i] = calc_acorr_ratedep(
-        #             ampl_0, ampl_1, dptt, delta=delt_pmt[i], k=k_pmt_fix[i]
-        #         )
-        # FIXME: Pass option to disable rate dep
-        data.auto4corr(1, pedestals)
+        if self._ped_shift_arr is not None:
+            pedestals = pedestals.T
+            pedestals[0] += self._ped_shift_arr
+            pedestals = pedestals.T
+
+        root_corr = {
+            "Pedestal": self.corrections["Pedestal"],
+            "RateDepElec": self.corrections["RateDepElec"],
+            "QDC": self.corrections["QDC"],
+        }
+        data.auto4corr(1, pedestals, root_corr)
 
         for i in range(0, data.no_pmts):
             ampl_corr[i] = (
