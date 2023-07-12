@@ -219,3 +219,16 @@ class PedPerkeo:
         plt.show()
 
         return 0
+
+
+def main():
+    fdir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+    file = fdir + "data194348-70372_2.root"
+
+    data = RootPerkeo(file)
+    pedtest = PedPerkeo(data, bplot_fit=True, bplot_log=True)
+    pedtest.plot_pedestals()
+
+
+if __name__ == "__main__":
+    main()
