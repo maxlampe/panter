@@ -61,7 +61,7 @@ class TestPedestal(unittest.TestCase):
                 fitclass = DoFit(testhist.hist)
                 fitclass.setup(gaus_simp)
                 fitclass.limit_range([mu - 3 * width, mu + 3 * width])
-                fitclass.set_bool("boutput", True)
+                fitclass.set_bool("boutput", False)
                 fitclass.set_fitparam("mu", mu)
                 fitclass.set_fitparam("sig", width)
                 # fitclass.set_fitparam("norm", 4000.0)

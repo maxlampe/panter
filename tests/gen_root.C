@@ -11,12 +11,12 @@ Specificially for unittest (pedestal, detsum, ratedependency).
 #define TDCMAXSTAMPS 4
 #define TDCDATASIZE (2 * (NQDCS + 1) * TDCMAXSTAMPS)
 
-#define NUM_EVENTS 10000
+#define NUM_EVENTS 40000
 #define CYCLENUMBER 650
 #define CYCLESTART 12300
 
 /*Define specific fill for PMTs for Pedestal(1), Detsum(2), Ratedependency(3)*/
-#define TEST 3
+#define TEST 1
 #define INVALIDS 0
 
 TRandom3 *RandomGenerator = new TRandom3(time(NULL));

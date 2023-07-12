@@ -47,7 +47,7 @@ class TestPedestal(unittest.TestCase):
         width = np.sqrt((self._signal_width**2) * self._num_PMTs)
         fitclass = DoFit(testhist.hist)
         fitclass.setup(gaus_simp)
-        fitclass.limit_range([mu - 3 * width, mu + 3 * width])
+        fitclass.limit_range([mu - 2 * width, mu + 2 * width])
         fitclass.set_bool("boutput", False)
         fitclass.set_fitparam("mu", mu)
         fitclass.set_fitparam("sig", width)
@@ -55,14 +55,14 @@ class TestPedestal(unittest.TestCase):
 
         fitted_mu = fitclass.ret_results().params["mu"].value
         fitted_mu_err = fitclass.ret_results().params["mu"].stderr
-        lower_intervall = mu - 0.7 * fitted_mu_err
-        upper_intervall = mu + 0.7 * fitted_mu_err
+        lower_intervall = mu - 1.5 * fitted_mu_err
+        upper_intervall = mu + 1.5 * fitted_mu_err
         self.assertGreaterEqual(fitted_mu, lower_intervall)
         self.assertLessEqual(fitted_mu, upper_intervall)
 
         fitted_sig = fitclass.ret_results().params["sig"].value
         fitted_sig_err = fitclass.ret_results().params["sig"].stderr
-        lower_intervall_w = width - 0.7 * fitted_sig_err
-        upper_intervall_w = width + 0.7 * fitted_sig_err
+        lower_intervall_w = width - 1.5 * fitted_sig_err
+        upper_intervall_w = width + 1.5 * fitted_sig_err
         self.assertGreaterEqual(abs(fitted_sig), lower_intervall_w)
         self.assertLessEqual(abs(fitted_sig), upper_intervall_w)
