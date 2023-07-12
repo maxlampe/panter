@@ -293,6 +293,8 @@ class DoFit:
     def plot_fit(self):
         """Plot data, fitresult and residuals of current fit."""
 
+        fsize = 15
+
         self.print_fitinfo()
         residuals_data = self._fitdata["y"] - self._fitmodel.eval(
             **self._fitresult.params, x=self._fitdata["x"]
@@ -324,9 +326,9 @@ class DoFit:
             gridspec_kw={"height_ratios": [6, 2]},
         )
         fig.subplots_adjust(hspace=0)
-        axs[0].set_title(self.plot_labels[0])
+        axs[0].set_title(self.plot_labels[0], fontsize=fsize)
 
-        axs.flat[0].set(ylabel=self.plot_labels[2])
+        axs.flat[0].set_ylabel(self.plot_labels[2], fontsize=fsize)
         if self.plotrange["x"] is not None:
             axs[0].set_xlim(self.plotrange["x"])
         if self.plotrange["y"] is not None:
@@ -334,13 +336,17 @@ class DoFit:
         if self.blogscale:
             axs[0].set_yscale("log")
 
-        axs[0].errorbar(self._data["x"], self._data["y"], self._data["err"], fmt=".")
+        axs[0].errorbar(
+            self._data["x"], self._data["y"], self._data["err"], fmt=".", c="#0C0887"
+        )
 
         axs[0].plot(
             self._data["x"],
             self._fitmodel.eval(**self._fitresult.params, x=self._data["x"]),
-            "r-",
+            "-",
+            c="#FF220C",
             label="best fit",
+            lw=2,
         )
 
         axs[0].grid(True)
@@ -353,9 +359,11 @@ class DoFit:
             ha="left",
             va="top",
             bbox=dict(boxstyle="round", fc="1"),
+            fontsize=fsize,
         )
 
-        axs.flat[1].set(xlabel=self.plot_labels[1], ylabel="Residuals [x]")
+        axs.flat[1].set_xlabel(self.plot_labels[1], fontsize=fsize)
+        axs.flat[1].set_ylabel("Residuals [x]", fontsize=fsize)
         res_max = (residuals_data + self._fitdata["err"]).max()
         res_min = (residuals_data - self._fitdata["err"]).min()
         axs.flat[1].set_ylim([res_min, res_max])
@@ -364,16 +372,17 @@ class DoFit:
             all_residuals,
             self._data["err"],
             fmt=".",
+            c="#0C0887",
         )
         axs[1].errorbar(
             self._fitdata["x"],
             residuals_data,
             self._fitdata["err"],
             fmt=".",
-            color="r",
+            color="#FF220C",
             label="fit range",
         )
-        axs[1].legend()
+        axs[1].legend(fontsize=fsize)
 
         axs[1].grid(True)
         if self.bfit_residuals:
@@ -389,9 +398,15 @@ class DoFit:
                     ha="left",
                     va="top",
                     bbox=dict(boxstyle="round", fc="1"),
+                    fontsize=fsize,
                 )
             except TypeError:
                 print("WARNING: Residual Gaussian fit failed.")
+
+        # axs[0].set_xticklabels([])
+        axs[0].tick_params(labelsize=fsize, bottom=False)
+        axs[1].tick_params(labelsize=fsize)
+        plt.tight_layout()
 
         if self._booldict["bsave_fit"]:
             if self.plot_file is None:

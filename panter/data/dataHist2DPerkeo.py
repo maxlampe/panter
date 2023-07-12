@@ -82,19 +82,46 @@ class Hist2DPerkeo(HistBase):
         bxlog: bool = False,
         bylog: bool = False,
         filename: str = None,
+        vlims: list = None,
+        fsize: int = None,
+        zticks: list = None,
+        xticks: list = None,
+        yticks: list = None,
+        zcut: float = None,
     ):
         """Plot histogram."""
 
         fig, axs = plt.subplots(1, 1, figsize=(8, 6))
         mesh_x, mesh_y = np.meshgrid(self.hist["x_edges"], self.hist["y_edges"])
-        ims = axs.pcolormesh(mesh_x, mesh_y, self.hist["z"], cmap="plasma")
-        fig.colorbar(ims, label=zlabel)
-        if title is not None:
-            plt.title(title)
-        if ylabel is not None:
-            plt.ylabel(ylabel)
-        if xlabel is not None:
-            plt.xlabel(xlabel)
+        if vlims is None:
+            vlims = [None] * 2
+        z_vals = self.hist["z"]
+        if zcut is not None:
+            z_vals[z_vals <= zcut] = None
+        ims = axs.pcolormesh(
+            mesh_x,
+            mesh_y,
+            z_vals,
+            cmap="plasma",
+            vmin=vlims[0],
+            vmax=vlims[1],
+            linewidth=0,
+            rasterized=True,
+        )
+        # ims.set_edgecolor('face')
+        cbar = fig.colorbar(
+            ims,
+            ticks=zticks,
+        )
+        cbar.set_label(label=zlabel, size=fsize)
+        plt.title(title, fontsize=fsize)
+        plt.ylabel(ylabel, fontsize=fsize)
+        plt.xlabel(xlabel, fontsize=fsize)
+        plt.xticks(xticks)
+        plt.yticks(yticks)
+        if fsize is not None:
+            plt.tick_params(labelsize=fsize)
+            cbar.ax.tick_params(labelsize=fsize)
 
         if rng is not None:
             plt.axis(rng)
@@ -106,7 +133,7 @@ class Hist2DPerkeo(HistBase):
         if bsavefig:
             if filename is None:
                 filename = "hist2dperkeo"
-            plt.savefig(f"{output_path}/{filename}.png", dpi=300)
+            plt.savefig(f"{output_path}/{filename}.pdf", dpi=300)
         plt.show()
 
     def addhist(self, hist_p: Hist2DPerkeo, fac: float = 1.0):

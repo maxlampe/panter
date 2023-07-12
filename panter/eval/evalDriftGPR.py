@@ -34,8 +34,8 @@ class GPRDriftData:
         self.x, self.y0, self.y1 = self._preprocess_data()
 
     def __call__(self, *args, **kwargs):
-        # return {"time": self.x[1:], "det0": self.y0[1:], "det1": self.y1[1:]}
-        return {"time": self.x, "det0": self.y0, "det1": self.y1}
+        return {"time": self.x[1:], "det0": self.y0[1:], "det1": self.y1[1:]}
+        # return {"time": self.x, "det0": self.y0, "det1": self.y1}
 
     def _preprocess_data(self):
         """Inplace modification"""
@@ -73,6 +73,15 @@ class GPRDrift:
         self._det = detector
         self.dataclass = GPRDriftData()
         self.data = self.dataclass()
+
+        if self._det == 1:
+            mask0 = self.data["time"] > 0.47
+            mask1 = self.data["time"] < 0.35
+            for key in self.data:
+                stored_0 = self.data[key][mask0]
+                stored_1 = self.data[key][mask1]
+                self.data[key] = torch.cat([stored_1, stored_0])
+
         self.gpr = self._create_gpr_model(
             x_train=self.data["time"], y_train=self.data[f"det{self._det}"]
         )
@@ -108,7 +117,7 @@ class GPRDrift:
         self, n_test: int = 500, t_range=None, y_lim=None, bsave=False, file_tag=None
     ):
         """"""
-
+        fsize = 15
         fig, ax = plt.subplots(figsize=(10, 6))
         x_data = self.data["time"]
         y_data = self.data[f"det{self._det}"]
@@ -151,15 +160,19 @@ class GPRDrift:
 
         # ax.set_title("Drift correction", fontsize=18)
         # ax.set(xlabel="Time [M - D / T]", ylabel="Drift factor [a.u.]")
-        ax.set(xlabel="Time t [M - D / T]", ylabel="Correction c_T [a.u.]")
-        ax.legend()
+        # ax.set(xlabel="Time t [M - D / T]", ylabel="Correction c_T [a.u.]")
+        ax.set_xlabel("Time t [M - D / T]", fontsize=fsize)
+        ax.set_ylabel("Correction c_T [a.u.]", fontsize=fsize)
+        ax.legend(fontsize=fsize)
         plt.tight_layout()
+        plt.tick_params(labelsize=fsize)
+
         if bsave:
             if file_tag is None:
                 file_tag = ""
             else:
                 file_tag = "_" + file_tag
-            plt.savefig(output_path + "/" + f"drift_gpr{file_tag}.png", dpi=300)
+            plt.savefig(output_path + "/" + f"drift_gpr{file_tag}.pdf", dpi=300)
         plt.show()
 
     def plot_losses(self):
@@ -217,4 +230,4 @@ def main(bcalc_anew: bool = False):
 
 
 if __name__ == "__main__":
-    main(bcalc_anew=True)
+    main(bcalc_anew=False)

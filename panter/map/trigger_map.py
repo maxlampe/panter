@@ -185,6 +185,8 @@ class TriggerMap(MapPerkeo):
                 label=f"{keys[2 * i]}",
             )
             axs.flat[i].set(xlabel="Time [ ]", ylabel=f"{keys[2 * i]} [ ]")
+            if keys[2 * i] == "a_1":
+                axs.flat[i].set(ylim=[0.0020, 0.0024])
 
         for i in range(2):
             axs.flat[4 + i].plot(

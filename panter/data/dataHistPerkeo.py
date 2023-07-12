@@ -97,6 +97,7 @@ class HistPerkeo(HistBase):
         bxlog: bool = False,
         bylog: bool = False,
         filename: str = "",
+        fsize: int = None,
     ):
         """Plot histogram."""
 
@@ -107,9 +108,10 @@ class HistPerkeo(HistBase):
         if self.stats["std"] is None:
             self.stats["std"] = 0.0
 
-        plt.title(title)
-        plt.ylabel(ylabel)
-        plt.xlabel(xlabel)
+        plt.title(title, fontsize=fsize)
+        plt.ylabel(ylabel, fontsize=fsize)
+        plt.xlabel(xlabel, fontsize=fsize)
+        plt.tick_params(labelsize=fsize)
         plt.annotate(
             (
                 f"n_ev = {self.stats['noevents']:0.1f}\n"
@@ -130,7 +132,7 @@ class HistPerkeo(HistBase):
         if bsavefig:
             if filename == "":
                 filename = "histperkeo"
-            plt.savefig(f"{output_path}/{filename}.png", dpi=300)
+            plt.savefig(f"{output_path}/{filename}.pdf", dpi=300)
         plt.show()
 
     def addhist(self, hist_p: HistPerkeo, fac: float = 1.0):
