@@ -7,7 +7,7 @@ import subprocess
 import numpy as np
 
 
-P3FIT_PATH = "/home/max/Software/p3fit/branches/afscint-new/build/p3fit"
+P3FIT_PATH = "/home/max/Software/p3fit_git/p3fit/build/p3fit"
 P3FIT_RESULTS_FILE = "fit_res.txt"
 
 
@@ -34,6 +34,7 @@ class P3FitComm:
     def __call__(self, *args, **kwargs):
         self._run()
         self._get_results()
+        self._remove_results()
 
     def _run(self):
         assert self._ini_file is not None, "No ini file set."
@@ -41,6 +42,9 @@ class P3FitComm:
             [self._p3fit_path, self._ini_file],
             check=True,
         )
+
+    def _remove_results(self):
+        os.remove(self._fit_res_file)
 
     def _get_results(self):
         with open(self._fit_res_file, "r") as file:
@@ -81,10 +85,8 @@ class P3FitComm:
 
 
 def main():
-    os.chdir("/home/max/Software/panter_applications/analyse_max/spectra/")
-    test_ini = (
-        "/home/max/Software/panter_applications/analyse_max/spectra/p3fit_testing.ini"
-    )
+    os.chdir("/home/max/Software/panter_applications/analyse_max/auto_fierz")
+    test_ini = "/home/max/Software/panter_applications/analyse_max/auto_fierz/p3fit_calibration.ini"
     p3_comm = P3FitComm(test_ini)
     p3_comm()
 
