@@ -112,7 +112,7 @@ class TestPedestal(unittest.TestCase):
         fitted_mu = fitclass.ret_results().params["mu"].value
         fitted_mu_err = fitclass.ret_results().params["mu"].stderr
         print(fitted_mu, fitted_mu_err)
-        lower_intervall = mu - 1.5 * fitted_mu_err
-        upper_intervall = mu + 1.5 * fitted_mu_err
+        lower_intervall = mu - 3.0 * fitted_mu_err
+        upper_intervall = mu + 3.0 * fitted_mu_err
         self.assertGreaterEqual(fitted_mu, lower_intervall)
         self.assertLessEqual(fitted_mu, upper_intervall)

@@ -485,6 +485,8 @@ class CorrPerkeo(CorrBase):
                     )
 
             if bstore:
+                if hist_o is None:
+                    hist_o = [None] * len(hist_n)
                 self.histograms.append(np.asarray([hist_o, hist_n]))
 
         self.histograms = np.asarray(self.histograms)

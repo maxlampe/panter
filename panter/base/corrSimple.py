@@ -254,6 +254,8 @@ class CorrSimple(CorrBase):
                         self.hist_concat.addhist(hist_n[0])
 
             if bstore:
+                if hist_o is None:
+                    hist_o = [None] * len(hist_n)
                 self.histograms.append(np.asarray([hist_o, hist_n]))
 
         self.histograms = np.asarray(self.histograms)

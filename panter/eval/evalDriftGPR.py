@@ -15,7 +15,6 @@ import pyro.distributions as dist
 from panter.config import conf_path
 from panter.map.drift_dettsum_map import DriftDetSumMapPerkeo
 
-assert pyro.__version__.startswith("1.7.0")
 pyro.set_rng_seed(0)
 plt.rcParams.update({"font.size": 12})
 output_path = os.getcwd()

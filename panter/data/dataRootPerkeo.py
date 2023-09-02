@@ -121,8 +121,8 @@ class RootPerkeo:
         self.mode = None
         self._tadc = None
         self.no_pmts = None
-        self._ev_no = len(self.file["dataTree"].array("EventNumber"))
-        self._cy_no = len(self.file["cycleTree"].array("Cycle"))
+        self._ev_no = len(self.file["dataTree"]["EventNumber"].array(library="np"))
+        self._cy_no = len(self.file["cycleTree"]["Cycle"].array(library="np"))
         self._bDPTT = b"DeltaPrevTriggerTime" in self.file["dataTree"].keys()
         self._ev_valid = None
         self._cy_valid = None
@@ -200,7 +200,7 @@ class RootPerkeo:
     def calc_dptt(self):
         """Calculates DeltaPrevTriggerTime manually. Needs to be run before filter."""
 
-        triggertime = self.file["dataTree"].array("TriggerTime")
+        triggertime = self.file["dataTree"]["TriggerTime"].array(library="np")
         self.dptt = np.insert(
             (0.01 * (triggertime[1:] - triggertime[:-1])), 0, 666666666.0
         )  # [mys]
@@ -215,7 +215,7 @@ class RootPerkeo:
         for filt in self.cyclefilter:
             if filt.active:
                 last_valcycles = self._cy_valid
-                arr = self.file["cycleTree"].array(filt.fkey)
+                arr = self.file["cycleTree"][filt.fkey].array(library="np")
 
                 if filt.ftype == "bool":
                     self._cy_valid = arr == filt.rightval
@@ -231,7 +231,7 @@ class RootPerkeo:
         if self.bverbose:
             print(f"Time taken for cycle Filt: {end_time - start_time:0.5f} s")
 
-        self.cy_valid_no = int(self._cy_valid.sum())
+        self.cy_valid_no = int(np.array(self._cy_valid).sum())
         if self.bverbose:
             print(
                 "Remaining cycles:     ",
@@ -269,13 +269,13 @@ class RootPerkeo:
                         print("Doing CoinTimeDiff filter manually.")
                     arr = self.coindiff
                 else:
-                    arr = self.file["dataTree"].array(filt.fkey)
+                    arr = self.file["dataTree"][filt.fkey].array(library="np")
 
                 if filt.ftype == "cyc":
                     if self.bverbose:
                         print("Applying cycle filter in dataTree")
 
-                    cycarr = self.file["cycleTree"].array("Cycle")
+                    cycarr = self.file["cycleTree"]["Cycle"].array(library="np")
                     res = True
                     for k, cycval in enumerate(cycarr):
                         # check if cycle invalid
@@ -321,7 +321,7 @@ class RootPerkeo:
         end_time = time.time()
         if self.bverbose:
             print(f"Time taken for data Filt: {end_time - start_time:0.5f} s")
-        self._ev_valid_no = int(self._ev_valid.sum())
+        self._ev_valid_no = int(np.array(self._ev_valid).sum())
         if self.bverbose:
             print(
                 "Remaining events:     ",
@@ -379,7 +379,7 @@ class RootPerkeo:
         Uses formula for non-paralyzable analysis. Prints corrected total rate."""
 
         self.val_rtime = (
-            self.file["cycleTree"].array("RealTime") * self._cy_valid
+            self.file["cycleTree"]["RealTime"].array(library="np") * self._cy_valid
         ).sum()
 
         self.val_rtime = self.val_rtime / 1e8
@@ -398,7 +398,7 @@ class RootPerkeo:
                 dtt_filter_count += 1
 
                 self.chop_freq = (
-                    self.file["cycleTree"].array("ChopperSpeed") * self._cy_valid
+                    self.file["cycleTree"]["ChopperSpeed"].array(library="np") * self._cy_valid
                 ).sum() / self.cy_valid_no
 
                 delta_dtt = (filt_perkeo.up_lim - filt_perkeo.low_lim) / 1e8
@@ -413,7 +413,7 @@ class RootPerkeo:
     def gen_pmtdata(self):
         """Generate pmt_data according to calc filter arrays."""
 
-        data_pmt = self.file["dataTree"].array("PMT")
+        data_pmt = self.file["dataTree"]["PMT"].array(library="np")
         self._ev_valid = np.asarray(self._ev_valid, dtype=bool)
         data_pmtfilt = data_pmt[self._ev_valid]
 
@@ -540,7 +540,7 @@ class RootPerkeo:
     def ret_array_by_key(self, key: str) -> np.array:
         """Generate array from data according to calc filter arrays by keyword."""
 
-        data_array = self.file["dataTree"].array(key)
+        data_array = self.file["dataTree"][key].array(library="np")
         data_arrayfilt = []
         for i, val in enumerate(data_array):
             if self._ev_valid[i] == 1:
@@ -594,14 +594,14 @@ class RootPerkeo:
         if self._bDPTT:
             if self.bverbose:
                 print("DPTT already exists.")  # [mus]
-            self.dptt = 0.01 * self.file["dataTree"].array("DeltaPrevTriggerTime")
+            self.dptt = 0.01 * self.file["dataTree"]["DeltaPrevTriggerTime"].array(library="np")
         else:
             if self.bverbose:
                 print("DPTT doesnt exist. Is calculated.")
             self.calc_dptt()
 
-        ct0 = np.array(self.file["dataTree"].array("CoinTime").T[0], dtype=float)
-        ct1 = np.array(self.file["dataTree"].array("CoinTime").T[1], dtype=float)
+        ct0 = np.array(self.file["dataTree"]["CoinTime"].array(library="np"), dtype=float).T[0]
+        ct1 = np.array(self.file["dataTree"]["CoinTime"].array(library="np"), dtype=float).T[1]
         self.coindiff = np.abs(ct0 - ct1)
 
     def filter(self, mode: int):
