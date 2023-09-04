@@ -31,9 +31,9 @@ class TestPedestal(unittest.TestCase):
         super(TestPedestal, self).__init__(*args, **kwargs)
         self._rootfile = "pedestal.root"
         self._data = RootPerkeo(self._rootfile)
-        self._custom_bins = {"bin_count": 100, "low_lim": -200, "up_lim": 200}
+        self._custom_bins = {"bin_count": 1000, "low_lim": -500, "up_lim": 500}
         self._pedtest = PedPerkeo(
-            self._data, bplot_fit=True, custom_hist_par=self._custom_bins
+            self._data, bplot_fit=False, custom_hist_par=self._custom_bins
         )
         self._pedestals = self._pedtest.ret_pedestals()
         self._pedestals_dim = np.shape(self._pedestals)
@@ -53,8 +53,19 @@ class TestPedestal(unittest.TestCase):
         ped_peaks_err = self._pedestals[:, 1]
         self._pedtest.plot_pedestals()
         for pmt in range(self._pedestals_dim[0]):
-            lower_intervall = self._pedestal_peak - 0.3  # 2*ped_peaks_err[pmt]
-            upper_intervall = self._pedestal_peak + 0.3  # 2*ped_peaks_err[pmt]
+            lower_intervall = (
+                self._pedestal_peak - 3.0 * ped_peaks_err[pmt]
+            )  # 2*ped_peaks_err[pmt]
+            upper_intervall = (
+                self._pedestal_peak + 3.0 * ped_peaks_err[pmt]
+            )  # 2*ped_peaks_err[pmt]
+            print(
+                self._pedestal_peak,
+                ped_peaks[pmt],
+                ped_peaks_err[pmt],
+                lower_intervall,
+                upper_intervall,
+            )
             self.assertGreaterEqual(ped_peaks[pmt], lower_intervall)
             self.assertLessEqual(ped_peaks[pmt], upper_intervall)
 
@@ -63,8 +74,12 @@ class TestPedestal(unittest.TestCase):
         ped_width = self._pedestals[:, 2]
         ped_width_err = self._pedestals[:, 3]
         for pmt in range(self._pedestals_dim[0]):
-            lower_intervall = self._pedestal_width - 1  # 3*ped_width_err[pmt]
-            upper_intervall = self._pedestal_width + 1  # 3*ped_width_err[pmt]
+            lower_intervall = (
+                self._pedestal_width - 3.0 * ped_width_err[pmt]
+            )  # 3*ped_width_err[pmt]
+            upper_intervall = (
+                self._pedestal_width + 3.0 * ped_width_err[pmt]
+            )  # 3*ped_width_err[pmt]
             self.assertGreaterEqual(ped_width[pmt], lower_intervall)
             self.assertLessEqual(ped_width[pmt], upper_intervall)
 
@@ -82,7 +97,7 @@ class TestPedestal(unittest.TestCase):
         corr_class.corrections["Pedestal"] = True
         corr_class.corr(bstore=True, bwrite=False)
         testhist = corr_class.histograms[0][1][0]
-        testhist.plot_hist()
+        # testhist.plot_hist()
 
         mu = self._signal_peak - self._pedestal_peak
         width = self._signal_width
@@ -97,7 +112,7 @@ class TestPedestal(unittest.TestCase):
         fitted_mu = fitclass.ret_results().params["mu"].value
         fitted_mu_err = fitclass.ret_results().params["mu"].stderr
         print(fitted_mu, fitted_mu_err)
-        lower_intervall = mu - 3 * fitted_mu_err
-        upper_intervall = mu + 3 * fitted_mu_err
+        lower_intervall = mu - 3.0 * fitted_mu_err
+        upper_intervall = mu + 3.0 * fitted_mu_err
         self.assertGreaterEqual(fitted_mu, lower_intervall)
         self.assertLessEqual(fitted_mu, upper_intervall)

@@ -1,4 +1,4 @@
-"""Trigger analysis"""
+"""Trigger analysis functions"""
 
 import pandas as pd
 import numpy as np
@@ -18,7 +18,13 @@ hist_trigger = [None] * 2
 
 
 def calc_trigger(P01: HistPerkeo, P1: HistPerkeo):
-    """Calculate trigger function from separate HistPerkeo."""
+    """Calculate trigger function from separate HistPerkeo histograms.
+
+    Parameters
+    ----------
+    P01, P1: HistPerkeo, HistPerkeo
+        Input histograms. Calculates trigger as (y01 / (y01 + y1)).
+    """
 
     assert P01.parameters == P1.parameters, "ERROR: Binning does not match."
 
@@ -55,7 +61,15 @@ def calc_trigger(P01: HistPerkeo, P1: HistPerkeo):
 
 
 def trigger_raw(meas: MeasPerkeo, det_main: int):
-    """Calculate trigger function for one detector from raw data."""
+    """Calculate trigger function for one detector from raw data.
+
+    Parameters
+    ----------
+    meas: MeasPerkeo
+        Input measurement as MeasPerkeo.
+    det_main: int
+        Target main detector.
+    """
 
     det_bac = 1 - det_main
     data = RootPerkeo(meas.file_list[0])
@@ -114,7 +128,17 @@ def trigger_raw(meas: MeasPerkeo, det_main: int):
 
 
 def trigger_corr(meas: MeasPerkeo, det_main: int, busebg: bool = True):
-    """Calculate trigger function for one detector from corrected data."""
+    """Calculate trigger function for one detector from corrected data.
+
+    Parameters
+    ----------
+    meas: MeasPerkeo
+        Input measurement as MeasPerkeo.
+    det_main: int
+        Target main detector.
+    busebg: True
+        Do histogram creation with background subtraction.
+    """
 
     det_bac = 1 - det_main
     # Set to data type without background subtraction

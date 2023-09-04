@@ -20,7 +20,7 @@ output_path = os.getcwd()
 
 
 class RateMap(MapPerkeo):
-    """"""
+    """Class for studying uncorrected(?, ToDo) event rates over time."""
 
     def __init__(
         self,

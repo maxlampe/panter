@@ -17,7 +17,27 @@ plt.rcParams.update({"font.size": 12})
 
 
 class Hist2DPerkeo(HistBase):
-    """"""
+    """Histogram object for use with 2D PERKEO data.
+
+    Takes data and histogram parameters to create a histogram with
+    basic helper functions like plotting and histogram arithmetics.
+
+    Parameters
+    ----------
+    data : np.array
+        Data to be histogrammed.
+    bin_count, low_lim, up_lim: [int, int]
+        Histogram parameters: Bin count, upper and lower limit.
+
+    Attributes
+    ----------
+    n_events, mean, stdv, stats, parameters, bin_width, integral
+        Set of histogram properties and information.
+    parameters: dict
+        Histogram parameters as dict.
+    hist : pd.DataFrame
+        Returned histogram from function ret_hist2d()
+    """
 
     def __init__(
         self,
@@ -82,19 +102,67 @@ class Hist2DPerkeo(HistBase):
         bxlog: bool = False,
         bylog: bool = False,
         filename: str = None,
+        vlims: list = None,
+        fsize: int = None,
+        zticks: list = None,
+        xticks: list = None,
+        yticks: list = None,
+        zcut: float = None,
     ):
-        """Plot histogram."""
+        """Plot histogram.
+
+        Parameters
+        ----------
+        rng: list
+            Plot ranges as list [x0, x1, y0, y1].
+        vlims: list
+            Color bar and plotting cut-offs for z values.
+        xticks, yticks, zticks: list, list, list
+            Set axis tickts.
+        zcut: float
+            Threshhold to set z values as None (z_vals <= zcut).
+        title, xlabel, ylabel, zlabel: str, str, str, str
+            Plot title and axis labels.
+        bsavefig, bxlog, bylog: False, False, False
+            Bools to set whether to write the plot to a file or to set axis to log
+            scales.
+        fsize: int
+            Font size for plot.
+        filename: str
+            Output file name as {filename}.pdf. Requires bsavefig = True.
+        """
 
         fig, axs = plt.subplots(1, 1, figsize=(8, 6))
         mesh_x, mesh_y = np.meshgrid(self.hist["x_edges"], self.hist["y_edges"])
-        ims = axs.pcolormesh(mesh_x, mesh_y, self.hist["z"], cmap="plasma")
-        fig.colorbar(ims, label=zlabel)
-        if title is not None:
-            plt.title(title)
-        if ylabel is not None:
-            plt.ylabel(ylabel)
-        if xlabel is not None:
-            plt.xlabel(xlabel)
+        if vlims is None:
+            vlims = [None] * 2
+        z_vals = self.hist["z"]
+        if zcut is not None:
+            z_vals[z_vals <= zcut] = None
+        ims = axs.pcolormesh(
+            mesh_x,
+            mesh_y,
+            z_vals,
+            cmap="plasma",
+            vmin=vlims[0],
+            vmax=vlims[1],
+            linewidth=0,
+            rasterized=True,
+        )
+        # ims.set_edgecolor('face')
+        cbar = fig.colorbar(
+            ims,
+            ticks=zticks,
+        )
+        cbar.set_label(label=zlabel, size=fsize)
+        plt.title(title, fontsize=fsize)
+        plt.ylabel(ylabel, fontsize=fsize)
+        plt.xlabel(xlabel, fontsize=fsize)
+        plt.xticks(xticks)
+        plt.yticks(yticks)
+        if fsize is not None:
+            plt.tick_params(labelsize=fsize)
+            cbar.ax.tick_params(labelsize=fsize)
 
         if rng is not None:
             plt.axis(rng)
@@ -106,11 +174,20 @@ class Hist2DPerkeo(HistBase):
         if bsavefig:
             if filename is None:
                 filename = "hist2dperkeo"
-            plt.savefig(f"{output_path}/{filename}.png", dpi=300)
+            plt.savefig(f"{output_path}/{filename}.pdf", dpi=300)
         plt.show()
 
     def addhist(self, hist_p: Hist2DPerkeo, fac: float = 1.0):
-        """Add another histogram to existing one with multiplicand."""
+        """Add another histogram to existing one with multiplicand.
+
+        Parameters
+        ----------
+        hist_p: HistPerkeo
+            Histogram to multiply y values with (bin by bin), including errors.
+        fac: float
+            Scaling factor to multiply bin count (z-value and error) of (external)
+            histogram hist_p.
+        """
 
         assert self.parameters == hist_p.parameters, "ERROR: Binning does not match."
 
@@ -124,7 +201,13 @@ class Hist2DPerkeo(HistBase):
         self._calc_stats()
 
     def scal(self, fac: float):
-        """Scale histogram by a factor."""
+        """Scale histogram by a factor.
+
+        Parameters
+        ----------
+        fac: float
+            Scaling factor to multiply bin count (z-value and error) with.
+        """
 
         new_hist = {
             **self.hist,

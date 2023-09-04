@@ -36,7 +36,7 @@ See docstrings and python help() function for manuals and examples. Core classes
 In _panter/applications/panter_example.py_ additional, but shorter examples can be found as well.
 
 ```python
-# Core data structure
+# Core data structures
 from panter.data.dataHistPerkeo import HistPerkeo
 from panter.data.dataRootPerkeo import RootPerkeo
 help(HistPerkeo)
@@ -50,9 +50,13 @@ help(DLPerkeo)
 from panter.eval.evalFit import DoFit
 help(DoFit)
 
-# Data reduction and correction class
+# Data reduction and correction class for energy spectra
 from panter.eval.corrPerkeo import CorrPerkeo
 help(CorrPerkeo)
+
+# Data reduction and correction class for non-energy data
+from panter.base.corrSimple import CorrSimple
+help(CorrSimple)
 ```
 
 ### File structure
@@ -75,9 +79,11 @@ and should also be placed into the config directory, should you not generate the
 
 1. Style guide: [pep8](https://www.python.org/dev/peps/pep-0008/)
 2. Docstring convention: [numpy](https://numpydoc.readthedocs.io/en/latest/format.html)
-3. Ideally, you should use [black](https://pypi.org/project/black/) as code formatter.
+3. Ideally, you should use [black](https://pypi.org/project/black/) as code formatter. **Maximum line length is 88** (default black enforced line length).
+4. Arbitrary conventions (private variables start with "_" and bool variables with "b")
+5. Due to the small group of people using panter, import paths in main() functions are hard coded.
 
-**Maximum line length is 88** (default black enforced line length).
+Note: Please update docstrings after changes!
 
 ### Unit tests
 
@@ -86,8 +92,8 @@ All unit tests can be found in the _tests_ directory and executed with _pytest_.
 cd tests/
 python3 -m pytest .
 ```
-A working ROOT installation is required to run the unit tests, as the panter and root outputs
-are compared.
+A working ROOT installation is required to run the unit tests, as the panter and ROOT outputs
+are compared or synthetic data is generated with ROOT.
 
 ## License
 

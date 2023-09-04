@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""General ElecTest measurement file information"""
+"""Helper classes and functions for importing ElecTest measurements."""
 
 ELECTEST_DIR = "/data/PerkeoDaten1920/ElecTest_20200309/"
 # """ Test 1 """

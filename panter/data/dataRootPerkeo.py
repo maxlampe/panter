@@ -1,4 +1,4 @@
-""""""
+"""Core class for importing Perkeo III root files."""
 
 from __future__ import annotations
 
@@ -12,11 +12,11 @@ import numpy as np
 import uproot
 
 from panter.config import conf_path
-from panter.config.params import delt_pmt
+from panter.config.params import delt_pmt, qdc_grad_m, qdc_grad_c
 from panter.config.params import k_pmt_fix
 from panter.data.dataHistPerkeo import HistPerkeo
 from panter.data.dataMisc import FiltPerkeo
-from panter.eval.evalFunctions import calc_acorr_ratedep
+from panter.eval.evalFunctions import calc_acorr_ratedep, calc_acorr_qdc
 
 # import global analysis parameters
 cnf = configparser.ConfigParser()
@@ -27,88 +27,120 @@ class RootPerkeo:
     """Class for top layer PERKEO root file management.
 
     Takes filename and can generate data histograms according to set
-    filters. Currently only for all PMTs individually. Has several helper functions.
+    filters. Has several helper functions and does some data corrections before
+    filtering.
 
     Parameters
     ----------
-    filename : str
-    bverbose : False
+    filename: str
+        File name (with ".root" ending) to be imported.
+    bverbose: False
         En-/Disables general outputs when handling data with RootPerkeo.
+    bfull_adc: False
+        Store full ALLMODE data, too, instead of taking difference.
 
     Attributes
     ----------
-    filename : str
-    filedate : float
+    filename: str
+    bverbose: False
+    bfull_adc: False
+    filedate: float
         Time (in seconds) since epoch of last modification of file.
-    file : uproot.open()
+    file: uproot.open()
         Raw root file in python via uproot package.
-    mode : {1, 2, 3}
+    mode: {1, 2, 3}
         Measurement program mode. (1, 2, 3) -> (Delta, Both, All)
-    _tadc : {0, 1, 32}
-        Depending on mode, is max _tadc index value of integrator
-    no_pmts : int
+    no_pmts: int
         Is set automatically. Should be 16 (e.g. LogicBox would be 4).
-    _ev_no, _cy_no : int
-        Number of events and cycles respectively.
-    _ev_valid, _cy_valid : array of bool
-        Length of array is either _ev_no or _cy_no. Is set depending on
-        filter settings. 1/True is valid and 0/False would be invalid.
-    _ev_valid_no, cy_valid_no : int
-        Number of valid events and valid cycles respectively.
-    cyclefilter, datafilter: dict of FiltPerkeo
-    pmt_data : list of arrays
-        List of arrays with all PMT data after generation with filters
-    dptt : array
+    cy_valid_no: int
+        Number of valid cycles.
+    cyclefilter, datafilter: list
+        Iterable of FiltPerkeo to be applied when generating data.
+    cache_datafilter, cache_cyclefilter
+        Store set filters in a cache for later use. Required to guarantee, e.g.,
+        correct rate dependency correction before removing (previous) events.
+    pmt_data: np.array
+        Arrays with all PMT data after generation with filters
+    data_pmt_tran: np.array
+        Arrays with all PMT data after generation with filters without taking the
+        QDC integrator difference. Used for ALLMODE data.
+    dptt: np.array
         Array to store DeltaPrevTriggerTime values for files without it.
-    val_rtime : float
+    val_rtime: float
         Valid measurement time. After cycles are filtered, measurement time is summed up
         for remaining cycles. None on instantiation.
-    dt_fac : float
+    dt_fac: float
         Dead time correction factor to correct number of detected events as a scaling
         factor. n_true = n_meas * dt_fac. None on instantiation.
     deadtime : float
         Dead time value from measurement. Imported from ini file (evalRaw.ini).
-    stats : dict of lists
+    stats : dict
         Dictionary for PMT statistics: mean, stddev, max xval, 'active'
         for each PMT (array in pmt_data). None on instantiation.
-    _pmt_thres : int
-        Virtual threshhold for mean of a PMT data array to be
-        considered 'active'. Has no effect outside this label. Is for
-        automated fits and set by ini file.
-    hists : list of HistPerkeo()
-        List of histograms for each PMT. Need to be initialized and generated.
-    _hist_par : list of int
-        Histogram default parameters imported by ini file (evalRaw.ini)
-        ['ADC_hist_counts', 'ADC_hist_min', 'ADC_hist_max']
-    hist_sums : list of HistPerkeo()
-        List of histograms for DetSum 0 and 1. Need to be initialized and generated.
-    _histsum_par  : list of int
-        Histogram default parameters imported by ini file (evalRaw.ini)
-        ['SUM_hist_counts', 'SUM_hist_min', 'SUM_hist_max']
+    hists: list
+        List of HistPerkeo for each PMT. Need to be initialized and generated.
+    hist_sums: list
+        List of HistPerkeo for DetSum 0 and 1. Need to be initialized and generated.
+    allmode_cut: 10000
+        Number of ALLMODE events to use with [:allmode_cut] on import.
+        Avoids large memory requirements.
 
     Examples
     --------
-    General example of how to use RootPerkeo. The two cases differ by
-    using default or custom filters (here DeltaPrevTriggerTime).
-    Histograms are created only for 'active' PMTs in this example.
+    1 ) General example of how to use RootPerkeo. Import file and generate data for detector
+    sums with default filters (removing invalid cycles).
+
+    >>> data = RootPerkeo("file.root")
+    >>> data.auto()
+    >>> data.gen_hist([])
+    >>> data.hist_sums[0].plot_hist()
+
+    2) The second case differs by using custom filters (here DeltaTriggerTime) by
+    adding a filter and running auto(1). Histograms are created for all sixteen PMTs in
+    this example. data.gen_hist([]) only creates sum histograms. You can also return
+    another data branch filtered, as is done for DeltaTriggerTime.
 
     >>> data = RootPerkeo("file.root")
     >>> data.info()
-    >>> if True:
-            data.auto()
-        else:
-            data.set_filtdef()
-            data.set_filt(
-                "data",
-                fkey="DeltaTriggerTime",
-                active=True,
-                ftype="num",
-                low_lim=x,
-                up_lim=y,
-            )
-            data.auto(1)
-    >>> data.gen_hist(data.ret_actpmt())
+    >>> data.set_filtdef()
+    >>> data.set_filt(
+            "data",
+            fkey="DeltaTriggerTime",
+            active=True,
+            ftype="num",
+            low_lim=x,
+            up_lim=y,
+        )
+    >>> data.auto(1)
+    >>> data.info()
+    >>> data.gen_hist(list(range(16)))
     >>> dtt = 0.01 * data.ret_array_by_key("DeltaTriggerTime") # [mus]
+
+    3) We can also correct the data with low-level corrections (pedestal, rate dependency,
+    and QDC non-linarity) and filter for detector 0 to tbe the primary detector. Using
+    QDC non-linarity correction is not recommended.
+
+    >>> data = RootPerkeo("file.root")
+    >>> data.set_filtdef()
+    >>> data.set_filt(
+        "data",
+        fkey="DeltaTriggerTime",
+        active=True,
+        ftype="num",
+        low_lim=380000,
+        up_lim=600000,
+    )
+    >>> data.set_filt(
+        "data", fkey="Detector", active=True, ftype="bool", rightval=0
+    )
+    >>> corrections = {
+        "Pedestal": True,
+        "RateDepElec": True,
+        "QDC": False,
+    }
+    >>> data.auto4corr(1, np.zeros((16, 6)), corrections)
+    >>> data.gen_hist([])
+    >>> data.hist_sums[0].plot_hist(rng=[0.0, 35e3, 0.0, 4e3])
     """
 
     def __init__(self, filename: str, bverbose: bool = False, bfull_adc: bool = False):
@@ -119,13 +151,18 @@ class RootPerkeo:
         self.filedate = os.path.getmtime(filename)
         self.file = uproot.open(self.filename)
         self.mode = None
-        self._tadc = None
         self.no_pmts = None
-        self._ev_no = len(self.file["dataTree"].array("EventNumber"))
-        self._cy_no = len(self.file["cycleTree"].array("Cycle"))
+        # Depending on mode, is max _tadc index value of integrator, i.e., {0, 1, 32}.
+        self._tadc = None
+        # Number of events and cycles respectively.
+        self._ev_no = len(self.file["dataTree"]["EventNumber"].array(library="np"))
+        self._cy_no = len(self.file["cycleTree"]["Cycle"].array(library="np"))
+        # Check if file has a DPTT branch
         self._bDPTT = b"DeltaPrevTriggerTime" in self.file["dataTree"].keys()
+        # Arrays with length either _ev_no or _cy_no. Is set depending on filters.
         self._ev_valid = None
         self._cy_valid = None
+        # Number of valid events and valid cycles respectively.
         self._ev_valid_no = None
         self.cy_valid_no = None
 
@@ -145,22 +182,32 @@ class RootPerkeo:
         self.dt_fac = None
         self.deadtime = float(cnf["dataPerkeo"]["DeadTime"])
         self.stats = None
+        # Virtual threshhold for mean of a PMT data array to be considered 'active'.
+        # Not really used excpet in old analysis of elec test data.
         self._pmt_thres = float(cnf["dataPerkeo"]["PMT_Thres"])
         self.hists = None
+        self.hist_sums = None
+        # Histogram default parameters imported by ini file (evalRaw.ini)
         self._hist_par = {
             "bin_count": int(cnf["dataPerkeo"]["ADC_hist_counts"]),
             "low_lim": int(cnf["dataPerkeo"]["ADC_hist_min"]),
             "up_lim": int(cnf["dataPerkeo"]["ADC_hist_max"]),
         }
-        self.hist_sums = None
         self._histsum_par = {
             "bin_count": int(cnf["dataPerkeo"]["SUM_hist_counts"]),
             "low_lim": int(cnf["dataPerkeo"]["SUM_hist_min"]),
             "up_lim": int(cnf["dataPerkeo"]["SUM_hist_max"]),
         }
+        self.allmode_cut = 10000
 
     def info(self, ball=False):
-        """Print (Valid) Events, Cycles, content of branches/trees"""
+        """Print (Valid) Events, Cycles, content of branches/trees
+
+        Parameters
+        ----------
+        ball: False
+            Print additional information.
+        """
 
         print("File name: \t" + self.filename)
         print(
@@ -199,7 +246,7 @@ class RootPerkeo:
     def calc_dptt(self):
         """Calculates DeltaPrevTriggerTime manually. Needs to be run before filter."""
 
-        triggertime = self.file["dataTree"].array("TriggerTime")
+        triggertime = self.file["dataTree"]["TriggerTime"].array(library="np")
         self.dptt = np.insert(
             (0.01 * (triggertime[1:] - triggertime[:-1])), 0, 666666666.0
         )  # [mys]
@@ -214,7 +261,7 @@ class RootPerkeo:
         for filt in self.cyclefilter:
             if filt.active:
                 last_valcycles = self._cy_valid
-                arr = self.file["cycleTree"].array(filt.fkey)
+                arr = self.file["cycleTree"][filt.fkey].array(library="np")
 
                 if filt.ftype == "bool":
                     self._cy_valid = arr == filt.rightval
@@ -230,7 +277,7 @@ class RootPerkeo:
         if self.bverbose:
             print(f"Time taken for cycle Filt: {end_time - start_time:0.5f} s")
 
-        self.cy_valid_no = int(self._cy_valid.sum())
+        self.cy_valid_no = int(np.array(self._cy_valid).sum())
         if self.bverbose:
             print(
                 "Remaining cycles:     ",
@@ -268,13 +315,13 @@ class RootPerkeo:
                         print("Doing CoinTimeDiff filter manually.")
                     arr = self.coindiff
                 else:
-                    arr = self.file["dataTree"].array(filt.fkey)
+                    arr = self.file["dataTree"][filt.fkey].array(library="np")
 
                 if filt.ftype == "cyc":
                     if self.bverbose:
                         print("Applying cycle filter in dataTree")
 
-                    cycarr = self.file["cycleTree"].array("Cycle")
+                    cycarr = self.file["cycleTree"]["Cycle"].array(library="np")
                     res = True
                     for k, cycval in enumerate(cycarr):
                         # check if cycle invalid
@@ -320,7 +367,7 @@ class RootPerkeo:
         end_time = time.time()
         if self.bverbose:
             print(f"Time taken for data Filt: {end_time - start_time:0.5f} s")
-        self._ev_valid_no = int(self._ev_valid.sum())
+        self._ev_valid_no = int(np.array(self._ev_valid).sum())
         if self.bverbose:
             print(
                 "Remaining events:     ",
@@ -328,9 +375,6 @@ class RootPerkeo:
                 "     from a total of:     ",
                 self._ev_no,
             )
-
-        # FIXME!
-        # assert self._ev_valid_no > 0, "ERROR: No events left. This wouldn't leave data."
 
         return 0
 
@@ -345,11 +389,18 @@ class RootPerkeo:
         return 0
 
     def set_filt(self, tree: str, **kwargs):
-        """Set filter"""
+        """Set filter
 
+        Parameters
+        ----------
+        tree: str
+            Key of target tree in root file.
+        """
+
+        assert tree in ["data", "cycle"], f"Error: Invalid tree key '{tree}'"
         if tree == "data":
             self.datafilter.append(FiltPerkeo(**kwargs))
-        if tree == "cycle":
+        else:
             self.cyclefilter.append(FiltPerkeo(**kwargs))
 
         return 0
@@ -381,7 +432,7 @@ class RootPerkeo:
         Uses formula for non-paralyzable analysis. Prints corrected total rate."""
 
         self.val_rtime = (
-            self.file["cycleTree"].array("RealTime") * self._cy_valid
+            self.file["cycleTree"]["RealTime"].array(library="np") * self._cy_valid
         ).sum()
 
         self.val_rtime = self.val_rtime / 1e8
@@ -400,7 +451,8 @@ class RootPerkeo:
                 dtt_filter_count += 1
 
                 self.chop_freq = (
-                    self.file["cycleTree"].array("ChopperSpeed") * self._cy_valid
+                    self.file["cycleTree"]["ChopperSpeed"].array(library="np")
+                    * self._cy_valid
                 ).sum() / self.cy_valid_no
 
                 delta_dtt = (filt_perkeo.up_lim - filt_perkeo.low_lim) / 1e8
@@ -415,7 +467,7 @@ class RootPerkeo:
     def gen_pmtdata(self):
         """Generate pmt_data according to calc filter arrays."""
 
-        data_pmt = self.file["dataTree"].array("PMT")
+        data_pmt = self.file["dataTree"]["PMT"].array(library="np")
         self._ev_valid = np.asarray(self._ev_valid, dtype=bool)
         data_pmtfilt = data_pmt[self._ev_valid]
 
@@ -442,49 +494,100 @@ class RootPerkeo:
         else:
             self.pmt_data = data_pmt_tran[self._tadc] - data_pmt_tran[0]
 
+        # self.pmt_data = np.array(self.pmt_data, dtype=float)
+        self.pmt_data = self.pmt_data.astype("float64")
+
         if self.bfull_adc:
-            self.data_pmt_tran = data_pmt_tran
+            # self.data_pmt_tran = np.array(data_pmt_tran, dtype=float)
+            self.data_pmt_tran = data_pmt_tran[:, :, : self.allmode_cut].astype(
+                "float64"
+            )
 
         return 0
 
     def filt_pmtdata(self, valid_ev_old: np.array):
-        """Filter PMT data based on calc filters."""
+        """Filter PMT data based on calc filters.
+
+        Parameters
+        ----------
+        valid_ev_old: np.array
+            Cached filters to be applied.
+        """
 
         self._ev_valid = np.asarray(self._ev_valid, dtype=bool)[valid_ev_old]
         self.pmt_data = self.pmt_data[:, self._ev_valid]
 
-    def corr_pmtdata(self):
-        """Correct PMT data with pedestals and rate dependency."""
+    def corr_pmtdata(self, corr_dict: dict):
+        """Correct PMT data with pedestals and rate dependency.
 
-        # Correct pedestal
-        for i in range(0, self.no_pmts):
-            self.pmt_data[i] = self.pmt_data[i] - self._peds[i][0]
+        Parameters
+        ----------
+        corr_dict: dict
+            Corrections ("Pedestal", "RateDepElec", "QDC") to be applied.
+        """
 
-        rdep_diff = []
-        for i in range(0, self.no_pmts):
-            ampl_0 = self.pmt_data[i][1:]
-            ampl_1 = self.pmt_data[i][:-1]
-            test = calc_acorr_ratedep(
-                ampl_0, ampl_1, self.dptt[1:], delta=delt_pmt[i], k=k_pmt_fix[i]
-            )
-            rdep_diff.append(test - self.pmt_data[i][1:])
-            # FIXME: Think about this. Worst case: One event should be irrelevant.
-            self.pmt_data[i][1:] = test
-        self._rdep_diff = rdep_diff
+        # Do pedestal correction
+        if corr_dict["Pedestal"]:
+            for i in range(0, self.no_pmts):
+                self.pmt_data[i] = self.pmt_data[i] - self._peds[i][0]
 
-    def ret_corr_allmode(self, i_start: int = 0, i_stop: int = 32):
-        """"""
+        # Do rate dependency correction
+        if corr_dict["RateDepElec"]:
+            rdep_diff = []
+            for i in range(0, self.no_pmts):
+                ampl_0 = self.pmt_data[i][1:]
+                ampl_1 = self.pmt_data[i][:-1]
+                test = calc_acorr_ratedep(
+                    ampl_0, ampl_1, self.dptt[1:], delta=delt_pmt[i], k=k_pmt_fix[i]
+                )
+                rdep_diff.append(test - self.pmt_data[i][1:])
+                # Not correcting first event should make sense
+                self.pmt_data[i][1:] = test
+            self._rdep_diff = rdep_diff
 
+        # Do QDC correction (treat all as non-delayed charge)
+        if corr_dict["QDC"]:
+            for i in range(0, self.no_pmts):
+                m = qdc_grad_m[i]
+                c = qdc_grad_c[i]
+                qdc_corr = calc_acorr_qdc(self.pmt_data[i], m, c)
+                self.pmt_data[i] += qdc_corr
+
+    def ret_corr_allmode(
+        self, i_start: list = None, i_stop: list = None, bfilt: bool = True
+    ):
+        """Return corrected ALLMODE data with chosen QDC sample difference.
+
+        Parameters
+        ----------
+        i_start, i_stop: list, list
+            QDC index for each PMT to be used for the integrator difference.
+        bfilt: True
+            Apply filters to ALLMODE data, too.
+        """
+
+        # Todo: Needs modular corrections too!
         assert self.bfull_adc, "AllMODE data note stored. Use bfull_adc=True"
+        if i_start is None:
+            i_start = [0] * self.no_pmts
+        if i_stop is None:
+            i_stop = [32] * self.no_pmts
 
-        pmt_data_man = self.data_pmt_tran[i_stop] - self.data_pmt_tran[i_start]
+        pmt_data_man = np.zeros(self.data_pmt_tran.shape[1:])
         # Correct with corrections used for regular data
         for i in range(0, self.no_pmts):
-            pmt_data_man[i] = pmt_data_man[i] - self._peds[i][0]
-            pmt_data_man[i, 1:] = pmt_data_man[i, 1:] + self._rdep_diff[i]
+            pmt_data_man[i] = (
+                self.data_pmt_tran[i_stop[i], i]
+                - self.data_pmt_tran[i_start[i], i]
+                - self._peds[i][0]
+            )
+            pmt_data_man[i, 1:] = (
+                pmt_data_man[i, 1:] + self._rdep_diff[i][: (self.allmode_cut - 1)]
+            )
 
         # Filter with most recent filter used for regular data
-        pmt_data_man = pmt_data_man[:, self._ev_valid]
+        if bfilt:
+            pmt_data_man = pmt_data_man[:, self._ev_valid[: self.allmode_cut]]
 
         return pmt_data_man
 
@@ -503,9 +606,15 @@ class RootPerkeo:
         self.coindiff = np.array(coindiff_filt)
 
     def ret_array_by_key(self, key: str) -> np.array:
-        """Generate array from data according to calc filter arrays by keyword."""
+        """Generate array from data according to calc filter arrays by keyword.
 
-        data_array = self.file["dataTree"].array(key)
+        Parameters
+        ----------
+        key: str
+            Key of branch in dataTree to be returned.
+        """
+
+        data_array = self.file["dataTree"][key].array(library="np")
         data_arrayfilt = []
         for i, val in enumerate(data_array):
             if self._ev_valid[i] == 1:
@@ -559,14 +668,20 @@ class RootPerkeo:
         if self._bDPTT:
             if self.bverbose:
                 print("DPTT already exists.")  # [mus]
-            self.dptt = 0.01 * self.file["dataTree"].array("DeltaPrevTriggerTime")
+            self.dptt = 0.01 * self.file["dataTree"]["DeltaPrevTriggerTime"].array(
+                library="np"
+            )
         else:
             if self.bverbose:
                 print("DPTT doesnt exist. Is calculated.")
             self.calc_dptt()
 
-        ct0 = np.array(self.file["dataTree"].array("CoinTime").T[0], dtype=float)
-        ct1 = np.array(self.file["dataTree"].array("CoinTime").T[1], dtype=float)
+        ct0 = np.array(
+            self.file["dataTree"]["CoinTime"].array(library="np"), dtype=float
+        ).T[0]
+        ct1 = np.array(
+            self.file["dataTree"]["CoinTime"].array(library="np"), dtype=float
+        ).T[1]
         self.coindiff = np.abs(ct0 - ct1)
 
     def filter(self, mode: int):
@@ -593,6 +708,10 @@ class RootPerkeo:
         self.datafilter = self.cache_datafilter
         self.cyclefilter = self.cache_cyclefilter
 
+    def ret_ev_valid(self):
+        """Return bool array for all events based on last used filters."""
+        return self._ev_valid
+
     def auto(self, set_mode: int = 0):
         """Run functions in correct order to get PMT data out of file.
 
@@ -616,10 +735,41 @@ class RootPerkeo:
         self.gen_dptt_coindiff()
         self.calc_stats()
 
-    def auto4corr(self, set_mode: int = 0, peds: np.array = None):
-        """Splits generation of PMT data and filterting over functions for RateDep."""
+    def auto4corr(self, set_mode: int = 0, peds: np.array = None, corr_dict: dict = {}):
+        """Run functions in correct order to get PMT data out of file with corrections.
 
-        assert peds is not None, "Needs pedestal values for rate dep."
+        This function calls all other necessary functions in appropriate order to
+        generate pmt_data with corrections. Splits generation of PMT data and
+        filterting over functions for RateDep.
+
+        Parameters
+        ----------
+        set_mode: int
+            0 = use default settings (only filter invalid cycles/events)
+            2 = ignore all filters and use raw data
+            any other int = use set filters (before running this)
+            (default 0)
+        peds: np.array
+            Array of pedestal positions to be used for the corrections.
+        corr_dict: dict
+            Correction dictionary ("Pedestal", "RateDepElec", "QDC").
+        """
+
+        valid_corr = [
+            "Pedestal",
+            "RateDepElec",
+            "QDC",
+        ]
+        corrs = {
+            "Pedestal": False,
+            "RateDepElec": False,
+            "QDC": False,
+        }
+        for key in corr_dict:
+            assert key in valid_corr, f"Invalid/unknown key {key}"
+            corrs[key] = corr_dict[key]
+        if corrs["Pedestal"]:
+            assert peds is not None, "Needs pedestal values for rate dep."
         self._peds = peds
 
         self.calc_missing_branches()
@@ -633,8 +783,8 @@ class RootPerkeo:
         # gen pmt data as before
         self.gen_pmtdata()
         # do pedestal and ratedep correction
-        self.corr_pmtdata()
-        # load cached custom filtersand recalculate valud cycecs/events
+        self.corr_pmtdata(corrs)
+        # load cached custom filters and recalculate valid cycles/events
         valid_ev_old = copy.deepcopy(self._ev_valid)
         self.uncache_filter()
         self.filter(set_mode)
@@ -703,8 +853,13 @@ def main():
         low_lim=380000,
         up_lim=600000,
     )
-    data.auto(1)
-    # data.auto4corr(1, np.zeros((16, 6)))
+    # data.auto(1)
+    corrections = {
+        "Pedestal": True,
+        "RateDepElec": True,
+        "QDC": False,
+    }
+    data.auto4corr(1, np.zeros((16, 6)), corrections)
     data.gen_hist([])
     data.hist_sums[0].plot_hist(rng=[0.0, 35e3, 0.0, 4e3])
 

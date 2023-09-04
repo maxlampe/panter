@@ -1,4 +1,4 @@
-""""""
+"""Module for evaluating drift data over time and creating the correction."""
 
 import numpy as np
 import pandas as pd
@@ -15,14 +15,30 @@ import pyro.distributions as dist
 from panter.config import conf_path
 from panter.map.drift_dettsum_map import DriftDetSumMapPerkeo
 
-assert pyro.__version__.startswith("1.7.0")
 pyro.set_rng_seed(0)
 plt.rcParams.update({"font.size": 12})
 output_path = os.getcwd()
 
 
 class GPRDriftData:
-    """"""
+    """Class for drift data with data processing. Uses pre-calculated DetSumMap.
+
+    Parameters
+    ----------
+    n_data_steps: int
+        Steps to potentially skip data to reduce training data size.
+
+    Attributes
+    ----------
+    pdm: DriftDetSumMapPerkeo
+        Fitted drift data class of summed detector signals.
+    df: pd.DataFrame
+        Fitted drift data of summed detector signals.
+    data_form: dict
+        Data rescaling factors to go from timestamps to scaled data.
+    x, y0, y1: pd.Series
+        Processed data.
+    """
 
     def __init__(self, n_data_steps: int = None):
         self._n_data_steps = n_data_steps
@@ -34,11 +50,13 @@ class GPRDriftData:
         self.x, self.y0, self.y1 = self._preprocess_data()
 
     def __call__(self, *args, **kwargs):
-        # return {"time": self.x[1:], "det0": self.y0[1:], "det1": self.y1[1:]}
-        return {"time": self.x, "det0": self.y0, "det1": self.y1}
+        """Return data as dictionary of pd.Series. Skips first data point."""
+
+        return {"time": self.x[1:], "det0": self.y0[1:], "det1": self.y1[1:]}
+        # return {"time": self.x, "det0": self.y0, "det1": self.y1}
 
     def _preprocess_data(self):
-        """Inplace modification"""
+        """Preprocessing, e.g., rescaling, data."""
 
         for index, row in self.df.iterrows():
             if pd.isnull(row["pmt_fac"][1]):
@@ -60,19 +78,65 @@ class GPRDriftData:
         return x, y0, y1
 
     def data_to_timestamp(self, x: torch.tensor):
-        """"""
+        """Convert rescaled data back to timestamps."""
+
         return x * self.data_form["b"] + self.data_form["a"]
 
     def timestamp_to_data(self, x: torch.tensor):
-        """"""
+        """Convert timestamps to rescaled data for the GPR."""
+
         return (x - self.data_form["a"]) / self.data_form["b"]
 
 
 class GPRDrift:
+    """Class for the Gaussian process regression of drift data for one detector.
+
+    Uses the GPRDriftData class to do inference on the data set. Can also train GPR
+    parameters.
+
+    Parameters
+    ----------
+    detector: 0
+        Target Perkeo III detector.
+
+    Attributes
+    ----------
+    dataclass, data: GPRDriftData, pd.DataFrame
+        Data class GPRDriftData and its data set.
+    gpr: gp.models
+        Gaussian process regression model object from pyro.
+    losses: list
+        Training losses.
+
+    Examples
+    --------
+    1) Calculate GPR from scatch for detector 1 and save it to PATH.
+
+    >>> gpr_class = GPRDrift(detector=1)
+    >>> gpr_class.train()
+    >>> gpr_class.save_model(file_name=f"{PATH}/gpr_model_det1_demo.plk")
+
+    2) Load a pre-trained GPR, plot drift data and model, and evaluate at three points.
+
+    >>> gpr_class = GPRDrift(detector=1)
+    >>> gpr_class.load_model(file_name=f"{PATH}/gpr_model_det1_demo.plk")
+    >>> gpr_class.plot_results(t_range=[0.0, 1.0])
+    >>> print(gpr_class(torch.tensor([0.1, 0.3, 0.8])))
+    """
+
     def __init__(self, detector: int = 0):
         self._det = detector
         self.dataclass = GPRDriftData()
         self.data = self.dataclass()
+
+        if self._det == 1:
+            mask0 = self.data["time"] > 0.47
+            mask1 = self.data["time"] < 0.35
+            for key in self.data:
+                stored_0 = self.data[key][mask0]
+                stored_1 = self.data[key][mask1]
+                self.data[key] = torch.cat([stored_1, stored_0])
+
         self.gpr = self._create_gpr_model(
             x_train=self.data["time"], y_train=self.data[f"det{self._det}"]
         )
@@ -81,7 +145,13 @@ class GPRDrift:
         self.losses = []
 
     def __call__(self, x_eval: torch.tensor):
-        """"""
+        """Evaluating the GPR at a set of testing locations.
+
+        Parameters
+        ----------
+        x_eval: torch.tensor
+            Testing locations to be evaluated.
+        """
 
         self.gpr.eval()
         with torch.no_grad():
@@ -91,7 +161,13 @@ class GPRDrift:
         return mean, sd
 
     def train(self, n_steps: int = 7000):
-        """"""
+        """Train Gaussian process regression.
+
+        Parameters
+        ----------
+        n_steps: 7000
+            Training steps.
+        """
 
         self.gpr.train()
 
@@ -105,10 +181,28 @@ class GPRDrift:
             self.losses.append(loss.item())
 
     def plot_results(
-        self, n_test: int = 500, t_range=None, y_lim=None, bsave=False, file_tag=None
+        self,
+        n_test: int = 500,
+        t_range=None,
+        y_lim=None,
+        bsave=False,
+        file_tag=None,
     ):
-        """"""
+        """Plot the resulting drift correction over time.
 
+        Parameters
+        ----------
+        n_test: 500
+            Number of testing locations for the plot. Affects smoothness of plot.
+        t_range, y_lim: list, list
+            Axis ranges for the plot.
+        bsave: False
+            Save plot to file.
+        file_tag: str
+            File tag to be appended to file name. Requires bsave = True.
+        """
+
+        fsize = 15
         fig, ax = plt.subplots(figsize=(10, 6))
         x_data = self.data["time"]
         y_data = self.data[f"det{self._det}"]
@@ -150,34 +244,57 @@ class GPRDrift:
             ax.set_ylim(y_lim)
 
         # ax.set_title("Drift correction", fontsize=18)
-        # ax.set(xlabel="Time [M - D / T]", ylabel="Drift factor [a.u.]")
-        ax.set(xlabel="Time t [M - D / T]", ylabel="Correction c_T [a.u.]")
-        ax.legend()
+        ax.set_xlabel("Time t [M - D / T]", fontsize=fsize)
+        ax.set_ylabel("Correction c_T [a.u.]", fontsize=fsize)
+        ax.legend(fontsize=fsize)
         plt.tight_layout()
+        plt.tick_params(labelsize=fsize)
+
         if bsave:
             if file_tag is None:
                 file_tag = ""
             else:
                 file_tag = "_" + file_tag
-            plt.savefig(output_path + "/" + f"drift_gpr{file_tag}.png", dpi=300)
+            plt.savefig(output_path + "/" + f"drift_gpr{file_tag}.pdf", dpi=300)
         plt.show()
 
     def plot_losses(self):
-        """"""
+        """Plot the loss curve from training."""
+
         plt.plot(self.losses)
         plt.show()
 
     def save_model(self, file_name: str = "gpr_model.plk"):
-        """"""
+        """Save a GPR model to a file.
+
+        Parameters
+        ----------
+        file_name: str
+            File name with ending to save model to.
+        """
+
         torch.save(self.gpr.state_dict(), file_name)
 
     def load_model(self, file_name: str = "gpr_model.plk"):
-        """"""
+        """Load stored GPR model from a file.
+
+        Parameters
+        ----------
+        file_name: str
+            File name with ending to load model from.
+        """
+
         self.gpr.load_state_dict(torch.load(file_name))
 
     @staticmethod
     def _create_gpr_model(x_train: torch.tensor, y_train: torch.tensor):
-        """"""
+        """Create a Gaussian process regression model from data.
+
+        Parameters
+        ----------
+        x_train, y_train: , torch.tensor
+            Training data for GPR.
+        """
 
         pyro.clear_param_store()
         kernel = gp.kernels.Matern32(
@@ -200,7 +317,6 @@ class GPRDrift:
 
 
 def main(bcalc_anew: bool = False):
-
     for det in [0, 1]:
         gpr_class = GPRDrift(detector=det)
 
@@ -217,4 +333,4 @@ def main(bcalc_anew: bool = False):
 
 
 if __name__ == "__main__":
-    main(bcalc_anew=True)
+    main(bcalc_anew=False)

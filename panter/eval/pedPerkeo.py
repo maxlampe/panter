@@ -25,21 +25,29 @@ class PedPerkeo:
     Parameters
     ----------
     dataclass : RootPerkeo
+        Input data.
     bplot_res, bplot_fit, bplot_log: False, False, False
-        Activate plotting the pedestal results, plotting each fit result and plotting
+        Activate plotting the pedestal results, plotting each fit result, and plotting
         each fit result with a log scaled y-axis.
     bnaive_filt: False
         If True, deactivates standard filter (detector == 0/1) to get electronic Eigen-
-        signal and fit a Gaussian to data below 500 channels for each PMT. Useful for
-        e.g. electronics data with non-organic trigger patterns.
-    range_detsum: None
-        Filter DetSum for specific range (list). If None, it's not applied.
-    range_dtt: None
-        Filter DeltraTriggerTime for specific range (list). If None, it's not applied.
+        signal and fit a Gaussian to data below 500 channels for each PMT. Useful for,
+        e.g., electronics data with non-organic trigger patterns.
+    range_detsum: list
+        Optional filter DetSum for specific range.
+    range_dtt: list
+        Optional filter DeltraTriggerTime for specific range.
+    custom_hist_par: dict
+        Custom histogram parameters. Defaults stated in evalRaw.ini
+
+    Attributes
+    ----------
+    ped_hists: np.array
+        HistPerkeo with pedestal data for each PMT.
 
     Examples
     --------
-    >>> data = RootPerkeo(filename)
+    >>> data = RootPerkeo("filename.root")
     >>> pedtest = PedPerkeo(data)
     >>> pedtest.plot_pedestals()
     >>> print(pedtest.ret_pedestals())
@@ -219,3 +227,16 @@ class PedPerkeo:
         plt.show()
 
         return 0
+
+
+def main():
+    fdir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+    file = fdir + "data194348-70372_2.root"
+
+    data = RootPerkeo(file)
+    pedtest = PedPerkeo(data, bplot_fit=True, bplot_log=True)
+    pedtest.plot_pedestals()
+
+
+if __name__ == "__main__":
+    main()

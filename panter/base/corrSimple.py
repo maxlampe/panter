@@ -11,26 +11,27 @@ class CorrSimple(CorrBase):
     """Class for doing simple correction on PERKEO data.
 
     Takes a data loader and corrects all with background subtraction and dead time.
+    Generally used for non-Energy spectra, e.g., time-of-flight data. Inherits
+    from CorrBase.
 
     Parameters
     ----------
     dataloader: np.array()
+        Array of measurements to be corrected created with data loader.
     bonlynew: True
         Only create corrected spectra instead of uncorrected spectra as well.
+    hist_par: {"bin_count": 1000, "low_lim": 0, "up_lim": 10000}
+        Parameters to be used for histogram (HistPerkeo).
+    branch_key: str
+        Key of branch in data tree to be used, e.g., CoinTime.
 
     Attributes
     ----------
     corrections : {
         "DeadTime": True,
     }
-    histograms : []
-        List to store created histograms to, if bstore=True in self.corr()
-    hist_concat : HistPerkeo
-        Concatenated histogram of all generated histograms, if bconcat is set to True
-        in corr() method. Only works with mode=0 at the moment.
-    addition_filters: []
-        List of individual entries to be used as filters with data
-        RootPerkeo.set_filt() in _filt_data().
+        Dictionary with bools to turn on/off different data corrections.
+    See base class for other attributes.
 
     Examples
     --------
@@ -61,7 +62,16 @@ class CorrSimple(CorrBase):
         }
 
     def _calc_corr(self, data: RootPerkeo, bdiff: bool = True):
-        """Calculate corrected amplitude for each event and file."""
+        """Calculate corrected amplitude for each event and file.
+
+        Parameters
+        ----------
+        data: RootPerkeo
+            Data class to be corrected.
+        bdiff: True
+            Assumes 2D events. Calculates difference between the two values. Mainly for
+            CoinTime to get DeltaCoinTime.
+        """
 
         binvalid = False
         data_by_branch = data.ret_array_by_key(key=self._branch_key)
@@ -98,7 +108,13 @@ class CorrSimple(CorrBase):
         return [[hist_old, hist_new], data.cy_valid_no, binvalid]
 
     def _corr_nobg(self, ev_file: list):
-        """Correct measurement without background subtraction"""
+        """Correct measurement without background subtraction
+
+        Parameters
+        ----------
+        ev_file: list
+            File name of data file as a list with one entry.
+        """
 
         res = []
         data_sg = RootPerkeo(ev_file[0])
@@ -118,14 +134,20 @@ class CorrSimple(CorrBase):
         return [res_old, res_new]
 
     def _corr_beam(self, ev_file: list):
-        """Correct beam-like data (i.e. background in same file)."""
+        """Correct beam-like data (i.e. background in same file).
+
+        Parameters
+        ----------
+        ev_file: list
+            File name of data file as a list with one entry.
+        """
 
         res = []
         data_sg = RootPerkeo(ev_file[0])
         data_bg = RootPerkeo(ev_file[0])
         data_dict = {"sg": data_sg, "bg": data_bg}
 
-        for (key, data) in data_dict.items():
+        for key, data in data_dict.items():
             self._filt_data(data, bbeam=True, key=key)
             r, s, i = self._calc_corr(data)
             if i:
@@ -151,7 +173,13 @@ class CorrSimple(CorrBase):
         return [res_old, res_new]
 
     def _corr_src(self, ev_files: list):
-        """Correct source-like data (i.e. background in different file)."""
+        """Correct source-like data (i.e. background in different file).
+
+        Parameters
+        ----------
+        ev_files: list
+            Signal and background file names in a list.
+        """
 
         res = []
         scal = []
@@ -194,8 +222,10 @@ class CorrSimple(CorrBase):
             Bool whether to append created histograms in self.histograms
         bwrite: True
             Bool whether to write created histograms to a ROOT file.
-        bconcat
-            Bool to concatenate spectra.
+        bconcat: False
+            Bool whether to concatenate spectra.
+        label: "CorrSimp"
+            Default file name prefix.
         """
 
         if not bwrite and not bstore:
@@ -204,7 +234,7 @@ class CorrSimple(CorrBase):
         if label is None:
             label = "CorrSimp"
         corr = ""
-        for (corr_name, is_active) in self.corrections.items():
+        for corr_name, is_active in self.corrections.items():
             if is_active:
                 corr += corr_name
         cyc_no = 0
@@ -254,6 +284,8 @@ class CorrSimple(CorrBase):
                         self.hist_concat.addhist(hist_n[0])
 
             if bstore:
+                if hist_o is None:
+                    hist_o = [None] * len(hist_n)
                 self.histograms.append(np.asarray([hist_o, hist_n]))
 
         self.histograms = np.asarray(self.histograms)

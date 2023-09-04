@@ -1,4 +1,4 @@
-""""""
+"""Class to calculate and visualize 2D scan results."""
 
 import os
 
@@ -18,7 +18,36 @@ output_path = os.getcwd()
 
 
 class ScanMapClass:
-    """"""
+    """Class to calculate and visualize 2D scan results.
+
+    Uses pre-sorted files and position values from filesScanMaps in panter.config.
+
+    Parameters
+    ----------
+    scan_pos_arr, event_arr: np.array, np.array
+        Position and measurement array from filesScanMaps class.
+    detector: 0
+        Target detector.
+    mid_pos: np.array([170, 5770])
+        Center position value.
+    label: "unlabelled"
+        Label to be used for plot.
+    mu_init_val: float
+        Initial value for the Gaussian peak fit to extract a peak position.
+    fit_range: list
+        Fit range for the Gaussian peak fit.
+    buse_2Dcorr, buse_sim_loss, do_widths: bool, bool, bool
+        Set of bools to determine whether to 1) apply 2D correctionf actors, 2) use
+        simulation map as ideal value and calculate deviation from that as loss, or 3)
+        use widths of Gaussian peaks instead of positions.
+
+    Attributes
+    ----------
+    detector
+    label
+    avg_dev, loss: float, float
+        Average deviation and loss over the 2D map.
+    """
 
     def __init__(
         self,
@@ -28,9 +57,10 @@ class ScanMapClass:
         mid_pos: np.array = np.array([170, 5770]),
         label: str = "unlabelled",
         buse_2Dcorr: bool = False,
-        buse_sim_loss: bool = True,
+        buse_sim_loss: bool = False,
         mu_init_val: float = None,
         fit_range: list = None,
+        do_widths: bool = False,
     ):
         self._scan_pos_arr = scan_pos_arr
         self._event_arr = event_arr
@@ -41,6 +71,7 @@ class ScanMapClass:
         self._buse_sim_loss = buse_sim_loss
         self._mu_init = mu_init_val
         self._fit_range = fit_range
+        self._do_widths = do_widths
 
         self._dataloader = DLPerkeo("")
         self._dataloader.fill(self._event_arr)
@@ -55,7 +86,6 @@ class ScanMapClass:
         self.loss = None
 
         # Calculate middle peak positions for weights=np.ones(16)
-        # ToDo: do not use bcorr for initial peak for consistency? probs no
         self._mid_ind = self._find_closest_ind(self._scan_pos_arr, self._mid_pos)
         self._center_peak = self._calc_single_peak(self._meas[self._mid_ind])
 
@@ -88,8 +118,12 @@ class ScanMapClass:
         fit_range=None,
         bplot_fits: bool = False,
     ):
-        """"""
+        """Calculate the position and width of a measurement with a Gaussian fit."""
 
+        if self._do_widths:
+            tar_par = "sig"
+        else:
+            tar_par = "mu"
         if mu_init_val is None:
             if self._mu_init is not None:
                 mu_init_val = self._mu_init
@@ -123,16 +157,16 @@ class ScanMapClass:
         fitclass.fit()
 
         try:
-            peak = fitclass.ret_results().params["mu"].value
-            peak_err = fitclass.ret_results().params["mu"].stderr
+            peak = fitclass.ret_results().params[tar_par].value
+            peak_err = fitclass.ret_results().params[tar_par].stderr
         except AttributeError:
             if brec:
                 print("Trying refit with higher mu val")
                 fitclass.set_fitparam("mu", mu_init_val * 1.05)
                 fitclass.fit()
                 try:
-                    peak = fitclass.ret_results().params["mu"].value
-                    peak_err = fitclass.ret_results().params["mu"].stderr
+                    peak = fitclass.ret_results().params[tar_par].value
+                    peak_err = fitclass.ret_results().params[tar_par].stderr
                 except AttributeError:
                     print(meas)
                     print(self._weights)
@@ -142,6 +176,10 @@ class ScanMapClass:
             else:
                 peak = None
                 peak_err = None
+
+        if self._do_widths:
+            peak = np.abs(peak)
+            peak_err = np.abs(peak_err)
 
         return peak, peak_err
 
@@ -180,10 +218,24 @@ class ScanMapClass:
         self._peak_pos_err_map = np.asarray(self._peak_pos_err_map)
 
     def ret_peak_map(self):
-        """Returns calculated array of peak pos values and theier fit errors."""
-        return self._peak_pos_map, self._peak_pos_err_map
+        """Returns calculated array of peak pos values and their fit errors."""
+        return (
+            self._peak_pos_map,
+            self._peak_pos_err_map,
+            self._mid_ind,
+            self._center_peak,
+        )
 
     def calc_loss(self, bsymm_loss: bool = True, beta_symm_loss: float = 0.5):
+        """Calculate the loss for the current set of peak positions.
+
+        Parameters
+        ----------
+        bsymm_loss: True
+            Add the symmetry loss to the uniformity loss.
+        beta_symm_loss: 0.5
+            Scaling factor between symmetry and uniformity loss.
+        """
         if self._buse_sim_loss:
             loss = self.calc_sim_loss()
         else:
@@ -201,7 +253,7 @@ class ScanMapClass:
         return loss, loss
 
     def calc_symm_loss(self, bsymm_loss: bool = True, beta_symm_loss: float = 0.5):
-        """Calculate average deviation and loss over map"""
+        """Calculate average deviation and loss over map."""
 
         assert self._peak_pos_map is not None, "ERROR: Map is empty."
         avg_dev = 0.0
@@ -240,7 +292,11 @@ class ScanMapClass:
         return avg_dev, loss
 
     def plot_scanmap(
-        self, bsavefig: bool = False, brel_map: bool = True, filename: str = ""
+        self,
+        bsavefig: bool = False,
+        brel_map: bool = True,
+        filename: str = "",
+        vlims: list = None,
     ):
         """Make a 2D plot of the scan map results."""
 
@@ -274,10 +330,12 @@ class ScanMapClass:
 
         fig, ax = plt.subplots(figsize=(9, 9))
         if brel_map:
-            ims = ax.imshow(data, cmap="plasma", vmin=0.996, vmax=1.026)
+            if vlims is None:
+                vlims = [0.996, 1.026]
         else:
-            # ims = ax.imshow(data, cmap="plasma", vmin=10590.0, vmax=11000.0)
-            ims = ax.imshow(data, cmap="plasma")
+            if vlims is None:
+                vlims = [None] * 2
+        ims = ax.imshow(data, cmap="plasma", vmin=vlims[0], vmax=vlims[1])
 
         ax.set_xticks(np.arange(x.shape[0]))
         ax.set_yticks(np.arange(y.shape[0]))
@@ -324,13 +382,13 @@ class ScanMapClass:
         if bsavefig:
             if filename == "":
                 filename = "scan2Dmap"
-            plt.savefig(f"{output_path}/{filename}.png", dpi=300)
+            plt.savefig(f"{output_path}/{filename}.pdf", dpi=300)
 
         plt.show()
 
     @staticmethod
     def _find_closest_ind(all_pos_arr, target_pos):
-        """"""
+        """Find index of position closest to target position."""
 
         assert all_pos_arr.shape[1] == target_pos.shape[0]
 
@@ -350,7 +408,7 @@ class ScanMapClass:
 
     @staticmethod
     def _get_lr_pairs(pos_arr: np.array):
-        """"""
+        """Get left and right positions."""
 
         x_points = np.unique(pos_arr.T[0])
         x_l = x_points[0]
@@ -363,16 +421,17 @@ class ScanMapClass:
 
 def main():
     pos, evs = scan_200117()
-
+    det = 0
     smc = ScanMapClass(
         scan_pos_arr=pos,
         event_arr=evs,
-        detector=0,
+        detector=det,
         label=scan_200117.label,
-        buse_2Dcorr=False,
+        buse_2Dcorr=True,
         buse_sim_loss=False,
         # mu_init_val=31000.,
         # fit_range=[30000., 32000.],
+        do_widths=True,
     )
 
     smc.calc_peak_positions()
@@ -404,8 +463,8 @@ def main():
     # {'x_opt': array([1.008433, 0.999707, 0.955058, 0.98363 , 0.99772 , 0.989287, 0.998192, 0.987019]), 'y_opt': (6300.757845958976, 6944.021863459121)}
 
     print(smc.calc_loss())
-    smc.plot_scanmap(bsavefig=True, filename="MapUnOpt")
-    smc.plot_scanmap(brel_map=True)
+    smc.plot_scanmap(bsavefig=False, filename=f"MapOpt{det}")
+    # smc.plot_scanmap(brel_map=False)
 
 
 if __name__ == "__main__":

@@ -18,19 +18,24 @@ class HistPerkeo(HistBase):
     """Histogram object for use with PERKEO data.
 
     Takes data and histogram parameters to create a histogram with
-    basic helper functions.
+    basic helper functions like plotting and histogram arithmetics.
+    Does over- and underflow bins "correctly", unlike numpy.hist.
+    Designed to be similar to ROOT histogram class and build upon
+    numpy.hist.
 
     Parameters
     ----------
     data : np.array
+        Data to be histogrammed.
     bin_count, low_lim, up_lim: int
         Histogram parameters: Bin count, upper and lower limit
 
     Attributes
     ----------
-    stats
-    parameters
-        see above section
+    n_events, mean, stdv, stats, parameters, bin_width, integral
+        Set of histogram properties and information.
+    parameters: dict
+        Histogram parameters as dict.
     hist : pd.DataFrame
         Returned histogram from function ret_hist()
 
@@ -97,8 +102,24 @@ class HistPerkeo(HistBase):
         bxlog: bool = False,
         bylog: bool = False,
         filename: str = "",
+        fsize: int = None,
     ):
-        """Plot histogram."""
+        """Plot histogram.
+
+        Parameters
+        ----------
+        rng: list
+            Plot ranges as list [x0, x1, y0, y1].
+        title, xlabel, ylabel: str, str, str
+            Plot title and axis labels.
+        bsavefig, bxlog, bylog: False, False, False
+            Bools to set whether to write the plot to a file or to set axis to log
+            scales.
+        fsize: int
+            Font size for plot.
+        filename: str
+            Output file name as {filename}.pdf. Requires bsavefig = True.
+        """
 
         figure(figsize=(8, 6))
         plt.errorbar(self.hist["x"], self.hist["y"], self.hist["err"], fmt=".")
@@ -107,9 +128,10 @@ class HistPerkeo(HistBase):
         if self.stats["std"] is None:
             self.stats["std"] = 0.0
 
-        plt.title(title)
-        plt.ylabel(ylabel)
-        plt.xlabel(xlabel)
+        plt.title(title, fontsize=fsize)
+        plt.ylabel(ylabel, fontsize=fsize)
+        plt.xlabel(xlabel, fontsize=fsize)
+        plt.tick_params(labelsize=fsize)
         plt.annotate(
             (
                 f"n_ev = {self.stats['noevents']:0.1f}\n"
@@ -130,11 +152,20 @@ class HistPerkeo(HistBase):
         if bsavefig:
             if filename == "":
                 filename = "histperkeo"
-            plt.savefig(f"{output_path}/{filename}.png", dpi=300)
+            plt.savefig(f"{output_path}/{filename}.pdf", dpi=300)
         plt.show()
 
     def addhist(self, hist_p: HistPerkeo, fac: float = 1.0):
-        """Add another histogram to existing one with multiplicand."""
+        """Add another histogram to existing one with multiplicand.
+
+        Parameters
+        ----------
+        hist_p: HistPerkeo
+            Histogram to multiply y values with (bin by bin), including errors.
+        fac: float
+            Scaling factor to multiply bin count (y-value and error) of (external)
+            histogram hist_p.
+        """
 
         assert self.parameters == hist_p.parameters, "ERROR: Binning does not match."
 
@@ -150,7 +181,13 @@ class HistPerkeo(HistBase):
         self._calc_stats()
 
     def divbyhist(self, hist_p: HistPerkeo):
-        """Divide by another histogram."""
+        """Divide by another histogram.
+
+        Parameters
+        ----------
+        hist_p: HistPerkeo
+            Histogram to divide y values with (bin by bin), including errors.
+        """
 
         assert self.parameters == hist_p.parameters, "ERROR: Binning does not match."
 
@@ -175,7 +212,13 @@ class HistPerkeo(HistBase):
         self._calc_stats()
 
     def multbyhist(self, hist_p: HistPerkeo):
-        """Multiply by another histogram."""
+        """Multiply by another histogram.
+
+        Parameters
+        ----------
+        hist_p: HistPerkeo
+            Histogram to multiply y values with (bin by bin), including errors.
+        """
 
         assert self.parameters == hist_p.parameters, "ERROR: Binning does not match."
 
@@ -199,7 +242,13 @@ class HistPerkeo(HistBase):
         self._calc_stats()
 
     def scal(self, fac: float):
-        """Scale histogram by a factor."""
+        """Scale histogram by a factor.
+
+        Parameters
+        ----------
+        fac: float
+            Scaling factor to multiply bin count (y-value and error) with.
+        """
 
         newhist = pd.DataFrame(
             {
@@ -230,7 +279,19 @@ class HistPerkeo(HistBase):
     def write2root(
         self, histname: str, filename: str, out_dir: str = None, bupdate: bool = False
     ):
-        """Write the histogram into a root file."""
+        """Write the histogram into a root file.
+
+        Parameters
+        ----------
+        histname: str
+            Name of histogram (first two parameters of TH1F in ROOT)
+        filename: str
+            Name of file as {filename}.root
+        out_dir: str
+            Path to output directory as {out_dir}/
+        bupdate: False
+            Flag to "UPDATE" or "RECREATE" file in TFile class.
+        """
 
         assert self._bfound_root, "ERROR: Could not find ROOT package."
         from ROOT import TFile, TH1F

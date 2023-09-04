@@ -1,4 +1,4 @@
-""""""
+"""Class to structure measured files with attributes."""
 
 import os
 
@@ -9,12 +9,14 @@ class MeasPerkeo:
     Parameters
     ----------
     tp : int
-        States whether beam-like (0), source-like data(1) or without background(2), for background subtraction.
+        States whether beam-like (0), source-like data(1) or without background(2),
+        for background subtraction.
     src : int
         Measurment type. Convention: 0-4 calibration sources,
         5 beam, 6-7 background w/wo B field and 8 would be electronic tests.
     file_list : list
-        List of file(s) for single measurement. One file for tp = 0 and 2, two for tp = 1.
+        List of file(s) for single measurement. One file for tp = 0 and 2,
+        two for tp = 1.
     cyc_no, nomad_no : int
         Optional.
 
@@ -22,9 +24,9 @@ class MeasPerkeo:
     ----------
     tp, src : int
     file_list : list of str
+    cyc_no, nomad_no : int
     date_list : list of float
         List of file modification time from file_list.
-    cyc_no, nomad_no : int
     """
 
     def __init__(
@@ -50,7 +52,7 @@ class MeasPerkeo:
 
     def __call__(self, *args, **kwargs):
         event = []
-        for (key, entry) in self.__dict__.items():
+        for key, entry in self.__dict__.items():
             event.append(entry)
         return event
 

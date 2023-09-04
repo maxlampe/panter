@@ -1,4 +1,4 @@
-"""Module for storing default fit model settings."""
+"""Helper classes and functions for storing default fit model settings."""
 
 import numpy as np
 
@@ -114,7 +114,7 @@ gaus_expmod.param_limit = {
 gaus_skew = FitSetting()
 gaus_skew.label = "gaus_skew"
 gaus_skew.fitfunc = eF.skewgaus
-gaus_skew.initvals = {"a": 4.0, "mu": 750.0, "sig": 300.0, "off": 1.0, "norm": 1000.}
+gaus_skew.initvals = {"a": 4.0, "mu": 750.0, "sig": 300.0, "off": 1.0, "norm": 1000.0}
 gaus_skew.paramvary = [True] * len(gaus_skew.initvals)
 
 

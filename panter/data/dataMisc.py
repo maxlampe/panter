@@ -1,4 +1,4 @@
-"""Module for handling Perkeo root files and creating histograms."""
+"""Helper functions for handling Perkeo root files and creating histograms."""
 
 import glob
 import os
@@ -16,7 +16,15 @@ def ret_hist(
     low_lim: int = 0,
     up_lim: int = 52000,
 ):
-    """Create a histogram as pd.DataFrame from an input array."""
+    """Create a histogram as pd.DataFrame from an input array.
+
+    Parameters
+    ----------
+    data : np.array
+        Data to be histogrammed.
+    bin_count, low_lim, up_lim: int
+        Histogram parameters: Bin count, upper and lower limit
+    """
 
     raw_bins = np.linspace(low_lim, up_lim, bin_count + 1)
     use_bins = [np.array([-np.inf]), raw_bins, np.array([np.inf])]
@@ -40,7 +48,15 @@ def ret_hist2d(
     low_lim=None,
     up_lim=None,
 ):
-    """Create a 2D histogram as dict from a 2D input array."""
+    """Create a 2D histogram as dict from a 2D input array.
+
+    Parameters
+    ----------
+    data : np.array
+        Data to be histogrammed.
+    bin_count, low_lim, up_lim: [int, int]
+        Histogram parameters: Bin count, upper and lower limit.
+    """
 
     if up_lim is None:
         up_lim = [52000.0, 52000.0]
@@ -84,7 +100,15 @@ def ret_hist2d(
 
 
 def filt_zeros(hist_df: pd.DataFrame, bdrop_nan: bool = True) -> pd.DataFrame:
-    """Taking a pandas data frame and removing all entries where "err" = 0."""
+    """Taking a pandas data frame and removing all entries where "err" = 0.
+
+    Parameters
+    ----------
+    hist_df: pd.DataFrame
+        Input data frame to be modified
+    bdrop_nan: True
+        Also removing any entries (not just "err") with nans from DataFrame.
+    """
 
     filt = hist_df["err"] != 0.0
     hist_df = hist_df[filt]
@@ -99,7 +123,13 @@ def filt_zeros(hist_df: pd.DataFrame, bdrop_nan: bool = True) -> pd.DataFrame:
 
 
 def concat_hists(hist_array: np.array):
-    """Concatenate multiple histograms in an array by adding them up with error prop."""
+    """Concatenate multiple histograms in an array by adding them up with error prop.
+
+    Parameters
+    ----------
+    hist_array: np.array
+        Array of histograms to be concatenated.
+    """
 
     hist_final = hist_array[0]
     for hist in hist_array[1:]:
@@ -109,13 +139,24 @@ def concat_hists(hist_array: np.array):
 
 
 class FilePerkeo:
-    """Obj for writing/reading data from/into a general binary file."""
+    """Obj for writing/reading data from/into a general binary file.
+
+    Parameters
+    ----------
+    filename: str
+        File name for IO (with ending).
+
+    Attributes
+    ----------
+    filename
+    """
 
     def __init__(self, filename: str):
         self.filename = filename
 
     def imp(self):
         """Open the file and return content."""
+
         with open(self.filename, "rb") as file:
             imp_obj = pickle.load(file)
 
@@ -123,18 +164,18 @@ class FilePerkeo:
 
     # FIXME: Append doesn't append? Probs because import only expects one object
     def dump(self, obj, out_dir: str = None, bapp: bool = False, btext: bool = False):
-        """Dump an python object into the file.
+        """Dump a python object into the file.
 
         Parameters
         ----------
         obj
-        out_dir
-        bapp : bool
+            Object to be dumped into file.
+        out_dir: str
+            Path to output directory used as {out_dir}/{self.filename}.
+        bapp : False
             Append to file instead of writing over it. Doesn't work.
-            (default False)
-        btext : bool
+        btext : False
             Bool whether to dump obj as binary or text into file.
-            (default False)
         """
 
         if out_dir is None:
@@ -152,14 +193,32 @@ class FilePerkeo:
 
 
 class DirPerkeo:
-    """Obj for extracting file name lists out of directory."""
+    """Obj for extracting file name lists out of directory of a file type.
+
+    Parameters
+    ----------
+    dirname: str
+        Name of target directory.
+    filetype: "root"
+        File type to be acquired.
+
+    Attributes
+    ----------
+    dirname, filetype
+    """
 
     def __init__(self, dirname: str, filetype: str = "root"):
         self.dirname = dirname
         self.filetype = filetype
 
     def get_all(self, bsorted=True) -> list:
-        """Returns list of all files of given type in directory"""
+        """Returns list of all files of given type in directory.
+
+        Parameters
+        ----------
+        bsorted: True
+            Whether to sort list of files.
+        """
 
         if bsorted:
             liste = sorted(glob.glob(self.dirname + "*." + self.filetype))
@@ -169,7 +228,13 @@ class DirPerkeo:
         return liste
 
     def get_subset(self, liste: list) -> list:
-        """Returns list of required files (full name) out of list in dir"""
+        """Returns list of required files (full name) out of list in dir.
+
+        Parameters
+        ----------
+        liste: list
+            Targeted subset as file names with file ending.
+        """
 
         retlist = []
         for i in liste:
@@ -181,6 +246,15 @@ class DirPerkeo:
 class FiltPerkeo:
     """Obj for creating/setting filters for RootPerkeo Trees.
 
+    Parameters
+    ----------
+    low_lim, up_lim: float
+        Filter range for 'num' type filter
+    rightval
+        Value for 'bool' type filter to check quality for
+    index
+        index to be used, e.g. CoinTime[index]
+
     Attributes
     ----------
     active : bool
@@ -188,12 +262,9 @@ class FiltPerkeo:
     type : str
         Filter type for safety handling: 'bool', 'num' or special
         type 'cyc'
-    low_lim, up_lim: float
-        Filter range for 'num' type filter
+    low_lim, up_lim
     rightval
-        Value for 'bool' type filter to check quality for
     index
-        index to be used, e.g. CoinTime[index]
     """
 
     def __init__(self, low_lim=None, up_lim=None, rightval=None, index=None, **kwargs):

@@ -191,7 +191,6 @@ class DriftMapPerkeo(MapPerkeo):
         """Calculate drift correction factors for each PMT from sn map"""
 
         for index, sn_meas in self.maps[1].iterrows():
-
             try:
                 factors = (self.cache / sn_meas["peak_list"]).to_numpy()
                 print(factors)
