@@ -12,19 +12,16 @@ from panter.base.mapPerkeo import MapPerkeo
 from panter.config import conf_path
 
 from panter.config.evalFitSettings import trigger_func
-from panter.data.dataMeasPerkeo import MeasPerkeo
-from panter.data.dataHistPerkeo import HistPerkeo
-from panter.data.dataRootPerkeo import RootPerkeo
 from panter.data.dataloaderPerkeo import DLPerkeo
 from panter.data.dataMisc import FilePerkeo
 from panter.eval.evalFit import DoFit
-from panter.eval.corrPerkeo import CorrPerkeo
+from panter.eval.trigger import calc_trigger, trigger_raw, trigger_corr
 
 output_path = os.getcwd()
 
 
 class TriggerMap(MapPerkeo):
-    """"""
+    """Class for trigger fits over time. Uses simplified trigger function."""
 
     def __init__(
         self,
@@ -83,8 +80,8 @@ class TriggerMap(MapPerkeo):
                 for j in range(n_files_sum):
                     meas = self._fmeas[i + j]
                     time += meas.date_list[0]
-                    # hist_both, hist_onlysec = self.trigger_raw(meas, det_prim)
-                    hist_both, hist_onlysec = self.trigger_corr(meas, det_prim)
+                    # hist_both, hist_onlysec = trigger_raw(meas, det_prim)
+                    hist_both, hist_onlysec = trigger_corr(meas, det_prim)
 
                     if j == 0:
                         master_onlysec = hist_onlysec[det_prim]
@@ -95,7 +92,7 @@ class TriggerMap(MapPerkeo):
 
                 # master_both.divbyhist(master_onlysec)
                 # hist_trigger[det_prim] = master_both
-                hist_trigger[det_prim] = self.calc_trigger(master_both, master_onlysec)
+                hist_trigger[det_prim] = calc_trigger(master_both, master_onlysec)
 
             time = time / (2 * n_files_sum)
 
@@ -204,205 +201,6 @@ class TriggerMap(MapPerkeo):
         plt.show()
 
         return 0
-
-    @staticmethod
-    def trigger_corr(meas: MeasPerkeo, det_main: int):
-        """Calculate trigger function for one detector from corrected data."""
-
-        det_bac = 1 - det_main
-        # Set to data type without background subtraction
-        meas.tp = 2
-        corr_class = CorrPerkeo(dataloader=meas, mode=1)
-        corr_class.set_all_corr(bactive=False)
-        corr_class.corrections["Pedestal"] = True
-        corr_class.corrections["DeadTime"] = True
-        corr_class.corrections["Drift"] = False
-        corr_class.corrections["RateDepElec"] = True
-        corr_class.corrections["Scan2D"] = False
-        corr_class.addition_filters.append(
-            {
-                "tree": "data",
-                "fkey": "CoinTime",
-                "active": True,
-                "ftype": "num",
-                "low_lim": 0,
-                "up_lim": 4e9,
-                "index": det_bac,
-            }
-        )
-        corr_class.addition_filters.append(
-            {
-                "tree": "data",
-                "fkey": "CoinTime",
-                "active": True,
-                "ftype": "num",
-                "low_lim": 4e9,
-                "up_lim": 4e10,
-                "index": det_main,
-            }
-        )
-        corr_class.addition_filters.append(
-            {
-                "tree": "data",
-                "fkey": "DeltaTriggerTime",
-                "active": True,
-                "ftype": "num",
-                "low_lim": 380000,
-                "up_lim": 600000,
-            }
-        )
-        corr_class.corr(bstore=True, bwrite=False)
-        hist_onlybac = corr_class.histograms[0][1]
-
-        corr_class.clear()
-
-        corr_class.addition_filters.append(
-            {
-                "tree": "data",
-                "fkey": "CoinTime",
-                "active": True,
-                "ftype": "num",
-                "low_lim": 0,
-                "up_lim": 4e9,
-                "index": det_bac,
-            }
-        )
-        corr_class.addition_filters.append(
-            {
-                "tree": "data",
-                "fkey": "CoinTime",
-                "active": True,
-                "ftype": "num",
-                "low_lim": 0,
-                "up_lim": 4e9,
-                "index": det_main,
-            }
-        )
-        corr_class.addition_filters.append(
-            {
-                "tree": "data",
-                "fkey": "Detector",
-                "active": True,
-                "ftype": "bool",
-                "rightval": det_main,
-            }
-        )
-        corr_class.addition_filters.append(
-            {
-                "tree": "data",
-                "fkey": "DeltaTriggerTime",
-                "active": True,
-                "ftype": "num",
-                "low_lim": 380000,
-                "up_lim": 600000,
-            }
-        )
-        corr_class.corr(bstore=True, bwrite=False)
-
-        hist_b = corr_class.histograms[0][1]
-        # hist_onlybac[det_main].addhist(hist_b[det_main])
-
-        return [hist_b, hist_onlybac]
-
-    @staticmethod
-    def trigger_raw(meas: MeasPerkeo, det_main: int):
-        """Calculate trigger function for one detector from raw data."""
-
-        det_bac = 1 - det_main
-        data = RootPerkeo(meas.file_list[0])
-        data.set_filtdef()
-        data.set_filt(
-            "data",
-            fkey="CoinTime",
-            active=True,
-            ftype="num",
-            low_lim=0,
-            up_lim=4e9,
-            index=det_bac,
-        )
-        data.set_filt(
-            "data",
-            fkey="CoinTime",
-            active=True,
-            ftype="num",
-            low_lim=4e9,
-            up_lim=4e10,
-            index=det_main,
-        )
-        data.auto(1)
-        data.gen_hist([])
-        hist_onlybac = data.hist_sums
-        # !!!
-        # for hist in hist_onlybac:
-        #     hist.scal(data.dt_fac)
-
-        data.set_filtdef()
-        data.set_filt(
-            "data",
-            fkey="CoinTime",
-            active=True,
-            ftype="num",
-            low_lim=0,
-            up_lim=4e9,
-            index=det_bac,
-        )
-        data.set_filt(
-            "data",
-            fkey="CoinTime",
-            active=True,
-            ftype="num",
-            low_lim=0,
-            up_lim=4e9,
-            index=det_main,
-        )
-        data.set_filt(
-            "data", fkey="Detector", active=True, ftype="bool", rightval=det_main
-        )
-        data.auto(1)
-        data.gen_hist([])
-
-        hist_b = data.hist_sums
-        # !!!
-        # for hist in hist_b:
-        #     hist.scal(data.dt_fac)
-        # hist_onlybac[det_main].addhist(hist_b[det_main])
-
-        return [hist_b, hist_onlybac]
-
-    @staticmethod
-    def calc_trigger(P01: HistPerkeo, P1: HistPerkeo):
-        """Calculate trigger function from separate HistPerkeo."""
-
-        assert P01.parameters == P1.parameters, "ERROR: Binning does not match."
-
-        filt = P01.hist["y"] != 0.0
-        P01.hist = P01.hist[filt]
-        P1.hist = P1.hist[filt]
-        filt = P1.hist["y"] != 0.0
-        P01.hist = P01.hist[filt]
-        P1.hist = P1.hist[filt]
-
-        y01 = P01.hist["y"]
-        y1 = P1.hist["y"]
-        y01_err = P01.hist["err"]
-        y1_err = P1.hist["err"]
-
-        newhist = pd.DataFrame(
-            {
-                "x": P01.hist["x"],
-                "y": (y01 / (y01 + y1)),
-                "err": np.sqrt(
-                    (y01_err * y1 / (y01 + y1) ** 2) ** 2
-                    + (y1_err * y01 / (y01 + y1) ** 2) ** 2
-                ),
-            }
-        )
-
-        trigger_hist = HistPerkeo(np.array([]))
-        trigger_hist.hist = newhist
-        # trigger_hist.plot_hist()
-
-        return trigger_hist
 
 
 def main():

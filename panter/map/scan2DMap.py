@@ -1,4 +1,4 @@
-""""""
+"""Class to calculate and visualize 2D scan results."""
 
 import os
 
@@ -18,7 +18,36 @@ output_path = os.getcwd()
 
 
 class ScanMapClass:
-    """"""
+    """Class to calculate and visualize 2D scan results.
+
+    Uses pre-sorted files and position values from filesScanMaps in panter.config.
+
+    Parameters
+    ----------
+    scan_pos_arr, event_arr: np.array, np.array
+        Position and measurement array from filesScanMaps class.
+    detector: 0
+        Target detector.
+    mid_pos: np.array([170, 5770])
+        Center position value.
+    label: "unlabelled"
+        Label to be used for plot.
+    mu_init_val: float
+        Initial value for the Gaussian peak fit to extract a peak position.
+    fit_range: list
+        Fit range for the Gaussian peak fit.
+    buse_2Dcorr, buse_sim_loss, do_widths: bool, bool, bool
+        Set of bools to determine whether to 1) apply 2D correctionf actors, 2) use
+        simulation map as ideal value and calculate deviation from that as loss, or 3)
+        use widths of Gaussian peaks instead of positions.
+
+    Attributes
+    ----------
+    detector
+    label
+    avg_dev, loss: float, float
+        Average deviation and loss over the 2D map.
+    """
 
     def __init__(
         self,
@@ -89,7 +118,8 @@ class ScanMapClass:
         fit_range=None,
         bplot_fits: bool = False,
     ):
-        """"""
+        """Calculate the position and width of a measurement with a Gaussian fit."""
+
         if self._do_widths:
             tar_par = "sig"
         else:
@@ -188,7 +218,7 @@ class ScanMapClass:
         self._peak_pos_err_map = np.asarray(self._peak_pos_err_map)
 
     def ret_peak_map(self):
-        """Returns calculated array of peak pos values and theier fit errors."""
+        """Returns calculated array of peak pos values and their fit errors."""
         return (
             self._peak_pos_map,
             self._peak_pos_err_map,
@@ -197,6 +227,15 @@ class ScanMapClass:
         )
 
     def calc_loss(self, bsymm_loss: bool = True, beta_symm_loss: float = 0.5):
+        """Calculate the loss for the current set of peak positions.
+
+        Parameters
+        ----------
+        bsymm_loss: True
+            Add the symmetry loss to the uniformity loss.
+        beta_symm_loss: 0.5
+            Scaling factor between symmetry and uniformity loss.
+        """
         if self._buse_sim_loss:
             loss = self.calc_sim_loss()
         else:
@@ -214,7 +253,7 @@ class ScanMapClass:
         return loss, loss
 
     def calc_symm_loss(self, bsymm_loss: bool = True, beta_symm_loss: float = 0.5):
-        """Calculate average deviation and loss over map"""
+        """Calculate average deviation and loss over map."""
 
         assert self._peak_pos_map is not None, "ERROR: Map is empty."
         avg_dev = 0.0
@@ -349,7 +388,7 @@ class ScanMapClass:
 
     @staticmethod
     def _find_closest_ind(all_pos_arr, target_pos):
-        """"""
+        """Find index of position closest to target position."""
 
         assert all_pos_arr.shape[1] == target_pos.shape[0]
 
@@ -369,7 +408,7 @@ class ScanMapClass:
 
     @staticmethod
     def _get_lr_pairs(pos_arr: np.array):
-        """"""
+        """Get left and right positions."""
 
         x_points = np.unique(pos_arr.T[0])
         x_l = x_points[0]

@@ -1,4 +1,6 @@
-"""QDC correction parameters (withotu delayed charge)"""
+"""Correction parameters to be imported"""
+
+"""QDC correction parameters (without delayed charge)"""
 
 qdc_grad_c = [
     4.746581935704006,

@@ -9,7 +9,7 @@ from panter.data.dataloaderPerkeo import DLPerkeo
 cnf = configparser.ConfigParser()
 cnf.read(f"{conf_path}/evalRaw.ini")
 
-
+# Import default ntof windows
 BEAM_MEAS_TIME = {
     "sg": [
         float(cnf["dataPerkeo"]["BEAM_SIG_LOW"]),
@@ -23,19 +23,21 @@ BEAM_MEAS_TIME = {
 
 
 class CorrBase:
-    """Base class for doing correction on PERKEO data.
+    """Base class for doing corrections on PERKEO data.
 
-    Takes a data loader output array and corrects all entries in it.
+    Takes a data loader output array and corrects all entries in it. CorrSimple and
+    CorrPerkeo inherent from CorrBase.
 
     Parameters
     ----------
     dataloader: DLPerkeo
     bonlynew: True
         Only create corrected spectra instead of uncorrected spectra as well.
+        Can be used for debugging and sanity checks.
 
     Attributes
     ----------
-    corrections : dict
+    corrections : {}
         Dictionary with bools to turn on/off different data corrections.
     histograms : []
         List to store created histograms to, if bstore=True in self.corr()
@@ -48,14 +50,7 @@ class CorrBase:
 
     Examples
     --------
-    Can be used to just calculate background subtracted data. If corrections were to be
-    set to True, data would be individually corrected and then background subtracted.
-    Corrections can be all turned off or on with the shown class method.
-
-    >>> meas = DLPerkeo().ret_meas()
-    >>> corr_class = CorrPerkeo(meas)
-    >>> corr_class.set_all_corr(bactive=True)
-    >>> corr_class.corr(bstore=True, bwrite=False)
+    See usage with CorrSimple (non-Energy data, e.g. ToF) and CorrPerkeo (Energy data).
     """
 
     def __init__(
@@ -77,7 +72,13 @@ class CorrBase:
         pass
 
     def set_all_corr(self, bactive: bool):
-        """Switch all corrections to active or inactive"""
+        """Switch all corrections to active or inactive
+
+        Parameters
+        ----------
+        bactive: bool
+            Value to set all corrections to. (active = True)
+        """
 
         for corr in self.corrections:
             self.corrections[corr] = bactive
@@ -93,7 +94,19 @@ class CorrBase:
         return 0
 
     def _filt_data(self, data: RootPerkeo, bbeam=False, key="", withauto: bool = True):
-        """Filter data set."""
+        """Filter data set.
+
+        Parameters
+        ----------
+        data: RootPerkeo
+            Data class to be filtered.
+        bbeam: False
+            Bool to apply nToF filter.
+        key: ""
+            Key to set signal or background nToF filter. Requires bbeam = True.
+        withauto: True
+            Filter data with RootPerkeo.auto(1)
+        """
 
         if bbeam:
             data.set_filtdef()
@@ -122,19 +135,43 @@ class CorrBase:
                     data.auto()
 
     def _calc_corr(self, data: RootPerkeo):
-        """Calculate corrected amplitude for each event and file."""
+        """Calculate corrected amplitude for each event and file.
+
+        Parameters
+        ----------
+        data: RootPerkeo
+            Data class to be corrected.
+        """
         pass
 
     def _corr_nobg(self, ev_file: list):
-        """Correct measurement without background subtraction"""
+        """Correct measurement without background subtraction
+
+        Parameters
+        ----------
+        ev_file: list
+            File name of data file as a list with one entry.
+        """
         pass
 
     def _corr_beam(self, ev_file: list):
-        """Correct beam-like data (i.e. background in same file)."""
+        """Correct beam-like data (i.e. background in same file).
+
+        Parameters
+        ----------
+        ev_file: list
+            File name of data file as a list with one entry.
+        """
         pass
 
     def _corr_src(self, ev_files: list):
-        """Correct source-like data (i.e. background in different file)."""
+        """Correct source-like data (i.e. background in different file).
+
+        Parameters
+        ----------
+        ev_files: list
+            Signal and background file names in a list.
+        """
         pass
 
     def corr(self, bstore: bool = False, bwrite: bool = True, bconcat: bool = False):
@@ -146,7 +183,7 @@ class CorrBase:
             Bool whether to append created histograms in self.histograms
         bwrite: True
             Bool whether to write created histograms to a ROOT file.
-        bconcat
+        bconcat: False
             Bool to concatenate spectra.
         """
         pass

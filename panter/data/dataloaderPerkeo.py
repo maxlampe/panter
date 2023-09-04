@@ -8,12 +8,13 @@ from panter.data.dataMeasPerkeo import MeasPerkeo
 
 
 class DLPerkeo:
-    """Data loader class for preparing list of files to evaluate.
+    """Data loader class for preparing list of files to evaluate from a directory.
 
     Stores events either by adding them manually to the loader or by automatically
     getting all from a directory. Beam time measurements are automatically sorted
     and calibration/drift measurements paired with their background measurement.
     Works on every directory with Perkeo III 19/20 automatic measurement files.
+    The sorting requires the same naming structure as the data from the 19/20 campaign.
 
     Parameters
     ----------
@@ -22,8 +23,8 @@ class DLPerkeo:
 
     Attributes
     ----------
-    _dir_name : str
-    _measurements : list of MeasPerkeo
+    df : pd.DataFrame
+        Measurements as data frame. Calculated by calling ret_df() or ret_filt_meas().
 
     Examples
     --------
@@ -76,22 +77,38 @@ class DLPerkeo:
         return length
 
     def add_meas(self, event: MeasPerkeo):
-        """Add measurement manually to the list with vague validity check."""
+        """Add measurement manually to the list with vague validity check.
+
+        Parameters
+        ----------
+        event: MeasPerkeo
+            Event to be added manually.
+        """
 
         self._measurements.append(event)
 
-        return 0
-
-    def rem_meas(self, meas_no: list):
-        """Remove given meas (by index) in meas_no list."""
-
-        for i, no in enumerate(meas_no):
-            del self._measurements[no - i * 1]
-
-        return 0
+    # This should not work /should be error-prone with index shifts, right?
+    # def rem_meas(self, meas_no: list):
+    #     """Remove given meas (by index) in meas_no list.
+    #
+    #     Parameters
+    #     ----------
+    #     meas_no: list
+    #     """
+    #
+    #     for i, no in enumerate(meas_no):
+    #         del self._measurements[no - i * 1]
+    #
+    #     return 0
 
     def fill(self, liste):
-        """Add measurements from list."""
+        """Add measurements from list.
+
+        Parameters
+        ----------
+        liste: iterable
+            Entries to be added to measurements as inputs for MeasPerkeo.
+        """
 
         for elem in liste:
             self.add_meas(MeasPerkeo(*elem))
@@ -99,7 +116,15 @@ class DLPerkeo:
         return 0
 
     def print(self, rng: list = None, bfilename=True):
-        """Print a sample of measurements by list of positions."""
+        """Print a sample of measurements by list of positions.
+
+        Parameters
+        ----------
+        rng: list
+            Range of indices to be printed.
+        bfilename: True
+            Print file names too.
+        """
 
         if rng is not None:
             print(f"Data loader Entries with index {rng}")
@@ -119,7 +144,13 @@ class DLPerkeo:
         return 0
 
     def ret_meas(self, rng: list = None) -> np.array:
-        """Return measurements as array for given list of positions."""
+        """Return measurements as array for given list of positions.
+
+        Parameters
+        ----------
+        rng: list
+            Range of indices to be returned.
+        """
 
         if rng is not None:
             return np.asarray(self._measurements)[rng]
@@ -127,7 +158,13 @@ class DLPerkeo:
             return np.asarray(self._measurements)
 
     def auto(self, bclear: bool = True):
-        """Use dataFiles.py sort_files and import all."""
+        """Use dataFiles.py sort_files and import all.
+
+        Parameters
+        ----------
+        bclear: True
+            Clear stored measurements before import to avoid duplicates.
+        """
 
         if bclear:
             self._measurements = []
@@ -148,7 +185,13 @@ class DLPerkeo:
         return self.df
 
     def ret_filt_meas(self, key: list, val: list):
-        """Return measurements filtered by MeasPerkeo attributes as array."""
+        """Return measurements filtered by MeasPerkeo attributes as array.
+
+        Parameters
+        ----------
+        key, val: list, list
+            Key and target value of MeasPerkeo attribute for selection.
+        """
 
         self.ret_df()
         curr_df = self.df

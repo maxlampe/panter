@@ -24,31 +24,31 @@ def doublegaussian(x, mu1, sig1, norm1, mu2, sig2, norm2):
 
 
 def f_p0(x, c0):
-    """Polynomial of 0th order"""
+    """Polynomial of 0th order. x * 0.0 + c0"""
     x = np.array(x, dtype=float)
     return x * 0.0 + c0
 
 
 def f_p1(x, c0, c1):
-    """Polynomial of 1st order"""
+    """Polynomial of 1st order. f_p0(x, c0) + x * c1"""
     x = np.array(x, dtype=float)
     return f_p0(x, c0) + x * c1
 
 
 def f_p2(x, c0, c1, c2):
-    """Polynomial of 2nd order"""
+    """Polynomial of 2nd order. f_p1(x, c0, c1) + c2 * x**2"""
     x = np.array(x, dtype=float)
     return f_p1(x, c0, c1) + c2 * x**2
 
 
 def f_p3(x, c0, c1, c2, c3):
-    """Polynomial of 3rd order"""
+    """Polynomial of 3rd order. f_p2(x, c0, c1, c2) + c3 * x**3"""
     x = np.array(x, dtype=float)
     return f_p2(x, c0, c1, c2) + c3 * x**3
 
 
 def fermi_step(x, k, c):
-    """Fermi step function."""
+    """Fermi step function. 1 / (1 + np.exp(k * (-x + c)))"""
     x = np.array(x, dtype=float)
     fermi = 1 / (1 + np.exp(k * (-x + c)))
 
@@ -56,7 +56,7 @@ def fermi_step(x, k, c):
 
 
 def exp_dec(x, a, k, x0=0.0):
-    """Exponential decay function."""
+    """Exponential decay function. a * np.exp(-(x - x0) / k)"""
     x = np.array(x, dtype=float)
     return a * np.exp(-(x - x0) / k)
 
@@ -68,7 +68,7 @@ def exp_dec2(x, a0, k0, a1, k1, x0=0.0, x1=0.0, b=0.0):
 
 
 def exp_sat(x, a, k1, c1):
-    """Exponential saturation function."""
+    """Exponential saturation function. a - exp_dec(x, c1, k1)"""
     return a - exp_dec(x, c1, k1)
 
 
@@ -125,20 +125,6 @@ def pmt_pois(x: int, energy: float, f_pe: float, loc: int = 0):
     x = np.array(x, dtype=int)
 
     return poisson.pmf(k=x, mu=(f_pe * energy), loc=loc)
-
-
-def pmt_diffapp(x: float, A: float, B: float):
-    """PMT spectra described by a Poisson distribution [Sau18].
-
-    Parameters:
-    ----------
-    """
-
-    x = np.array(x, dtype=float)
-
-    t1 = np.exp(-A / B)
-
-    pass
 
 
 # TODO: set h (norm?) to default 1. and change in project acc.

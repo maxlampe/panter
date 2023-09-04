@@ -1,4 +1,4 @@
-"""Module for storing default fit model settings."""
+"""Helper classes and functions for storing default fit model settings."""
 
 import numpy as np
 

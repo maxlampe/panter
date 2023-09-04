@@ -128,7 +128,6 @@ class DriftDetSumMapPerkeo(MapPerkeo):
         """Calculate peak position from Sn drift measurements"""
 
         for i, meas in enumerate(self._fmeas):
-
             print(f"Meas No: {i}/{self._fmeas.shape[0]} - cycle {meas.cyc_no}")
             if i % 100 == 0 and i > 0:
                 self._write_map2file(map_ind=1, fname=self._outfile[0])
@@ -202,7 +201,6 @@ class DriftDetSumMapPerkeo(MapPerkeo):
         """Calculate drift correction factors for each PMT from sn map"""
 
         for index, sn_meas in self.maps[1].iterrows():
-
             factors = (self.cache / sn_meas["peak_list"]).to_numpy()
             print(factors)
             rchi2_filter = sn_meas["rchi2"] > self._rch2_limit

@@ -1,4 +1,4 @@
-"""This module should manage filelists and setup further evaluations. """
+"""File list management helper functions."""
 
 import datetime
 import sys

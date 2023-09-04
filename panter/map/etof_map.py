@@ -20,9 +20,8 @@ output_path = os.getcwd()
 plt.rcParams.update({"font.size": 12})
 
 
-# TODO: redo with eToFPerkeo Class!
 class EToFMap(MapPerkeo):
-    """"""
+    """Class for fitted eToF peaks over time. TODO: redo with eToFPerkeo Class!"""
 
     def __init__(
         self,

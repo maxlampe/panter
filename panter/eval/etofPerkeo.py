@@ -1,4 +1,4 @@
-"""electron time-of-flight calculation class from data"""
+"""Electron time-of-flight calculation class from data"""
 
 import configparser
 import matplotlib.pyplot as plt
@@ -16,8 +16,36 @@ cnf.read(f"{conf_path}/evalRaw.ini")
 
 
 class EToFPerkeo:
-    """
-    Class for generating, plotting and storing eToF histograms of MeasPerkeo objects.
+    """Class for generating, plotting and storing eToF histograms of MeasPerkeo objects.
+
+    Parameters
+    ----------
+    measperkeo: MeasPerkeo
+        Input measurements as MeasPerkeo data object.
+    bplot_res: False
+        Whether to plot the resulting eToF histogram.
+    range_detsum: list
+        Filter for summed detector signal (e.g., to only get eToF for large energies).
+    custom_hist_par: dict
+        Custom histogram parameters (default from evalRaw.ini).
+
+    Attributes
+    ----------
+    tof_hist: HistPerkeo
+        Resulting eToF histogram.
+
+    Examples
+    --------
+    The eToF is calculated on instantiation. Here for Bi fro the  using the data
+    loader class DLPerkeo on a data directory.
+
+    >>> dataloader = DLPerkeo(data_dir)
+    >>> dataloader.auto()
+    >>> filt_meas = dataloader.ret_filt_meas(
+            ["tp", "src", "nomad_no", "cyc_no"], [1, 2, 70372, 194348]
+        )[[0]]
+    >>> etof = EToFPerkeo(filt_meas, bplot_res=True)
+
     """
 
     def __init__(
@@ -29,7 +57,7 @@ class EToFPerkeo:
     ):
         assert measperkeo.shape[0] == 1, "Class should only be used for single files."
         self._measp = measperkeo
-        # self._bplot_log = bplot_log
+        # ToDo: Add input parameter and self._bplot_log = bplot_log
         self._range_detsum = range_detsum
 
         if custom_hist_par is None:
@@ -46,7 +74,7 @@ class EToFPerkeo:
             self.plot_etof()
 
     def calc_etof(self):
-        """"""
+        """Calculate the electron time-of-flight spectrum"""
 
         corr_class = CorrSimple(
             dataloader=self._measp,
@@ -85,7 +113,7 @@ class EToFPerkeo:
         self.tof_hist = histp
 
     def plot_etof(self):
-        """"""
+        """Plot the electron time-of-flight spectrum."""
 
         self.tof_hist.plot_hist(
             rng=[-25.0, 25.0, 0.0, self.tof_hist.hist["y"].max() * 1.3],

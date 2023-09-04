@@ -1,4 +1,4 @@
-"""header for scanfiles"""
+"""Helper classes and functions for importing Scan measurements."""
 
 import numpy as np
 

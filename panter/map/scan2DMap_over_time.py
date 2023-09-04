@@ -61,7 +61,7 @@ assert len(MAPS) == len(DET0) and len(MAPS) == len(DET1), "ERROR: Inputs not rig
 
 
 class ScanFac2DMap(MapPerkeo):
-    """"""
+    """Class to visualize 2D optimization factors over time."""
 
     def __init__(
         self,
@@ -89,7 +89,6 @@ class ScanFac2DMap(MapPerkeo):
         """Set 2D correction factors for each PMT from scan optimization."""
 
         for index, map_files in enumerate(MAPS):
-
             pos, evs = map_files()
             time = os.path.getmtime(evs[0][2][0])
 
@@ -160,7 +159,7 @@ class ScanFac2DMap(MapPerkeo):
 
     @staticmethod
     def _fill_with_closest(fac_map: pd.DataFrame):
-        """"""
+        """Fill data over time with closest optimization result."""
 
         times = fac_map["time"].apply(pd.Series)
         facs = fac_map["pmt_fac"].apply(pd.Series)

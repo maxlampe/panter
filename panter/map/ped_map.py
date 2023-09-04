@@ -39,6 +39,7 @@ class PedMapPerkeo(MapPerkeo):
 
     Attributes
     ----------
+    outfile_flag
     cache: np.array
         Used for storing relevant outputs, besides resulting maps.
         In this case, it is not used.
@@ -187,7 +188,6 @@ class PedMapPerkeo(MapPerkeo):
                 histp = corr_class.histograms[0]
 
                 for pmt in range(8 * det, 8 + 8 * det):  # 16
-
                     test = histp[1][pmt]
 
                     fitclass = DoFit(test.hist)
@@ -313,7 +313,13 @@ class PedMapPerkeo(MapPerkeo):
         return 0
 
     def plot_ped_map(self, bsave: bool = False):
-        """Plot Pedestal map for all PMTs"""
+        """Plot Pedestal map for all PMTs
+
+        Parameters
+        ----------
+        bsave: False
+            Save plot to file. Uses parameter outfile_flag for file name.
+        """
 
         fig, axs = plt.subplots(1, 2, figsize=(20, 12))
         fig.suptitle(f"Pedestal Map {self.outfile_flag}")
@@ -366,7 +372,13 @@ class PedMapPerkeo(MapPerkeo):
         return 0
 
     def plot_sig_map(self, bsave: bool = False):
-        """Plot Pedestal map for all PMTs"""
+        """Plot Pedestal map for all PMTs
+
+        Parameters
+        ----------
+        bsave: False
+            Save plot to file. Uses parameter outfile_flag for file name.
+        """
 
         fig, axs = plt.subplots(1, 2, figsize=(20, 12))
         fig.suptitle(f"Pedestal Sigma Map {self.outfile_flag}")
@@ -418,20 +430,20 @@ class PedMapPerkeo(MapPerkeo):
         return 0
 
 
-if False:
-    # file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
-    # dataloader = DLPerkeo(file_dir)
-    # dataloader.auto()
-    # filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 4])
-    # filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
-    sources = np.asarray(["beam", "ce", "cd", "cs", "bi", "sn"])
-    for src in sources:
-        ppm = PedMapPerkeo([], bimp_ped=True, outfile_flag=src)
-        ppm()
-        ppm.plot_ped_map(bsave=True)
+# if False:
+#     # file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
+#     # dataloader = DLPerkeo(file_dir)
+#     # dataloader.auto()
+#     # filt_meas = dataloader.ret_filt_meas(["tp", "src"], [1, 4])
+#     # filt_meas = dataloader.ret_filt_meas(["tp", "src", "nomad_no"], [1, 3, 67732])
+#     sources = np.asarray(["beam", "ce", "cd", "cs", "bi", "sn"])
+#     for src in sources:
+#         ppm = PedMapPerkeo([], bimp_ped=True, outfile_flag=src)
+#         ppm()
+#         ppm.plot_ped_map(bsave=True)
 
 
-if True:
+def main():
     ind = 5
     file_dir = "/mnt/sda/PerkeoDaten1920/cycle201/cycle201/"
     dataloader = DLPerkeo(file_dir)
@@ -443,3 +455,7 @@ if True:
     ppm()
     ppm.plot_ped_map(bsave=True)
     ppm.plot_sig_map(bsave=True)
+
+
+if __name__ == "__main__":
+    main()

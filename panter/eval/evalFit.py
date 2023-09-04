@@ -1,4 +1,4 @@
-""""""
+"""Module for fit classes."""
 
 from __future__ import annotations
 
@@ -33,16 +33,15 @@ BPLOT = cnf["evalPerkeo"].getboolean("bplot")
 
 
 class DoFit:
-    """Class for executing fits on data for different models.
+    """Class for executing fits on data for different, pre-coded models.
 
-    This class replaces all fitFOO() functions. Fit settings need to be
-    set/loaded though. No general defaults set, only model dependend
-    defaults.
+    Fit settings need to be set/loaded. No general defaults set, only model dependend
+    defaults. Basically a wrapper around lmfit with quality-of-life functions.
 
     Parameters
     ----------
-    data : pd.DataFrame({'x': , 'y': , 'err': })
-        Could be ret_hist() and therefore HistPerkeo.hist
+    data: pd.DataFrame({'x': , 'y': , 'err': })
+        Could be ret_hist() and therefore panter histogram class HistPerkeo.hist.
 
     Attributes
     ----------
@@ -59,10 +58,11 @@ class DoFit:
     Examples
     --------
     General example of how to use DoFit. The histogram is imported from
-    a RootPerkeo class object (dataSrc), which was generated outside of
-    this example. The fit model is an exponentially modified Gaussian.
+    a RootPerkeo class object (data), which was generated outside of
+    this example. The fit model is an exponentially modified Gaussian and loaded from
+    evalFitSettings.
 
-    >>> histogram = dataSrc.hists[0].hist
+    >>> histogram = data.hists[0].hist
     >>> fitclass = DoFit(histogram)
     >>> fitclass.setup(gaus_expmod)
     >>> fitclass.set_bool('boutput', True)
@@ -89,7 +89,13 @@ class DoFit:
         self._gof = None
 
     def setup(self, fitsettings: FitSetting = gaus_simp):
-        """Set attributes with FitSetting obj from evalFitSettings."""
+        """Set attributes with FitSetting obj from evalFitSettings.
+
+        Parameters
+        ----------
+        fitsettings: FitSetting
+            Fit settings, e.g., from evalFitSettings. Default is simple Gaussian fit.
+        """
 
         self._label = fitsettings.label
         self._booldict = fitsettings.booldict
@@ -118,7 +124,13 @@ class DoFit:
         return 0
 
     def limit_range(self, fitrange: [float, float]):
-        """Activate and set fit range limit."""
+        """Activate and set fit range limit.
+
+        Parameters
+        ----------
+        fitrange: [float, float]
+            Range to fit.
+        """
 
         self._fitrange = fitrange
         self._booldict["blimfit"] = True
@@ -126,14 +138,28 @@ class DoFit:
         return 0
 
     def set_bool(self, name: str, bvalue: bool):
-        """set a chosen bool to desired value"""
+        """set a chosen bool to desired value.
+
+        Parameters
+        ----------
+        name, bvalue: str, bool
+            Key and target value of bool to be set.
+        """
 
         self._booldict[name] = bvalue
 
         return 0
 
     def set_fitparam(self, namekey: str, valpar: float = None, bparafree=None):
-        """Set parameter with new value and/or set it free or not."""
+        """Set parameter with new value and/or set it free or not.
+
+        Parameters
+        ----------
+        namekey, valpar
+            Key and value of fit parameter to be set.
+        bparafree: bool
+            Whether to fit parameter or fix it.
+        """
 
         if valpar is None and bparafree is None:
             print('WARNING: Doing nothing. All inputs "None"!')
@@ -145,7 +171,15 @@ class DoFit:
         return 0
 
     def set_limit_fitparam(self, namekey: str, para_range: [float, float]):
-        """Set range limit on fit parameter by keyword."""
+        """Set range limit on fit parameter by keyword.
+
+        Parameters
+        ----------
+        namekey: str
+            Key of target fit parameter to be limited.
+        para_range: list
+            Lower and upper limit of fit parameter.
+        """
 
         self._fitparams[namekey].min = para_range[0]
         self._fitparams[namekey].max = para_range[1]
@@ -155,7 +189,15 @@ class DoFit:
     def set_recursive(
         self, par_key_cen: str, par_key_wid: str, n_iter: int, factor: float
     ):
-        """Set parameters for recursive fitting with range adaption."""
+        """Set parameters for recursive fitting with range adaption. Used for Gaussians.
+
+        Parameters
+        ----------
+        par_key_cen, par_key_wid, factor: str, str, float
+            Key of center value, key of width and scaling factor for recursive fit.
+        n_iter: int
+            Number of iterations.
+        """
 
         self._brecparams = {
             "par_key_cen": par_key_cen,
@@ -426,13 +468,10 @@ class DoFit:
         return 0
 
     def scanfit(self, param: str):
-        """UNFINISHED - WIP"""
-        # scan one fit parameter and study chi**2 fresults
-        pass
+        """UNFINISHED - WIP
 
-    def compfit(self, otherfit: DoFit):
-        """UNFINISHED - WIP"""
-        # comapre fit models by plotting / calculating difference etc
+        Scan one fit parameter and study chi**2 results
+        """
         pass
 
 
@@ -441,6 +480,7 @@ class DoFitData:
 
     Fit settings cannot be set/loaded though as settings are set by
     measurement type and ini file parameters. Logging available.
+    Outdated and only used for old ElecTest measurements.
 
     Parameters
     ----------
@@ -543,7 +583,6 @@ class DoFitData:
 
         fitresults = []
         for i in self._stats["nPMT"]:
-
             if (
                 self._datatype == self._valid_datatypes[1]
                 or self._datatype == self._valid_datatypes[3]
