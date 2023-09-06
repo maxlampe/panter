@@ -10,6 +10,12 @@ Welcome to panter's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. autosummary::
+   :toctree: _autosummary
+   :template: custom-module-template.rst
+   :recursive:
+
+   panter
 
 
 Indices and tables
