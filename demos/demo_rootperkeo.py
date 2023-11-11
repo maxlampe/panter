@@ -1,6 +1,12 @@
 from panter.data.dataRootPerkeo import RootPerkeo
 import numpy as np
 
+# I strongly recommend checking out the docstring and the examples for RootPerkeo class
+# call via running
+# >>> help(RootPerkeo)
+
+# -------- Quickstart
+
 # Initialize the RootPerkeo object with a ROOT file from PERKEO III data
 data = RootPerkeo("example.root")
 
@@ -12,6 +18,10 @@ data.gen_hist(list(range(16)))
 
 # Plot histogram for the first PMT to visually inspect the data
 data.hists[0].plot_hist()
+
+# -------- Alternatively
+
+data = RootPerkeo("example.root")
 
 # Apply custom filters to the data. Filters are used to refine the data
 # based on certain criteria, such as time differences and detector responses

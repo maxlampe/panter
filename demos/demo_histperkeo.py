@@ -8,14 +8,13 @@ data = np.random.normal(5, 2, 1000)  # normal distribution, mean=5, std=2
 histogram = HistPerkeo(data=data, bin_count=20, low_lim=0, up_lim=10)
 
 # Calculate statistics and scale the histogram
-histogram._calc_stats()  # Recalculate statistics if needed
 histogram.scal(fac=2)  # Scale the histogram by a factor of 2
 
 # Perform arithmetic with histograms
 another_data = np.random.normal(7, 1.5, 800)  # another dataset
 histogram2 = HistPerkeo(data=another_data, bin_count=20, low_lim=0, up_lim=10)
 histogram.addhist(
-    hist_p=histogram2, fac=0.5
+    hist_p=histogram2, fac=-0.5
 )  # Add another histogram to the existing one
 histogram.divbyhist(hist_p=histogram2)  # Divide by another histogram
 histogram.multbyhist(hist_p=histogram2)  # Multiply by another histogram
